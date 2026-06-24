@@ -26,7 +26,7 @@ h1 {
 table {
     border-collapse: collapse;
     width: 100%;
-    max-width: 900px;
+    max-width: 1300px;
     background: white;
 }
 
@@ -39,7 +39,6 @@ th, td {
 
 th {
     background: #e9ecef;
-    text-align: left;
 }
 
 
@@ -57,7 +56,6 @@ td.zeit {
 .footer {
     margin-top: 10px;
     color: #666;
-    font-size: 0.9em;
 }
 
 </style>
@@ -68,7 +66,7 @@ td.zeit {
 <body>
 
 
-<h1>Aktuelle ETF-Kurse (Lang & Schwarz bzw. gettex)</h1>
+<h1>Aktuelle ETF-Kurse</h1>
 
 
 
@@ -80,6 +78,8 @@ td.zeit {
 
 <th>ETF</th>
 <th>ISIN</th>
+<th>ConsorsID</th>
+<th>Tagesanfang (€)</th>
 <th>Kurs (€)</th>
 <th>Zeitpunkt</th>
 
@@ -92,7 +92,9 @@ td.zeit {
 <tbody id="tableBody">
 
 <tr>
-<td colspan="4">Lade Daten...</td>
+<td colspan="6">
+Lade Daten...
+</td>
 </tr>
 
 </tbody>
@@ -101,9 +103,7 @@ td.zeit {
 </table>
 
 
-
 <div class="footer" id="updateInfo"></div>
-
 
 
 
@@ -124,60 +124,180 @@ const isins = [
 
 
 
-async function ladeETF(isin) {
-
-    const url = "/api/" + isin;
 
 
-    const response = await fetch(url);
+// Tagesanfang über gleichen Proxy
+
+async function ladeTagesanfang(consorsId) {
+
+
+    const url =
+        "/api/chart/" + consorsId;
+
+
+
+    const response =
+        await fetch(url);
+
 
 
     if (!response.ok) {
 
         throw new Error(
-            "HTTP Fehler " + response.status
+            "Chart HTTP Fehler " +
+            response.status
         );
 
     }
 
 
-    const result = await response.json();
+
+    const data =
+        await response.json();
 
 
-    // Consorsbank liefert ein Array
-    const data = result[0];
+
+    try {
 
 
-// Erst Lang & Schwarz suchen
-let exchange = data.ExchangesV2.find(
-
-    e =>
-    e.CONSORS_EXCHANGE_CODE === "@_LUSG"
-
-);
+        return Number(
+            data[0]
+            .ChartHistoryV1
+            .PERF_START_PRICE
+        );
 
 
-// Falls nicht vorhanden: gettex verwenden
-if (!exchange) {
+    }
 
-    exchange = data.ExchangesV2.find(
+    catch(e) {
 
-        e =>
-        e.CONSORS_EXCHANGE_CODE === "_TRO"
+        return null;
 
-    );
+    }
 
 }
 
 
 
-if (!exchange) {
 
-    throw new Error(
-        "Kein @_LUSG oder _TRO Kurs gefunden"
-    );
 
-}
+
+
+
+async function ladeETF(isin) {
+
+
+    const response =
+        await fetch("/api/" + isin);
+
+
+
+    if (!response.ok) {
+
+        throw new Error(
+            "HTTP Fehler " +
+            response.status
+        );
+
+    }
+
+
+
+    const result =
+        await response.json();
+
+
+
+    const data =
+        result[0];
+
+
+
+
+
+    // Erst Lang & Schwarz
+
+    let exchange =
+        data.ExchangesV2.find(
+
+            e =>
+            e.CONSORS_EXCHANGE_CODE === "@_LUSG"
+
+        );
+
+
+
+
+
+    // sonst gettex
+
+    if (!exchange) {
+
+        exchange =
+        data.ExchangesV2.find(
+
+            e =>
+            e.CONSORS_EXCHANGE_CODE === "_TRO"
+
+        );
+
+    }
+
+
+
+
+
+
+    if (!exchange) {
+
+        throw new Error(
+            "Kein Kurs gefunden"
+        );
+
+    }
+
+
+
+
+
+
+    const consorsId =
+        exchange.CONSORS_ID ??
+        "nicht gefunden";
+
+
+
+
+
+    let tagesanfang = null;
+
+
+
+    if (consorsId !== "nicht gefunden") {
+
+
+        try {
+
+            tagesanfang =
+                await ladeTagesanfang(consorsId);
+
+        }
+
+        catch(err) {
+
+            console.warn(
+                "Kein Tagesanfang:",
+                isin,
+                err
+            );
+
+        }
+
+    }
+
+
+
+
 
 
     return {
@@ -187,17 +307,26 @@ if (!exchange) {
         data.BasicV1.NAME_SECURITY_SHORT,
 
 
-        isin: isin,
+        isin,
 
 
-kurs:
-Number(exchange.PRICE),
+        consorsId,
 
 
-zeit:
-exchange.DATETIME_PRICE
+        tagesanfang,
+
+
+
+        kurs:
+        Number(exchange.PRICE),
+
+
+        zeit:
+        exchange.DATETIME_PRICE
+
 
     };
+
 
 }
 
@@ -205,10 +334,15 @@ exchange.DATETIME_PRICE
 
 
 
-function formatDatum(isoString) {
 
 
-    const d = new Date(isoString);
+
+
+function formatDatum(value) {
+
+
+    const d =
+        new Date(value);
 
 
 
@@ -216,19 +350,21 @@ function formatDatum(isoString) {
         "de-DE",
         {
 
-            day: "2-digit",
-            month: "2-digit",
-            year: "numeric",
+            day:"2-digit",
+            month:"2-digit",
+            year:"numeric",
 
-            hour: "2-digit",
-            minute: "2-digit",
-            second: "2-digit"
+            hour:"2-digit",
+            minute:"2-digit",
+            second:"2-digit"
 
         }
 
     );
 
 }
+
+
 
 
 
@@ -250,11 +386,11 @@ async function ladeAlleKurse() {
 
 
 
+
     for (const isin of isins) {
 
 
         try {
-
 
 
             const etf =
@@ -263,62 +399,95 @@ async function ladeAlleKurse() {
 
 
 
+
             tbody.innerHTML += `
 
-            <tr>
 
-                <td>
-                    ${etf.name}
-                </td>
+<tr>
 
 
-                <td>
-                    ${etf.isin}
-                </td>
+<td>
+${etf.name}
+</td>
 
 
-                <td class="kurs">
-                    ${etf.kurs.toFixed(3)}
-                </td>
+<td>
+${etf.isin}
+</td>
 
 
-                <td class="zeit">
-                    ${formatDatum(etf.zeit)}
-                </td>
+
+<td>
+${etf.consorsId}
+</td>
 
 
-            </tr>
 
-            `;
+<td class="kurs">
+
+${
+etf.tagesanfang !== null
+?
+etf.tagesanfang.toFixed(3)
+:
+"-"
+}
+
+</td>
+
+
+
+
+<td class="kurs">
+
+${etf.kurs.toFixed(3)}
+
+</td>
+
+
+
+<td class="zeit">
+
+${formatDatum(etf.zeit)}
+
+</td>
+
+
+
+</tr>
+
+
+`;
 
 
 
 
         }
 
-        catch(err) {
 
+        catch(err) {
 
 
             tbody.innerHTML += `
 
-            <tr>
 
-                <td colspan="4">
+<tr>
 
-                    Fehler beim Abruf von
-                    ${isin}:
-                    ${err.message}
+<td colspan="6">
 
-                </td>
+Fehler bei ${isin}: 
+${err.message}
 
-            </tr>
+</td>
 
-            `;
+</tr>
 
+
+`;
 
 
             console.error(err);
+
 
         }
 
@@ -330,15 +499,15 @@ async function ladeAlleKurse() {
 
 
 
-    document.getElementById("updateInfo").textContent =
 
+    document.getElementById("updateInfo")
+    .textContent =
 
-        "Letzte Aktualisierung: " +
-
-        new Date().toLocaleString("de-DE");
-
+    "Letzte Aktualisierung: " +
+    new Date().toLocaleString("de-DE");
 
 }
+
 
 
 
@@ -349,14 +518,12 @@ async function ladeAlleKurse() {
 ladeAlleKurse();
 
 
-// Aktualisierung jede Minute
+
+// alle 60 Sekunden aktualisieren
 
 setInterval(
-
     ladeAlleKurse,
-
     60000
-
 );
 
 
