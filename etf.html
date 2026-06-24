@@ -23,10 +23,15 @@ h1 {
 }
 
 
+h2 {
+    margin-top: 30px;
+}
+
+
 table {
     border-collapse: collapse;
     width: 100%;
-    max-width: 1300px;
+    max-width: 1400px;
     background: white;
 }
 
@@ -97,7 +102,7 @@ ConsorsID
 <tbody id="tableBody">
 
 <tr>
-<td colspan="6">
+<td colspan="7">
 Lade Daten...
 </td>
 </tr>
@@ -113,6 +118,35 @@ Lade Daten...
 
 
 
+<h2>Historische Werte</h2>
+
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Anlage</th>
+<th>Anteile Jahresanfang</th>
+<th>Kurs Jahresanfang</th>
+
+</tr>
+
+</thead>
+
+
+<tbody id="historyBody">
+
+</tbody>
+
+
+</table>
+
+
+
+
+
 <script>
 
 
@@ -120,27 +154,37 @@ const isins = [
 
     {
         alias: "ETF Core MSCI World",
-        isin: "IE00B4L5Y983"
+        isin: "IE00B4L5Y983",
+        anzahlJA: 500.084082,
+        kursJA: 111.74
     },
 
     {
         alias: "ETF MSCI World SRI",
-        isin: "IE00BYX2JD69"
+        isin: "IE00BYX2JD69",
+        anzahlJA: 3792.520514,
+        kursJA: 12.19
     },
 
     {
         alias: "Aktie Allianz",
-        isin: "DE0008404005"
+        isin: "DE0008404005",
+        anzahlJA: 91.862,
+        kursJA: 390.50
     },
 
     {
         alias: "ETF AI Infrastructure",
-        isin: "IE000X59ZHE2"
+        isin: "IE000X59ZHE2",
+        anzahlJA: 476.198976,
+        kursJA: 6.19
     },
 
     {
         alias: "Fonds Allianz US Equity",
-        isin: "LU0256843979"
+        isin: "LU0256843979",
+        anzahlJA: 4.873,
+        kursJA: 457.889
     }
 
 ];
@@ -149,25 +193,25 @@ const isins = [
 
 
 
+function formatZahl(value, stellen = 3) {
+
+    return Number(value)
+        .toFixed(stellen)
+        .replace(".", ",");
+
+}
+
+
+
+
+
+
+
 async function ladeTagesanfang(consorsId) {
 
 
-    const url =
-        "/api/chart/" + consorsId;
-
-
     const response =
-        await fetch(url);
-
-
-    if (!response.ok) {
-
-        throw new Error(
-            "Chart HTTP Fehler " +
-            response.status
-        );
-
-    }
+        await fetch("/api/chart/" + consorsId);
 
 
     const data =
@@ -225,8 +269,6 @@ async function ladeETF(isin) {
 
 
 
-
-
     let exchange =
         data.ExchangesV2.find(
 
@@ -234,8 +276,6 @@ async function ladeETF(isin) {
             e.CONSORS_EXCHANGE_CODE === "@_LUSG"
 
         );
-
-
 
 
 
@@ -254,8 +294,6 @@ async function ladeETF(isin) {
 
 
 
-
-
     if (!exchange) {
 
         throw new Error(
@@ -268,12 +306,8 @@ async function ladeETF(isin) {
 
 
 
-
     const consorsId =
-        exchange.CONSORS_ID ??
-        "nicht gefunden";
-
-
+        exchange.CONSORS_ID ?? "nicht gefunden";
 
 
 
@@ -283,7 +317,6 @@ async function ladeETF(isin) {
 
     if (consorsId !== "nicht gefunden") {
 
-
         try {
 
             tagesanfang =
@@ -291,20 +324,9 @@ async function ladeETF(isin) {
 
         }
 
-        catch(err) {
-
-            console.warn(
-                "Kein Tagesanfang:",
-                isin,
-                err
-            );
-
-        }
+        catch(e) {}
 
     }
-
-
-
 
 
 
@@ -314,52 +336,35 @@ async function ladeETF(isin) {
 
 
 
-
     let tagesentwicklung = null;
 
 
 
     if (tagesanfang !== null && tagesanfang !== 0) {
 
-
         tagesentwicklung =
-            ((kurs - tagesanfang)
-            / tagesanfang) * 100;
+        ((kurs - tagesanfang)
+        / tagesanfang) * 100;
 
     }
 
 
 
 
-
-
-
     return {
-
-
-        name:
-        data.BasicV1.NAME_SECURITY_SHORT,
-
 
         isin,
 
-
         consorsId,
-
 
         tagesanfang,
 
+        kurs,
 
         tagesentwicklung,
 
-
-        kurs,
-
-
-
         zeit:
         exchange.DATETIME_PRICE
-
 
     };
 
@@ -373,29 +378,22 @@ async function ladeETF(isin) {
 
 
 
-
 function formatDatum(value) {
-
 
     const d =
         new Date(value);
 
 
-
     return d.toLocaleString(
         "de-DE",
         {
-
             day:"2-digit",
             month:"2-digit",
             year:"numeric",
-
             hour:"2-digit",
             minute:"2-digit",
             second:"2-digit"
-
         }
-
     );
 
 }
@@ -416,14 +414,40 @@ async function ladeAlleKurse() {
         document.getElementById("tableBody");
 
 
+    const history =
+        document.getElementById("historyBody");
+
 
     tbody.innerHTML = "";
 
+    history.innerHTML = "";
 
 
 
 
     for (const item of isins) {
+
+
+        history.innerHTML += `
+
+<tr>
+
+<td>
+${item.alias}
+</td>
+
+<td class="kurs">
+${formatZahl(item.anzahlJA,6)}
+</td>
+
+<td class="kurs">
+${formatZahl(item.kursJA,3)} €
+</td>
+
+</tr>
+
+`;
+
 
 
         try {
@@ -433,28 +457,20 @@ async function ladeAlleKurse() {
                 await ladeETF(item.isin);
 
 
-            etf.alias =
-                item.alias;
-
-
-
-
 
             tbody.innerHTML += `
 
 
 <tr>
 
-
 <td>
-${etf.alias}
+${item.alias}
 </td>
 
 
 <td>
-${etf.isin}
+${item.isin}
 </td>
-
 
 
 <td style="display:none;">
@@ -468,7 +484,7 @@ ${etf.consorsId}
 ${
 etf.tagesanfang !== null
 ?
-etf.tagesanfang.toFixed(3) + " €"
+formatZahl(etf.tagesanfang,3) + " €"
 :
 "-"
 }
@@ -477,20 +493,15 @@ etf.tagesanfang.toFixed(3) + " €"
 
 
 
-
-
 <td class="kurs">
 
-${etf.kurs.toFixed(3)} €
+${formatZahl(etf.kurs,3)} €
 
 </td>
 
 
 
-
-
 <td class="kurs">
-
 
 ${
 etf.tagesentwicklung === null ||
@@ -503,21 +514,16 @@ Math.abs(etf.tagesentwicklung) < 0.005
 :
 
 `
-
 <span style="color:${etf.tagesentwicklung < 0 ? "red" : "green"}">
 
-${etf.tagesentwicklung.toFixed(2)} %
+${formatZahl(etf.tagesentwicklung,2)} %
 
 </span>
-
 `
 
 }
 
-
 </td>
-
-
 
 
 
@@ -528,44 +534,32 @@ ${formatDatum(etf.zeit)}
 </td>
 
 
-
 </tr>
-
 
 `;
 
 
 
-
         }
-
 
         catch(err) {
 
 
             tbody.innerHTML += `
 
-
 <tr>
 
-<td colspan="6">
+<td colspan="7">
 
-Fehler bei ${item.alias} (${item.isin}): 
-${err.message}
+Fehler bei ${item.alias}: ${err.message}
 
 </td>
 
 </tr>
 
-
 `;
 
-
-            console.error(err);
-
-
         }
-
 
     }
 
@@ -573,16 +567,27 @@ ${err.message}
 
 
 
+    const jetzt = new Date();
 
 
     document.getElementById("updateInfo")
     .textContent =
 
     "Letzte Aktualisierung: " +
-    new Date().toLocaleString("de-DE");
+
+    jetzt.toLocaleString(
+        "de-DE",
+        {
+            day:"2-digit",
+            month:"2-digit",
+            year:"numeric",
+            hour:"2-digit",
+            minute:"2-digit",
+            second:"2-digit"
+        }
+    );
 
 }
-
 
 
 
@@ -593,14 +598,10 @@ ${err.message}
 ladeAlleKurse();
 
 
-
-// alle 60 Sekunden aktualisieren
-
 setInterval(
     ladeAlleKurse,
     60000
 );
-
 
 
 </script>
