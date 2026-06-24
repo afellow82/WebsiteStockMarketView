@@ -78,7 +78,11 @@ td.zeit {
 
 <th>Anlage</th>
 <th>ISIN</th>
-<th>ConsorsID</th>
+
+<th style="display:none;">
+ConsorsID
+</th>
+
 <th>Kurs Tagesanfang</th>
 <th>Kurs</th>
 <th>Tagesentwicklung</th>
@@ -93,7 +97,7 @@ td.zeit {
 <tbody id="tableBody">
 
 <tr>
-<td colspan="7">
+<td colspan="6">
 Lade Daten...
 </td>
 </tr>
@@ -223,8 +227,6 @@ async function ladeETF(isin) {
 
 
 
-    // Lang & Schwarz
-
     let exchange =
         data.ExchangesV2.find(
 
@@ -236,8 +238,6 @@ async function ladeETF(isin) {
 
 
 
-
-    // Ersatz: gettex
 
     if (!exchange) {
 
@@ -311,7 +311,6 @@ async function ladeETF(isin) {
 
     const kurs =
         Number(exchange.PRICE);
-
 
 
 
@@ -458,7 +457,7 @@ ${etf.isin}
 
 
 
-<td>
+<td style="display:none;">
 ${etf.consorsId}
 </td>
 
@@ -549,7 +548,7 @@ ${formatDatum(etf.zeit)}
 
 <tr>
 
-<td colspan="7">
+<td colspan="6">
 
 Fehler bei ${item.alias} (${item.isin}): 
 ${err.message}
