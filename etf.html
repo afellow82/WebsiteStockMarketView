@@ -8,7 +8,6 @@
 
 <title>ETF Kurse</title>
 
-
 <style>
 
 body {
@@ -17,16 +16,9 @@ body {
     background: #f5f5f5;
 }
 
-
 h1 {
     margin-bottom: 20px;
 }
-
-
-h2 {
-    margin-top: 30px;
-}
-
 
 table {
     border-collapse: collapse;
@@ -35,28 +27,23 @@ table {
     background: white;
 }
 
-
 th, td {
     border: 1px solid #ddd;
     padding: 10px;
 }
 
-
 th {
     background: #e9ecef;
 }
-
 
 td.kurs {
     text-align: right;
     font-weight: bold;
 }
 
-
 td.zeit {
     white-space: nowrap;
 }
-
 
 .footer {
     margin-top: 10px;
@@ -71,8 +58,7 @@ td.zeit {
 <body>
 
 
-<h1>Aktuelle ETF-Kurse</h1>
-
+<h1>Aktuelle Kurse</h1>
 
 
 <table>
@@ -83,6 +69,7 @@ td.zeit {
 
 <th>Anlage</th>
 <th>ISIN</th>
+<th>Anteile</th>
 
 <th style="display:none;">
 ConsorsID
@@ -98,17 +85,15 @@ ConsorsID
 </thead>
 
 
-
 <tbody id="tableBody">
 
 <tr>
-<td colspan="7">
+<td colspan="8">
 Lade Daten...
 </td>
 </tr>
 
 </tbody>
-
 
 </table>
 
@@ -118,7 +103,8 @@ Lade Daten...
 
 
 
-<h2>Historische Werte</h2>
+<h1>Werte Jahresanfang</h1>
+
 
 
 <table>
@@ -130,6 +116,7 @@ Lade Daten...
 <th>Anlage</th>
 <th>Anteile Jahresanfang</th>
 <th>Kurs Jahresanfang</th>
+<th>Gesamtwert Jahresanfang</th>
 
 </tr>
 
@@ -152,40 +139,45 @@ Lade Daten...
 
 const isins = [
 
-    {
-        alias: "ETF Core MSCI World",
-        isin: "IE00B4L5Y983",
-        anzahlJA: 500.084082,
-        kursJA: 111.74
-    },
+{
+alias: "ETF Core MSCI World",
+isin: "IE00B4L5Y983",
+anzahl: 500.084082,
+anzahlJA: 500.084082,
+kursJA: 111.74
+},
 
-    {
-        alias: "ETF MSCI World SRI",
-        isin: "IE00BYX2JD69",
-        anzahlJA: 3792.520514,
-        kursJA: 12.19
-    },
+{
+alias: "ETF MSCI World SRI",
+isin: "IE00BYX2JD69",
+anzahl: 4655.231737,
+anzahlJA: 3792.520514,
+kursJA: 12.19
+},
 
-    {
-        alias: "Aktie Allianz",
-        isin: "DE0008404005",
-        anzahlJA: 91.862,
-        kursJA: 390.50
-    },
+{
+alias: "Aktie Allianz",
+isin: "DE0008404005",
+anzahl: 91.862,
+anzahlJA: 91.862,
+kursJA: 390.50
+},
 
-    {
-        alias: "ETF AI Infrastructure",
-        isin: "IE000X59ZHE2",
-        anzahlJA: 476.198976,
-        kursJA: 6.19
-    },
+{
+alias: "ETF AI Infrastructure",
+isin: "IE000X59ZHE2",
+anzahl: 476.198976,
+anzahlJA: 476.198976,
+kursJA: 6.19
+},
 
-    {
-        alias: "Fonds Allianz US Equity",
-        isin: "LU0256843979",
-        anzahlJA: 4.873,
-        kursJA: 457.889
-    }
+{
+alias: "Fonds Allianz US Equity",
+isin: "LU0256843979",
+anzahl: 5.386,
+anzahlJA: 4.873,
+kursJA: 457.889
+}
 
 ];
 
@@ -193,11 +185,28 @@ const isins = [
 
 
 
-function formatZahl(value, stellen = 3) {
+function formatZahl(value, stellen = 3, tausender = false) {
 
-    return Number(value)
-        .toFixed(stellen)
-        .replace(".", ",");
+let zahl =
+Number(value).toFixed(stellen);
+
+
+let teile =
+zahl.split(".");
+
+
+if (tausender) {
+
+teile[0] =
+teile[0].replace(
+/\B(?=(\d{3})+(?!\d))/g,
+"."
+);
+
+}
+
+
+return teile.join(",");
 
 }
 
@@ -209,33 +218,30 @@ function formatZahl(value, stellen = 3) {
 
 async function ladeTagesanfang(consorsId) {
 
+const response =
+await fetch("/api/chart/" + consorsId);
 
-    const response =
-        await fetch("/api/chart/" + consorsId);
-
-
-    const data =
-        await response.json();
+const data =
+await response.json();
 
 
-    try {
+try {
 
-        return Number(
-            data[0]
-            .ChartHistoryV1
-            .PERF_START_PRICE
-        );
-
-    }
-
-    catch(e) {
-
-        return null;
-
-    }
+return Number(
+data[0]
+.ChartHistoryV1
+.PERF_START_PRICE
+);
 
 }
 
+catch(e) {
+
+return null;
+
+}
+
+}
 
 
 
@@ -246,128 +252,114 @@ async function ladeTagesanfang(consorsId) {
 async function ladeETF(isin) {
 
 
-    const response =
-        await fetch("/api/" + isin);
+const response =
+await fetch("/api/" + isin);
 
 
-    if (!response.ok) {
+if (!response.ok) {
 
-        throw new Error(
-            "HTTP Fehler " +
-            response.status
-        );
+throw new Error(
+"HTTP Fehler " +
+response.status
+);
 
-    }
+}
 
 
-    const result =
-        await response.json();
+const result =
+await response.json();
 
 
-    const data =
-        result[0];
+const data =
+result[0];
 
 
 
-    let exchange =
-        data.ExchangesV2.find(
+let exchange =
+data.ExchangesV2.find(
 
-            e =>
-            e.CONSORS_EXCHANGE_CODE === "@_LUSG"
+e =>
+e.CONSORS_EXCHANGE_CODE === "@_LUSG"
 
-        );
+);
 
 
 
-    if (!exchange) {
+if (!exchange) {
 
-        exchange =
-        data.ExchangesV2.find(
+exchange =
+data.ExchangesV2.find(
 
-            e =>
-            e.CONSORS_EXCHANGE_CODE === "_TRO"
+e =>
+e.CONSORS_EXCHANGE_CODE === "_TRO"
 
-        );
+);
 
-    }
+}
 
 
 
+if (!exchange) {
 
-    if (!exchange) {
+throw new Error(
+"Kein Kurs gefunden"
+);
 
-        throw new Error(
-            "Kein Kurs gefunden"
-        );
+}
 
-    }
 
 
+const consorsId =
+exchange.CONSORS_ID ?? "nicht gefunden";
 
 
 
-    const consorsId =
-        exchange.CONSORS_ID ?? "nicht gefunden";
+let tagesanfang = null;
 
 
+if (consorsId !== "nicht gefunden") {
 
-    let tagesanfang = null;
+try {
 
+tagesanfang =
+await ladeTagesanfang(consorsId);
 
+}
 
-    if (consorsId !== "nicht gefunden") {
+catch(e){}
 
-        try {
+}
 
-            tagesanfang =
-                await ladeTagesanfang(consorsId);
 
-        }
 
-        catch(e) {}
+const kurs =
+Number(exchange.PRICE);
 
-    }
 
 
+let tagesentwicklung = null;
 
 
-    const kurs =
-        Number(exchange.PRICE);
+if (tagesanfang !== null && tagesanfang !== 0) {
 
+tagesentwicklung =
+((kurs - tagesanfang)
+/ tagesanfang) * 100;
 
+}
 
-    let tagesentwicklung = null;
 
 
+return {
 
-    if (tagesanfang !== null && tagesanfang !== 0) {
-
-        tagesentwicklung =
-        ((kurs - tagesanfang)
-        / tagesanfang) * 100;
-
-    }
-
-
-
-
-    return {
-
-        isin,
-
-        consorsId,
-
-        tagesanfang,
-
-        kurs,
-
-        tagesentwicklung,
-
-        zeit:
-        exchange.DATETIME_PRICE
-
-    };
-
+isin,
+consorsId,
+tagesanfang,
+kurs,
+tagesentwicklung,
+zeit: exchange.DATETIME_PRICE
+
+};
 
 }
 
@@ -380,26 +372,23 @@ async function ladeETF(isin) {
 
 function formatDatum(value) {
 
-    const d =
-        new Date(value);
+const d =
+new Date(value);
 
 
-    return d.toLocaleString(
-        "de-DE",
-        {
-            day:"2-digit",
-            month:"2-digit",
-            year:"numeric",
-            hour:"2-digit",
-            minute:"2-digit",
-            second:"2-digit"
-        }
-    );
+return d.toLocaleString(
+"de-DE",
+{
+day:"2-digit",
+month:"2-digit",
+year:"numeric",
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+}
+);
 
 }
-
-
-
 
 
 
@@ -410,38 +399,44 @@ function formatDatum(value) {
 async function ladeAlleKurse() {
 
 
-    const tbody =
-        document.getElementById("tableBody");
+const tbody =
+document.getElementById("tableBody");
 
 
-    const history =
-        document.getElementById("historyBody");
+const history =
+document.getElementById("historyBody");
 
 
-    tbody.innerHTML = "";
+tbody.innerHTML = "";
 
-    history.innerHTML = "";
-
-
+history.innerHTML = "";
 
 
-    for (const item of isins) {
+
+for (const item of isins) {
 
 
-        history.innerHTML += `
+const historischerGesamtwert =
+item.anzahlJA * item.kursJA;
+
+
+
+history.innerHTML += `
 
 <tr>
 
-<td>
-${item.alias}
-</td>
+<td>${item.alias}</td>
 
 <td class="kurs">
-${formatZahl(item.anzahlJA,6)}
+${formatZahl(item.anzahlJA,6,true)}
 </td>
 
 <td class="kurs">
 ${formatZahl(item.kursJA,3)} €
+</td>
+
+<td class="kurs">
+${formatZahl(historischerGesamtwert,2,true)} €
 </td>
 
 </tr>
@@ -450,26 +445,25 @@ ${formatZahl(item.kursJA,3)} €
 
 
 
-        try {
+try {
 
 
-            const etf =
-                await ladeETF(item.isin);
+const etf =
+await ladeETF(item.isin);
 
 
 
-            tbody.innerHTML += `
-
+tbody.innerHTML += `
 
 <tr>
 
-<td>
-${item.alias}
-</td>
+<td>${item.alias}</td>
+
+<td>${item.isin}</td>
 
 
-<td>
-${item.isin}
+<td class="kurs">
+${formatZahl(item.anzahl,6,true)}
 </td>
 
 
@@ -478,13 +472,12 @@ ${etf.consorsId}
 </td>
 
 
-
 <td class="kurs">
 
 ${
 etf.tagesanfang !== null
 ?
-formatZahl(etf.tagesanfang,3) + " €"
+formatZahl(etf.tagesanfang,3)+" €"
 :
 "-"
 }
@@ -492,11 +485,8 @@ formatZahl(etf.tagesanfang,3) + " €"
 </td>
 
 
-
 <td class="kurs">
-
 ${formatZahl(etf.kurs,3)} €
-
 </td>
 
 
@@ -505,32 +495,22 @@ ${formatZahl(etf.kurs,3)} €
 
 ${
 etf.tagesentwicklung === null ||
-Math.abs(etf.tagesentwicklung) < 0.005
-
+Math.abs(etf.tagesentwicklung)<0.005
 ?
-
 ""
-
 :
-
 `
-<span style="color:${etf.tagesentwicklung < 0 ? "red" : "green"}">
-
+<span style="color:${etf.tagesentwicklung < 0 ? "red":"green"}">
 ${formatZahl(etf.tagesentwicklung,2)} %
-
 </span>
 `
-
 }
 
 </td>
-
 
 
 <td class="zeit">
-
 ${formatDatum(etf.zeit)}
-
 </td>
 
 
@@ -538,60 +518,49 @@ ${formatDatum(etf.zeit)}
 
 `;
 
+}
 
+catch(err) {
 
-        }
-
-        catch(err) {
-
-
-            tbody.innerHTML += `
+tbody.innerHTML += `
 
 <tr>
 
-<td colspan="7">
-
+<td colspan="8">
 Fehler bei ${item.alias}: ${err.message}
-
 </td>
 
 </tr>
 
 `;
 
-        }
-
-    }
-
-
-
-
-
-    const jetzt = new Date();
-
-
-    document.getElementById("updateInfo")
-    .textContent =
-
-    "Letzte Aktualisierung: " +
-
-    jetzt.toLocaleString(
-        "de-DE",
-        {
-            day:"2-digit",
-            month:"2-digit",
-            year:"numeric",
-            hour:"2-digit",
-            minute:"2-digit",
-            second:"2-digit"
-        }
-    );
+}
 
 }
 
 
 
+const jetzt = new Date();
 
+
+document.getElementById("updateInfo")
+.textContent =
+
+"Letzte Aktualisierung: " +
+
+jetzt.toLocaleString(
+"de-DE",
+{
+day:"2-digit",
+month:"2-digit",
+year:"numeric",
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+}
+);
+
+}
 
 
 
@@ -599,8 +568,8 @@ ladeAlleKurse();
 
 
 setInterval(
-    ladeAlleKurse,
-    60000
+ladeAlleKurse,
+60000
 );
 
 
