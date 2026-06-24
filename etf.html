@@ -76,10 +76,10 @@ td.zeit {
 
 <tr>
 
-<th>ETF</th>
+<th>Anlage</th>
 <th>ISIN</th>
 <th>ConsorsID</th>
-<th>Tagesanfang</th>
+<th>Kurs Tagesanfang</th>
 <th>Kurs</th>
 <th>Tagesentwicklung</th>
 <th>Zeitpunkt</th>
@@ -114,11 +114,30 @@ Lade Daten...
 
 const isins = [
 
-    "IE00B4L5Y983",
-    "IE00BYX2JD69",
-    "DE0008404005",
-    "IE000X59ZHE2",
-    "LU0256843979"
+    {
+        alias: "ETF Core MSCI World",
+        isin: "IE00B4L5Y983"
+    },
+
+    {
+        alias: "ETF MSCI World SRI",
+        isin: "IE00BYX2JD69"
+    },
+
+    {
+        alias: "Aktie Allianz",
+        isin: "DE0008404005"
+    },
+
+    {
+        alias: "ETF AI Infrastructure",
+        isin: "IE000X59ZHE2"
+    },
+
+    {
+        alias: "Fonds Allianz US Equity",
+        isin: "LU0256843979"
+    }
 
 ];
 
@@ -405,14 +424,18 @@ async function ladeAlleKurse() {
 
 
 
-    for (const isin of isins) {
+    for (const item of isins) {
 
 
         try {
 
 
             const etf =
-                await ladeETF(isin);
+                await ladeETF(item.isin);
+
+
+            etf.alias =
+                item.alias;
 
 
 
@@ -425,7 +448,7 @@ async function ladeAlleKurse() {
 
 
 <td>
-${etf.name}
+${etf.alias}
 </td>
 
 
@@ -528,7 +551,7 @@ ${formatDatum(etf.zeit)}
 
 <td colspan="7">
 
-Fehler bei ${isin}: 
+Fehler bei ${item.alias} (${item.isin}): 
 ${err.message}
 
 </td>
