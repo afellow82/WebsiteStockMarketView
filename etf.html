@@ -79,8 +79,9 @@ td.zeit {
 <th>ETF</th>
 <th>ISIN</th>
 <th>ConsorsID</th>
-<th>Tagesanfang (€)</th>
-<th>Kurs (€)</th>
+<th>Tagesanfang</th>
+<th>Kurs</th>
+<th>Tagesentwicklung</th>
 <th>Zeitpunkt</th>
 
 </tr>
@@ -92,7 +93,7 @@ td.zeit {
 <tbody id="tableBody">
 
 <tr>
-<td colspan="6">
+<td colspan="7">
 Lade Daten...
 </td>
 </tr>
@@ -101,6 +102,7 @@ Lade Daten...
 
 
 </table>
+
 
 
 <div class="footer" id="updateInfo"></div>
@@ -124,10 +126,6 @@ const isins = [
 
 
 
-
-
-// Tagesanfang über gleichen Proxy
-
 async function ladeTagesanfang(consorsId) {
 
 
@@ -135,10 +133,8 @@ async function ladeTagesanfang(consorsId) {
         "/api/chart/" + consorsId;
 
 
-
     const response =
         await fetch(url);
-
 
 
     if (!response.ok) {
@@ -151,21 +147,17 @@ async function ladeTagesanfang(consorsId) {
     }
 
 
-
     const data =
         await response.json();
 
 
-
     try {
-
 
         return Number(
             data[0]
             .ChartHistoryV1
             .PERF_START_PRICE
         );
-
 
     }
 
@@ -191,7 +183,6 @@ async function ladeETF(isin) {
         await fetch("/api/" + isin);
 
 
-
     if (!response.ok) {
 
         throw new Error(
@@ -202,10 +193,8 @@ async function ladeETF(isin) {
     }
 
 
-
     const result =
         await response.json();
-
 
 
     const data =
@@ -215,7 +204,7 @@ async function ladeETF(isin) {
 
 
 
-    // Erst Lang & Schwarz
+    // Lang & Schwarz
 
     let exchange =
         data.ExchangesV2.find(
@@ -229,7 +218,7 @@ async function ladeETF(isin) {
 
 
 
-    // sonst gettex
+    // Ersatz: gettex
 
     if (!exchange) {
 
@@ -300,6 +289,33 @@ async function ladeETF(isin) {
 
 
 
+
+    const kurs =
+        Number(exchange.PRICE);
+
+
+
+
+
+    let tagesentwicklung = null;
+
+
+
+    if (tagesanfang !== null && tagesanfang !== 0) {
+
+
+        tagesentwicklung =
+            ((kurs - tagesanfang)
+            / tagesanfang) * 100;
+
+    }
+
+
+
+
+
+
+
     return {
 
 
@@ -316,9 +332,11 @@ async function ladeETF(isin) {
         tagesanfang,
 
 
+        tagesentwicklung,
 
-        kurs:
-        Number(exchange.PRICE),
+
+        kurs,
+
 
 
         zeit:
@@ -428,7 +446,7 @@ ${etf.consorsId}
 ${
 etf.tagesanfang !== null
 ?
-etf.tagesanfang.toFixed(3)
+etf.tagesanfang.toFixed(3) + " €"
 :
 "-"
 }
@@ -438,11 +456,46 @@ etf.tagesanfang.toFixed(3)
 
 
 
+
 <td class="kurs">
 
-${etf.kurs.toFixed(3)}
+${etf.kurs.toFixed(3)} €
 
 </td>
+
+
+
+
+
+<td class="kurs">
+
+
+${
+etf.tagesentwicklung === null ||
+Math.abs(etf.tagesentwicklung) < 0.005
+
+?
+
+""
+
+:
+
+`
+
+<span style="color:${etf.tagesentwicklung < 0 ? "red" : "green"}">
+
+${etf.tagesentwicklung.toFixed(2)} %
+
+</span>
+
+`
+
+}
+
+
+</td>
+
+
 
 
 
@@ -473,7 +526,7 @@ ${formatDatum(etf.zeit)}
 
 <tr>
 
-<td colspan="6">
+<td colspan="7">
 
 Fehler bei ${isin}: 
 ${err.message}
