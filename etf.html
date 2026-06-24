@@ -70,15 +70,15 @@ td.zeit {
 <th>Anlage</th>
 <th>ISIN</th>
 <th>Anteile</th>
+<th>Kurs</th>
+<th>Wert</th>
+<th>Kurs Tagesanfang</th>
+<th>Tagesentwicklung</th>
+<th>Zeitpunkt</th>
 
 <th style="display:none;">
 ConsorsID
 </th>
-
-<th>Kurs Tagesanfang</th>
-<th>Kurs</th>
-<th>Tagesentwicklung</th>
-<th>Zeitpunkt</th>
 
 </tr>
 
@@ -88,7 +88,7 @@ ConsorsID
 <tbody id="tableBody">
 
 <tr>
-<td colspan="8">
+<td colspan="9">
 Lade Daten...
 </td>
 </tr>
@@ -106,7 +106,6 @@ Lade Daten...
 <h1>Werte Jahresanfang</h1>
 
 
-
 <table>
 
 <thead>
@@ -116,7 +115,7 @@ Lade Daten...
 <th>Anlage</th>
 <th>Anteile Jahresanfang</th>
 <th>Kurs Jahresanfang</th>
-<th>Gesamtwert Jahresanfang</th>
+<th>Wert Jahresanfang</th>
 
 </tr>
 
@@ -129,6 +128,9 @@ Lade Daten...
 
 
 </table>
+
+
+<div class="footer" id="gesamtwert"></div>
 
 
 
@@ -187,12 +189,9 @@ kursJA: 457.889
 
 function formatZahl(value, stellen = 3, tausender = false) {
 
-let zahl =
-Number(value).toFixed(stellen);
+let zahl = Number(value).toFixed(stellen);
 
-
-let teile =
-zahl.split(".");
+let teile = zahl.split(".");
 
 
 if (tausender) {
@@ -412,6 +411,9 @@ tbody.innerHTML = "";
 history.innerHTML = "";
 
 
+let gesamtwert = 0;
+
+
 
 for (const item of isins) {
 
@@ -453,6 +455,14 @@ await ladeETF(item.isin);
 
 
 
+const wert =
+item.anzahl * etf.kurs;
+
+
+gesamtwert += wert;
+
+
+
 tbody.innerHTML += `
 
 <tr>
@@ -467,9 +477,15 @@ ${formatZahl(item.anzahl,6,true)}
 </td>
 
 
-<td style="display:none;">
-${etf.consorsId}
+<td class="kurs">
+${formatZahl(etf.kurs,3)} €
 </td>
+
+
+<td class="kurs">
+${formatZahl(wert,2,true)} €
+</td>
+
 
 
 <td class="kurs">
@@ -483,12 +499,6 @@ formatZahl(etf.tagesanfang,3)+" €"
 }
 
 </td>
-
-
-<td class="kurs">
-${formatZahl(etf.kurs,3)} €
-</td>
-
 
 
 <td class="kurs">
@@ -514,6 +524,12 @@ ${formatDatum(etf.zeit)}
 </td>
 
 
+
+<td style="display:none;">
+${etf.consorsId}
+</td>
+
+
 </tr>
 
 `;
@@ -526,7 +542,7 @@ tbody.innerHTML += `
 
 <tr>
 
-<td colspan="8">
+<td colspan="9">
 Fehler bei ${item.alias}: ${err.message}
 </td>
 
@@ -537,6 +553,14 @@ Fehler bei ${item.alias}: ${err.message}
 }
 
 }
+
+
+
+document.getElementById("gesamtwert").innerHTML =
+
+"<strong>Gesamtwert:</strong> " +
+formatZahl(gesamtwert,2,true) +
+" €";
 
 
 
@@ -569,7 +593,7 @@ ladeAlleKurse();
 
 setInterval(
 ladeAlleKurse,
-60000
+300000
 );
 
 
