@@ -8,283 +8,222 @@
 
 <title>Stock Market View</title>
 
-
 <style>
 
-* {
-    box-sizing:border-box;
+*{
+box-sizing:border-box;
 }
 
-
-body {
-
-    font-family:
-    Inter,
-    "Segoe UI",
-    Arial,
-    sans-serif;
-
-    margin:0;
-    padding:25px;
-
-    background:
-    linear-gradient(
-        135deg,
-        #eef2f7,
-        #f8fafc
-    );
-
-    color:#222;
+body{
+font-family:Inter,"Segoe UI",Arial,sans-serif;
+margin:0;
+padding:25px;
+background:linear-gradient(135deg,#eef2f7,#f8fafc);
+color:#222;
 }
 
-
-
-.container {
-
-    max-width:1500px;
-    margin:auto;
-
+.container{
+max-width:1500px;
+margin:auto;
 }
 
-
-
-h1 {
-
-    margin-top:35px;
-    margin-bottom:12px;
-
-    font-size:13px;
-
-    text-transform:uppercase;
-    letter-spacing:1px;
-
-    color:#7b8494;
-
-    font-weight:600;
-
+h1{
+margin-top:35px;
+margin-bottom:12px;
+font-size:13px;
+text-transform:uppercase;
+letter-spacing:1px;
+color:#7b8494;
+font-weight:600;
 }
 
-
-
-table {
-
-    width:100%;
-
-    border-collapse:separate;
-    border-spacing:0;
-
-    overflow:hidden;
-
-    background:white;
-
-    border-radius:16px;
-
-    box-shadow:
-    0 8px 25px rgba(0,0,0,.08);
-
+table{
+width:100%;
+border-collapse:separate;
+border-spacing:0;
+overflow:hidden;
+background:white;
+border-radius:16px;
+box-shadow:0 8px 25px rgba(0,0,0,.08);
 }
 
-
-
-th {
-
-    background:#f1f5f9;
-
-    color:#475569;
-
-    font-size:13px;
-
-    font-weight:600;
-
+th{
+background:#f1f5f9;
+color:#475569;
+font-size:13px;
+font-weight:600;
 }
 
-
-
-th,
-td {
-
-    padding:13px 14px;
-
-    border-bottom:1px solid #e5e7eb;
-
+th,td{
+padding:13px 14px;
+border-bottom:1px solid #e5e7eb;
 }
 
-
-
-tr:last-child td {
-
-    border-bottom:none;
-
+tr:last-child td{
+border-bottom:none;
 }
 
-
-
-td {
-
-    font-size:14px;
-
+td{
+font-size:14px;
 }
 
-
-
-td.kurs {
-
-    text-align:right;
-
-    font-weight:600;
-
+td.kurs{
+text-align:right;
+font-weight:600;
 }
 
-
-
-td.zeit {
-
-    white-space:nowrap;
-
-    color:#64748b;
-
-    font-size:13px;
-
+td.zeit{
+white-space:nowrap;
+color:#64748b;
+font-size:13px;
 }
 
-
-
-.footer {
-
-    margin-top:12px;
-
-    color:#64748b;
-
-    font-size:13px;
-
+.footer{
+margin-top:12px;
+color:#64748b;
+font-size:13px;
 }
-
-
-
 
 
 /* Dashboard */
 
-.zusammenfassung {
+.zusammenfassung{
 
-    display:grid;
-
-    grid-template-columns:
-    repeat(2,1fr);
-
-    gap:25px;
-
-    margin-top:30px;
+display:grid;
+grid-template-columns:repeat(2,1fr);
+gap:25px;
+margin-top:5px;
 
 }
 
 
+.card{
 
-.card {
+background:rgba(255,255,255,.85);
+backdrop-filter:blur(10px);
+border-radius:20px;
+padding:20px;
 
-    background:
-    rgba(255,255,255,.85);
-
-    backdrop-filter:
-    blur(10px);
-
-    border-radius:20px;
-
-    padding:20px;
-
-    box-shadow:
-    0 10px 30px rgba(0,0,0,.08);
+box-shadow:
+0 10px 30px rgba(0,0,0,.08);
 
 }
 
 
+.metric{
 
-.metric {
-
-    font-size:40px;
-
-    font-weight:700;
-
-    margin-bottom:15px;
-
-    color:#111827;
+font-size:40px;
+font-weight:700;
+margin-bottom:15px;
+color:#111827;
 
 }
 
 
-
-.metric.small {
-
-    font-size:26px;
-
+.metric.small{
+font-size:26px;
 }
 
 
+.label{
 
-
-.label {
-
-    font-size:13px;
-
-    color:#64748b;
-
-    text-transform:uppercase;
-
-    letter-spacing:.8px;
-
-    margin-bottom:6px;
+font-size:13px;
+color:#64748b;
+text-transform:uppercase;
+letter-spacing:.8px;
+margin-bottom:6px;
 
 }
-
-
-
 
 
 @media(max-width:900px){
 
-
-.zusammenfassung {
-
-    grid-template-columns:1fr;
-
+.zusammenfassung{
+grid-template-columns:1fr;
 }
 
-
-table {
-
-    font-size:12px;
-
-    display:block;
-
-    overflow-x:auto;
-
+table{
+font-size:12px;
+display:block;
+overflow-x:auto;
 }
 
-
-
-.metric {
-
-    font-size:24px;
-
+.metric{
+font-size:24px;
 }
 
-
-
 }
-
-
 
 </style>
 
-
 </head>
-
 
 
 <body>
 
 
 <div class="container">
+
+<h1>Depotübersicht</h1>
+
+<div class="zusammenfassung">
+
+
+<div class="card">
+
+
+<div class="label">
+Gesamtwert
+</div>
+
+
+<div class="metric" id="gesamtwert"></div>
+
+
+
+<div class="label" id="entwicklungHeute">
+Entwicklung heute
+</div>
+
+
+<div class="metric small" id="tagesentwicklung"></div>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+
+<div class="label">
+Entwicklung durch Kurs aktuelles Jahr
+</div>
+
+
+<div class="metric small" id="jahresentwicklung"></div>
+
+
+
+
+<div class="label" id="entwicklungJahrGesamt">
+
+Entwicklung aktuelles Jahr inkl. Zukäufe
+
+</div>
+
+
+<div class="metric small" id="jahresentwicklungGesamt"></div>
+
+
+
+</div>
+
+
+</div>
+
 
 
 
@@ -316,6 +255,7 @@ table {
 
 <tbody id="tableBody">
 
+
 <tr>
 <td colspan="10">
 Lade Daten...
@@ -332,71 +272,6 @@ Lade Daten...
 <div class="footer" id="updateInfo"></div>
 
 
-
-<div class="zusammenfassung">
-
-
-<div class="card">
-
-
-<div class="label">
-Gesamtwert
-</div>
-
-
-<div class="metric" id="gesamtwert"></div>
-
-
-
-<div class="label" id="entwicklungHeute">
-Entwicklung heute
-</div>
-
-
-<div class="metric small"
-id="tagesentwicklung">
-</div>
-
-
-</div>
-
-
-
-
-
-<div class="card">
-
-
-<div class="label">
-Entwicklung durch Kurs aktuelles Jahr
-</div>
-
-
-<div class="metric small"
-id="jahresentwicklung">
-</div>
-
-
-
-
-<div class="label"
-id="entwicklungJahrGesamt">
-
-Entwicklung aktuelles Jahr inkl. Zukäufe
-
-</div>
-
-
-<div class="metric small"
-id="jahresentwicklungGesamt">
-</div>
-
-
-
-</div>
-
-
-</div>
 
 
 
@@ -427,13 +302,15 @@ id="jahresentwicklungGesamt">
 
 
 </table>
+
+
 <script>
 
 
-const STANDDATUM = "23.06.2026";
+const STANDDATUM="23.06.2026";
 
 
-const isins = [
+const isins=[
 
 {
 alias:"ETF Core MSCI World",
@@ -479,22 +356,11 @@ kursJA:457.889
 
 
 
+function formatZahl(value,stellen=3,tausender=false){
 
+let zahl=Number(value).toFixed(stellen);
 
-function formatZahl(
-value,
-stellen=3,
-tausender=false
-){
-
-
-let zahl =
-Number(value).toFixed(stellen);
-
-
-let teile =
-zahl.split(".");
-
+let teile=zahl.split(".");
 
 if(tausender){
 
@@ -505,65 +371,37 @@ teile[0]=teile[0].replace(
 
 }
 
-
 return teile.join(",");
 
-
 }
-
-
-
-
-
 
 async function ladeTagesanfang(consorsId){
 
+const response=await fetch("/api/chart/"+consorsId);
 
-const response =
-await fetch(
-"/api/chart/"+consorsId
-);
-
-
-const data =
-await response.json();
-
-
+const data=await response.json();
 
 try{
 
-
 return Number(
-data[0]
-.ChartHistoryV1
-.PERF_START_PRICE
+data[0].ChartHistoryV1.PERF_START_PRICE
 );
 
-
 }
-
 catch(e){
 
 return null;
 
 }
 
-
 }
-
-
 
 
 
 
 async function ladeETF(isin){
 
-
-const response =
-await fetch(
-"/api/"+isin
-);
-
+const response=await fetch("/api/"+isin);
 
 
 if(!response.ok){
@@ -575,107 +413,64 @@ throw new Error(
 }
 
 
+const result=await response.json();
 
-const result =
-await response.json();
-
-
-
-const data =
-result[0];
+const data=result[0];
 
 
-
-
-let exchange =
-data.ExchangesV2.find(
+let exchange=data.ExchangesV2.find(
 e=>e.CONSORS_EXCHANGE_CODE==="@_LUSG"
 );
 
 
-
 if(!exchange){
 
-
-exchange =
-data.ExchangesV2.find(
+exchange=data.ExchangesV2.find(
 e=>e.CONSORS_EXCHANGE_CODE==="_TRO"
 );
 
-
 }
-
-
 
 
 if(!exchange){
 
-throw new Error(
-"Kein Kurs gefunden"
-);
+throw new Error("Kein Kurs gefunden");
 
 }
 
 
-
-
-
-const consorsId =
-exchange.CONSORS_ID ??
-"nicht gefunden";
-
+const consorsId=exchange.CONSORS_ID ?? "nicht gefunden";
 
 
 let tagesanfang=null;
 
 
-
 if(consorsId!=="nicht gefunden"){
-
 
 try{
 
-
-tagesanfang =
+tagesanfang=
 await ladeTagesanfang(consorsId);
-
 
 }
 catch(e){}
 
-
 }
 
 
 
-
-
-const kurs =
-Number(exchange.PRICE);
-
-
+const kurs=Number(exchange.PRICE);
 
 
 let tagesentwicklung=null;
 
 
+if(tagesanfang!==null && tagesanfang!==0){
 
-
-if(
-tagesanfang!==null &&
-tagesanfang!==0
-){
-
-
-tagesentwicklung =
-(
-(kurs-tagesanfang)
-/tagesanfang
-)*100;
-
+tagesentwicklung=
+((kurs-tagesanfang)/tagesanfang)*100;
 
 }
-
 
 
 
@@ -690,42 +485,27 @@ zeit:exchange.DATETIME_PRICE
 
 };
 
-
 }
-
-
-
 
 
 
 
 function formatDatum(value){
 
-
-const d =
-new Date(value);
-
-
+const d=new Date(value);
 
 return d.toLocaleString(
 "de-DE",
 {
-
 day:"2-digit",
 month:"2-digit",
 year:"numeric",
 hour:"2-digit",
 minute:"2-digit"
-
 }
-
 );
 
-
 }
-
-
-
 
 
 
@@ -734,57 +514,31 @@ minute:"2-digit"
 async function ladeAlleKurse(){
 
 
+const tbody=document.getElementById("tableBody");
 
-const tbody =
-document.getElementById(
-"tableBody"
-);
-
-
-
-const history =
-document.getElementById(
-"historyBody"
-);
-
+const history=document.getElementById("historyBody");
 
 
 tbody.innerHTML="";
 history.innerHTML="";
 
 
-
-
 let gesamtwert=0;
-
 let startwertHeute=0;
-
 let tagesentwicklungProzent=0;
-
 let jahresAktuell=0;
-
 let jahresAnfang=0;
-
-
-
-
 
 
 
 for(const item of isins){
 
 
-
-const historischerGesamtwert =
-item.anzahlJA *
-item.kursJA;
+const historischerGesamtwert=
+item.anzahlJA*item.kursJA;
 
 
-
-jahresAnfang +=
-historischerGesamtwert;
-
-
+jahresAnfang+=historischerGesamtwert;
 
 
 
@@ -792,27 +546,18 @@ history.innerHTML+=`
 
 <tr>
 
-<td>
-${item.alias}
-</td>
-
+<td>${item.alias}</td>
 
 <td class="kurs">
 ${formatZahl(item.anzahlJA,6,true)}
 </td>
 
-
 <td class="kurs">
 ${formatZahl(item.kursJA,3)} €
 </td>
 
-
 <td class="kurs">
-${formatZahl(
-historischerGesamtwert,
-2,
-true
-)} €
+${formatZahl(historischerGesamtwert,2,true)} €
 </td>
 
 
@@ -823,47 +568,27 @@ true
 
 
 
-
-
 try{
 
 
-
-const etf =
-await ladeETF(item.isin);
+const etf=await ladeETF(item.isin);
 
 
+const wert=item.anzahl*etf.kurs;
 
 
-const wert =
-item.anzahl *
-etf.kurs;
+gesamtwert+=wert;
 
 
-
-gesamtwert += wert;
-
-
-
-jahresAktuell +=
-item.anzahlJA *
-etf.kurs;
-
-
+jahresAktuell+=item.anzahlJA*etf.kurs;
 
 
 
 if(etf.tagesanfang!==null){
 
-
-startwertHeute +=
-item.anzahl *
-etf.tagesanfang;
-
+startwertHeute+=item.anzahl*etf.tagesanfang;
 
 }
-
-
 
 
 
@@ -872,44 +597,24 @@ tbody.innerHTML+=`
 
 <tr>
 
+<td>${item.alias}</td>
 
-<td>
-${item.alias}
-</td>
+<td>${item.isin}</td>
 
 
-<td>
-${item.isin}
+<td class="kurs">
+${formatZahl(item.anzahl,6,true)}
 </td>
 
 
 <td class="kurs">
-${formatZahl(
-item.anzahl,
-6,
-true
-)}
+${formatZahl(etf.kurs,3)} €
 </td>
-
 
 
 <td class="kurs">
-${formatZahl(
-etf.kurs,
-3
-)} €
+${formatZahl(wert,2,true)} €
 </td>
-
-
-
-<td class="kurs">
-${formatZahl(
-wert,
-2,
-true
-)} €
-</td>
-
 
 
 <td class="kurs anteil">
@@ -917,25 +622,17 @@ true
 </td>
 
 
-
-
 <td class="kurs">
 
 ${
 etf.tagesanfang!==null
 ?
-formatZahl(
-etf.tagesanfang,
-3
-)+" €"
+formatZahl(etf.tagesanfang,3)+" €"
 :
 "-"
-
 }
 
 </td>
-
-
 
 
 <td class="kurs">
@@ -944,47 +641,29 @@ ${
 etf.tagesentwicklung===null ||
 Math.abs(etf.tagesentwicklung)<0.005
 ?
-
 ""
-
 :
-
 `
-
 <span style="color:${etf.tagesentwicklung<0?"red":"green"}">
 
-${formatZahl(
-etf.tagesentwicklung,
-2
-)} %
+${formatZahl(etf.tagesentwicklung,2)} %
 
-</span>
-
-`
-
+</span>`
 }
 
 </td>
 
 
-
-
-
 <td class="zeit">
 
-${formatDatum(
-etf.zeit
-)}
+${formatDatum(etf.zeit)}
 
 </td>
 
 
 <td style="display:none;">
-
 ${etf.consorsId}
-
 </td>
-
 
 
 </tr>
@@ -1004,8 +683,7 @@ tbody.innerHTML+=`
 
 <td colspan="10">
 
-Fehler bei ${item.alias}:
-${err.message}
+Fehler bei ${item.alias}: ${err.message}
 
 </td>
 
@@ -1013,163 +691,92 @@ ${err.message}
 
 `;
 
+}
+
 
 }
 
 
 
-}
 
 
-
-
-
-
-document.getElementById(
-"gesamtwert"
-).innerHTML =
+document.getElementById("gesamtwert").innerHTML=
 
 "<strong>"+
-formatZahl(
-gesamtwert,
-2,
-true
-)+
+formatZahl(gesamtwert,2,true)+
 " €</strong>";
 
 
 
 
 
-const anteilSpalten =
+const anteilSpalten=
 document.querySelectorAll(".anteil");
-
 
 
 let index=0;
 
 
 
-
 for(const item of isins){
 
+const etf=await ladeETF(item.isin);
 
-const etf =
-await ladeETF(item.isin);
-
-
-
-const wert =
-item.anzahl *
-etf.kurs;
+const wert=item.anzahl*etf.kurs;
 
 
-
-const anteil =
-Math.round(
-(wert/gesamtwert)*100
-);
-
-
-
-anteilSpalten[index].innerHTML =
-anteil+" %";
+anteilSpalten[index].innerHTML=
+Math.round((wert/gesamtwert)*100)+" %";
 
 
 index++;
 
-
 }
+
 
 
 
 
 if(startwertHeute!==0){
 
-
-tagesentwicklungProzent =
-(
-(gesamtwert/startwertHeute)-1
-)*100;
-
+tagesentwicklungProzent=
+((gesamtwert/startwertHeute)-1)*100;
 
 }
 
 
 
 
-
-const tagesentwicklungBetrag =
+const tagesentwicklungBetrag=
 gesamtwert-startwertHeute;
 
 
 
-
-document.getElementById(
-"entwicklungHeute"
-).innerHTML =
+document.getElementById("entwicklungHeute").innerHTML=
 
 "Entwicklung heute (Startwert: "+
-formatZahl(
-startwertHeute,
-2,
-true
-)+
+formatZahl(startwertHeute,2,true)+
 " €)";
 
 
 
 
 
-document.getElementById(
-"tagesentwicklung"
-).innerHTML =
-
+document.getElementById("tagesentwicklung").innerHTML=
 
 "<strong style='color:"+
-(
-tagesentwicklungProzent<0
-?
-"red"
-:
-"green"
-)+
+(tagesentwicklungProzent<0?"red":"green")+
 "'>"+
 
+(tagesentwicklungProzent>=0?"+":"")+
 
-(
-tagesentwicklungProzent>=0
-?
-"+"
-:
-""
-)+
-
-
-formatZahl(
-tagesentwicklungProzent,
-2
-)+
-
+formatZahl(tagesentwicklungProzent,2)+
 
 " % ("+
 
+(tagesentwicklungBetrag>=0?"+":"")+
 
-(
-tagesentwicklungBetrag>=0
-?
-"+"
-:
-""
-)+
-
-
-formatZahl(
-tagesentwicklungBetrag,
-2,
-true
-)+
-
+formatZahl(tagesentwicklungBetrag,2,true)+
 
 " €)</strong>";
 
@@ -1177,79 +784,29 @@ true
 
 
 
+const jahresentwicklung=
+
+((jahresAktuell/jahresAnfang)-1)*100;
 
 
-
-const jahresentwicklung =
-
-(
-(jahresAktuell/jahresAnfang)-1
-)*100;
-
-
-
-
-
-const jahresentwicklungBetrag =
-
+const jahresentwicklungBetrag=
 jahresAktuell-jahresAnfang;
 
 
 
+document.getElementById("jahresentwicklung").innerHTML=
 
+"<strong>"+
 
-document.getElementById(
-"jahresentwicklung"
-).innerHTML =
+(jahresentwicklung>=0?"+":"")+
 
-
-
-"<strong style='color:"+
-
-(
-jahresentwicklung<0
-?
-"red"
-:
-"black"
-)+
-
-"'>"+
-
-
-(
-jahresentwicklung>=0
-?
-"+"
-:
-""
-)+
-
-
-formatZahl(
-jahresentwicklung,
-2
-)+
-
+formatZahl(jahresentwicklung,2)+
 
 " % ("+
 
+(jahresentwicklungBetrag>=0?"+":"")+
 
-(
-jahresentwicklungBetrag>=0
-?
-"+"
-:
-""
-)+
-
-
-formatZahl(
-jahresentwicklungBetrag,
-2,
-true
-)+
-
+formatZahl(jahresentwicklungBetrag,2,true)+
 
 " €)</strong>";
 
@@ -1258,28 +815,10 @@ true
 
 
 
-
-
-const jahresentwicklungGesamtBetrag =
-
-gesamtwert-jahresAnfang;
-
-
-
-
-
-
-document.getElementById(
-"entwicklungJahrGesamt"
-).innerHTML =
-
+document.getElementById("entwicklungJahrGesamt").innerHTML=
 
 "Entwicklung aktuelles Jahr inkl. Zukäufe (Startwert: "+
-formatZahl(
-jahresAnfang,
-2,
-true
-)+
+formatZahl(jahresAnfang,2,true)+
 " €)";
 
 
@@ -1287,13 +826,10 @@ true
 
 
 
-
-const jetztDatum =
-new Date();
+const jetztDatum=new Date();
 
 
-
-const jahresStart =
+const jahresStart=
 new Date(
 jetztDatum.getFullYear(),
 0,
@@ -1301,89 +837,35 @@ jetztDatum.getFullYear(),
 );
 
 
-
-
-
-const vergangeneTage =
-
+const vergangeneTage=
 Math.floor(
-(
-jetztDatum-jahresStart
-)
-/
+(jetztDatum-jahresStart)/
 (1000*60*60*24)
 )+1;
 
 
 
+const entwicklungProTag=
+(jahresentwicklungBetrag/vergangeneTage);
 
 
 
-
-const entwicklungProTag =
-
-jahresentwicklungGesamtBetrag /
-vergangeneTage;
-
-
-
-
-
-
-
-document.getElementById(
-"jahresentwicklungGesamt"
-).innerHTML =
-
-
+document.getElementById("jahresentwicklungGesamt").innerHTML=
 
 "<strong style='color:"+
-
-(
-jahresentwicklungGesamtBetrag<0
-?
-"red"
-:
-"black"
-)+
-
+(jahresentwicklungBetrag<0?"red":"black")+
 "'>"+
 
 
-(
-jahresentwicklungGesamtBetrag>=0
-?
-"+"
-:
-""
-)+
+(jahresentwicklungBetrag>=0?"+":"")+
 
-
-formatZahl(
-jahresentwicklungGesamtBetrag,
-2,
-true
-)+
-
+formatZahl(jahresentwicklungBetrag,2,true)+
 
 " € ("+
 
+(entwicklungProTag>=0?"+":"")+
 
-(
-entwicklungProTag>=0
-?
-"+"
-:
-""
-)+
-
-
-formatZahl(
-entwicklungProTag,
-2,
-true
-)+
-
+formatZahl(entwicklungProTag,2,true)+
 
 " €/Tag)</strong>";
 
@@ -1391,57 +873,34 @@ true
 
 
 
+const jetzt=new Date();
 
 
-
-const jetzt =
-new Date();
-
-
-
-
-
-document.getElementById(
-"updateInfo"
-).textContent =
-
-
+document.getElementById("updateInfo").textContent=
 
 "Letzte Aktualisierung: "+
-
-
 jetzt.toLocaleString(
 "de-DE",
 {
-
 day:"2-digit",
 month:"2-digit",
 year:"numeric",
 hour:"2-digit",
 minute:"2-digit"
-
 }
-
 )
-
-
 +
 ", Stand Anteile: "
 +
 STANDDATUM;
 
 
-
-
-
 }
 
 
 
 
-
 ladeAlleKurse();
-
 
 
 setInterval(
@@ -1450,9 +909,7 @@ ladeAlleKurse,
 );
 
 
-
 </script>
-
 
 
 </div>
