@@ -504,8 +504,6 @@ return teile.join(",");
 
 }
 
-
-
 async function ladeTagesanfang(consorsId){
 
 const response =
@@ -951,15 +949,15 @@ document.getElementById(
 (tagesentwicklungProzent<0?"red":"green")+
 "'>"+
 
-(tagesentwicklungProzent>=0?"+":"")+
+(tagesentwicklungProzent>=0?"▲ ":"▼ ")+
 
-formatZahl(tagesentwicklungProzent,2)+
+formatZahl(Math.abs(tagesentwicklungProzent),2)+
 
 " % ("+
 
-(tagesentwicklungBetrag>=0?"+":"")+
+(tagesentwicklungBetrag>=0?"▲ ":"▼ ")+
 
-formatZahl(tagesentwicklungBetrag,2,true)+
+formatZahl(Math.abs(tagesentwicklungBetrag),2,true)+
 
 " €)</strong>";
 
@@ -984,15 +982,15 @@ document.getElementById(
 (jahresentwicklung<0?"red":"black")+
 "'>"+
 
-(jahresentwicklung>=0?"+":"")+
+(jahresentwicklung>=0?"▲ ":"▼ ")+
 
-formatZahl(jahresentwicklung,2)+
+formatZahl(Math.abs(jahresentwicklung),2)+
 
 " % ("+
 
-(jahresentwicklungBetrag>=0?"+":"")+
+(jahresentwicklungBetrag>=0?"▲ ":"▼ ")+
 
-formatZahl(jahresentwicklungBetrag,2,true)+
+formatZahl(Math.abs(jahresentwicklungBetrag),2,true)+
 
 " €)</strong>";
 
@@ -1049,23 +1047,19 @@ document.getElementById(
 (jahresentwicklungGesamtBetrag<0?"red":"black")+
 "'>"+
 
-(jahresentwicklungGesamtBetrag>=0?"+":"")+
+(jahresentwicklungGesamtBetrag>=0?"▲ ":"▼ ")+
 
-formatZahl(jahresentwicklungGesamtBetrag,2,true)+
+formatZahl(Math.abs(jahresentwicklungGesamtBetrag),2,true)+
 
 " € ("+
 
-(entwicklungProTag>=0?"+":"")+
+(entwicklungProTag>=0?"▲ ":"▼ ")+
 
-formatZahl(entwicklungProTag,2,true)+
+formatZahl(Math.abs(entwicklungProTag),2,true)+
 
 " €/Tag)</strong>";
 
 
-
-
-const jetzt =
-new Date();
 
 
 document.getElementById(
@@ -1074,7 +1068,7 @@ document.getElementById(
 
 "Letzte Aktualisierung: "+
 
-jetzt.toLocaleString(
+new Date().toLocaleString(
 "de-DE",
 {
 
