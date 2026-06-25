@@ -6,7 +6,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>ETF Kurse</title>
+<title>Stock Market View</title>
 
 <style>
 
@@ -101,7 +101,6 @@ td.zeit {
 </table>
 
 
-
 <div class="footer" id="updateInfo"></div>
 
 
@@ -110,13 +109,18 @@ td.zeit {
 <div class="gesamtwert" id="gesamtwert"></div>
 
 
-
 <h1 id="entwicklungHeute">
 Entwicklung heute
 </h1>
 
 <div class="gesamtwert" id="tagesentwicklung"></div>
 
+
+<h1>
+Entwicklung durch Kurs aktuelles Jahr
+</h1>
+
+<div class="gesamtwert" id="jahresentwicklung"></div>
 
 
 <h1>Werte Jahresanfang</h1>
@@ -141,11 +145,9 @@ Entwicklung heute
 </table>
 
 
-
 <script>
 
 
-// STANDDATUM (manuell anpassen)
 const STANDDATUM = "23.06.2026";
 
 
@@ -192,7 +194,6 @@ kursJA:457.889
 }
 
 ];
-
 
 
 function formatZahl(value,stellen=3,tausender=false){
@@ -245,7 +246,6 @@ return null;
 
 
 
-
 async function ladeETF(isin){
 
 const response =
@@ -275,7 +275,6 @@ e=>e.CONSORS_EXCHANGE_CODE==="@_LUSG"
 );
 
 
-
 if(!exchange){
 
 exchange =
@@ -286,7 +285,6 @@ e=>e.CONSORS_EXCHANGE_CODE==="_TRO"
 }
 
 
-
 if(!exchange){
 
 throw new Error("Kein Kurs gefunden");
@@ -294,13 +292,11 @@ throw new Error("Kein Kurs gefunden");
 }
 
 
-
 const consorsId =
 exchange.CONSORS_ID ?? "nicht gefunden";
 
 
 let tagesanfang=null;
-
 
 
 if(consorsId!=="nicht gefunden"){
@@ -317,14 +313,11 @@ catch(e){}
 }
 
 
-
 const kurs =
 Number(exchange.PRICE);
 
 
-
 let tagesentwicklung=null;
-
 
 
 if(tagesanfang!==null && tagesanfang!==0){
@@ -334,7 +327,6 @@ tagesentwicklung =
 /tagesanfang)*100;
 
 }
-
 
 
 return {
@@ -349,10 +341,6 @@ zeit:exchange.DATETIME_PRICE
 };
 
 }
-
-
-
-
 
 function formatDatum(value){
 
@@ -397,6 +385,9 @@ let gesamtwert=0;
 let startwertHeute=0;
 let tagesentwicklungProzent=0;
 
+let jahresAktuell=0;
+let jahresAnfang=0;
+
 
 
 for(const item of isins){
@@ -405,6 +396,9 @@ for(const item of isins){
 
 const historischerGesamtwert =
 item.anzahlJA * item.kursJA;
+
+
+jahresAnfang += historischerGesamtwert;
 
 
 
@@ -445,6 +439,11 @@ item.anzahl * etf.kurs;
 
 
 gesamtwert += wert;
+
+
+
+jahresAktuell +=
+item.anzahlJA * etf.kurs;
 
 
 
@@ -561,6 +560,11 @@ tagesentwicklungProzent =
 
 
 
+const tagesentwicklungBetrag =
+gesamtwert - startwertHeute;
+
+
+
 document.getElementById("entwicklungHeute").innerHTML =
 
 "Entwicklung heute (Startwert: "+
@@ -576,7 +580,34 @@ document.getElementById("tagesentwicklung").innerHTML =
 "'>"+
 (tagesentwicklungProzent >= 0 ? "+" : "")+
 formatZahl(tagesentwicklungProzent,2)+
-" %</strong>";
+" % ("+
+(tagesentwicklungBetrag >= 0 ? "+" : "")+
+formatZahl(tagesentwicklungBetrag,2,true)+
+" €)</strong>";
+
+
+
+const jahresentwicklung =
+((jahresAktuell / jahresAnfang)-1)*100;
+
+
+
+const jahresentwicklungBetrag =
+jahresAktuell - jahresAnfang;
+
+
+
+document.getElementById("jahresentwicklung").innerHTML =
+
+"<strong style='color:"+
+(jahresentwicklung < 0 ? "red":"black")+
+"'>"+
+(jahresentwicklung >= 0 ? "+" : "")+
+formatZahl(jahresentwicklung,2)+
+" % ("+
+(jahresentwicklungBetrag >= 0 ? "+" : "")+
+formatZahl(jahresentwicklungBetrag,2,true)+
+" €)</strong>";
 
 
 
