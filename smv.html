@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ETF Kurse</title>
+
+<style>
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background: #f5f5f5;
+}
+
+h1 {
+    margin-top: 40px;
+    margin-bottom: 15px;
+    font-size: 14px;
+    color: #666;
+    font-weight: normal;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+    max-width: 1400px;
+    background: white;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
+th {
+    background: #e9ecef;
+}
+
+td.kurs {
+    text-align: right;
+    font-weight: bold;
+}
+
+td.zeit {
+    white-space: nowrap;
+}
+
+.footer {
+    margin-top: 10px;
+    color: #666;
+}
+
+.gesamtwert {
+    font-size: 28px;
+    font-weight: bold;
+    margin-bottom: 30px;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<h1>Aktuelle Kurse</h1>
+
+
+<table>
+
+<thead>
+
+<tr>
+<th>Anlage</th>
+<th>ISIN</th>
+<th>Anteile</th>
+<th>Kurs</th>
+<th>Wert</th>
+<th>Kurs Tagesanfang</th>
+<th>Tagesentwicklung</th>
+<th>Zeitpunkt</th>
+<th style="display:none;">ConsorsID</th>
+</tr>
+
+</thead>
+
+
+<tbody id="tableBody">
+
+<tr>
+<td colspan="9">Lade Daten...</td>
+</tr>
+
+</tbody>
+
+</table>
+
+
+
+<div class="footer" id="updateInfo"></div>
+
+
+<h1>Gesamtwert</h1>
+
+<div class="gesamtwert" id="gesamtwert"></div>
+
+
+
+<h1 id="entwicklungHeute">
+Entwicklung heute
+</h1>
+
+<div class="gesamtwert" id="tagesentwicklung"></div>
+
+
+
+<h1>Werte Jahresanfang</h1>
+
+
+<table>
+
+<thead>
+
+<tr>
+<th>Anlage</th>
+<th>Anteile Jahresanfang</th>
+<th>Kurs Jahresanfang</th>
+<th>Wert Jahresanfang</th>
+</tr>
+
+</thead>
+
+
+<tbody id="historyBody"></tbody>
+
+</table>
+
+
+
+<script>
+
+
+// STANDDATUM (manuell anpassen)
+const STANDDATUM = "23.06.2026";
+
+
+const isins = [
+
+{
+alias:"ETF Core MSCI World",
+isin:"IE00B4L5Y983",
+anzahl:500.084082,
+anzahlJA:500.084082,
+kursJA:111.74
+},
+
+{
+alias:"ETF MSCI World SRI",
+isin:"IE00BYX2JD69",
+anzahl:4655.231737,
+anzahlJA:3792.520514,
+kursJA:12.19
+},
+
+{
+alias:"Aktie Allianz",
+isin:"DE0008404005",
+anzahl:91.862,
+anzahlJA:91.862,
+kursJA:390.50
+},
+
+{
+alias:"ETF AI Infrastructure",
+isin:"IE000X59ZHE2",
+anzahl:476.198976,
+anzahlJA:476.198976,
+kursJA:6.19
+},
+
+{
+alias:"Fonds Allianz US Equity",
+isin:"LU0256843979",
+anzahl:5.386,
+anzahlJA:4.873,
+kursJA:457.889
+}
+
+];
+
+
+
+function formatZahl(value,stellen=3,tausender=false){
+
+let zahl=Number(value).toFixed(stellen);
+
+let teile=zahl.split(".");
+
+if(tausender){
+
+teile[0]=teile[0].replace(
+/\B(?=(\d{3})+(?!\d))/g,
+"."
+);
+
+}
+
+return teile.join(",");
+
+}
+
+
+
+async function ladeTagesanfang(consorsId){
+
+const response =
+await fetch("/api/chart/"+consorsId);
+
+const data =
+await response.json();
+
+
+try{
+
+return Number(
+data[0]
+.ChartHistoryV1
+.PERF_START_PRICE
+);
+
+}
+
+catch(e){
+
+return null;
+
+}
+
+}
+
+
+
+
+async function ladeETF(isin){
+
+const response =
+await fetch("/api/"+isin);
+
+
+if(!response.ok){
+
+throw new Error(
+"HTTP Fehler "+response.status
+);
+
+}
+
+
+const result =
+await response.json();
+
+
+const data =
+result[0];
+
+
+let exchange =
+data.ExchangesV2.find(
+e=>e.CONSORS_EXCHANGE_CODE==="@_LUSG"
+);
+
+
+
+if(!exchange){
+
+exchange =
+data.ExchangesV2.find(
+e=>e.CONSORS_EXCHANGE_CODE==="_TRO"
+);
+
+}
+
+
+
+if(!exchange){
+
+throw new Error("Kein Kurs gefunden");
+
+}
+
+
+
+const consorsId =
+exchange.CONSORS_ID ?? "nicht gefunden";
+
+
+let tagesanfang=null;
+
+
+
+if(consorsId!=="nicht gefunden"){
+
+try{
+
+tagesanfang =
+await ladeTagesanfang(consorsId);
+
+}
+
+catch(e){}
+
+}
+
+
+
+const kurs =
+Number(exchange.PRICE);
+
+
+
+let tagesentwicklung=null;
+
+
+
+if(tagesanfang!==null && tagesanfang!==0){
+
+tagesentwicklung =
+((kurs-tagesanfang)
+/tagesanfang)*100;
+
+}
+
+
+
+return {
+
+isin,
+consorsId,
+tagesanfang,
+kurs,
+tagesentwicklung,
+zeit:exchange.DATETIME_PRICE
+
+};
+
+}
+
+
+
+
+
+function formatDatum(value){
+
+const d =
+new Date(value);
+
+
+return d.toLocaleString(
+"de-DE",
+{
+day:"2-digit",
+month:"2-digit",
+year:"numeric",
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+}
+);
+
+}
+
+
+
+
+
+async function ladeAlleKurse(){
+
+
+const tbody =
+document.getElementById("tableBody");
+
+
+const history =
+document.getElementById("historyBody");
+
+
+tbody.innerHTML="";
+history.innerHTML="";
+
+
+let gesamtwert=0;
+let startwertHeute=0;
+let tagesentwicklungProzent=0;
+
+
+
+for(const item of isins){
+
+
+
+const historischerGesamtwert =
+item.anzahlJA * item.kursJA;
+
+
+
+history.innerHTML+=`
+
+<tr>
+
+<td>${item.alias}</td>
+
+<td class="kurs">
+${formatZahl(item.anzahlJA,6,true)}
+</td>
+
+<td class="kurs">
+${formatZahl(item.kursJA,3)} €
+</td>
+
+<td class="kurs">
+${formatZahl(historischerGesamtwert,2,true)} €
+</td>
+
+</tr>
+
+`;
+
+
+
+try{
+
+
+const etf =
+await ladeETF(item.isin);
+
+
+
+const wert =
+item.anzahl * etf.kurs;
+
+
+gesamtwert += wert;
+
+
+
+if(etf.tagesanfang !== null){
+
+startwertHeute +=
+item.anzahl *
+etf.tagesanfang;
+
+}
+
+
+
+tbody.innerHTML+=`
+
+<tr>
+
+<td>${item.alias}</td>
+
+<td>${item.isin}</td>
+
+<td class="kurs">
+${formatZahl(item.anzahl,6,true)}
+</td>
+
+<td class="kurs">
+${formatZahl(etf.kurs,3)} €
+</td>
+
+<td class="kurs">
+${formatZahl(wert,2,true)} €
+</td>
+
+<td class="kurs">
+
+${
+etf.tagesanfang!==null
+?
+formatZahl(etf.tagesanfang,3)+" €"
+:
+"-"
+}
+
+</td>
+
+
+<td class="kurs">
+
+${
+etf.tagesentwicklung===null ||
+Math.abs(etf.tagesentwicklung)<0.005
+?
+""
+:
+`
+<span style="color:${etf.tagesentwicklung<0?"red":"green"}">
+${formatZahl(etf.tagesentwicklung,2)} %
+</span>
+`
+}
+
+</td>
+
+
+<td class="zeit">
+${formatDatum(etf.zeit)}
+</td>
+
+
+<td style="display:none;">
+${etf.consorsId}
+</td>
+
+</tr>
+
+`;
+
+}
+
+catch(err){
+
+tbody.innerHTML+=`
+
+<tr>
+
+<td colspan="9">
+Fehler bei ${item.alias}: ${err.message}
+</td>
+
+</tr>
+
+`;
+
+}
+
+}
+
+
+
+document.getElementById("gesamtwert").innerHTML =
+
+"<strong>"+
+formatZahl(gesamtwert,2,true)+
+" €</strong>";
+
+
+
+if(startwertHeute !== 0){
+
+tagesentwicklungProzent =
+((gesamtwert / startwertHeute)-1)*100;
+
+}
+
+
+
+document.getElementById("entwicklungHeute").innerHTML =
+
+"Entwicklung heute (Startwert: "+
+formatZahl(startwertHeute,2,true)+
+" €)";
+
+
+
+document.getElementById("tagesentwicklung").innerHTML =
+
+"<strong style='color:"+
+(tagesentwicklungProzent < 0 ? "red":"black")+
+"'>"+
+(tagesentwicklungProzent >= 0 ? "+" : "")+
+formatZahl(tagesentwicklungProzent,2)+
+" %</strong>";
+
+
+
+const jetzt=new Date();
+
+
+document.getElementById("updateInfo")
+.textContent=
+
+"Letzte Aktualisierung: "+
+
+jetzt.toLocaleString(
+"de-DE",
+{
+day:"2-digit",
+month:"2-digit",
+year:"numeric",
+hour:"2-digit",
+minute:"2-digit",
+second:"2-digit"
+}
+)
+
++", Stand Anteile: "+STANDDATUM;
+
+
+}
+
+
+
+ladeAlleKurse();
+
+
+setInterval(
+ladeAlleKurse,
+300000
+);
+
+
+</script>
+
+
+</body>
+
+</html>
