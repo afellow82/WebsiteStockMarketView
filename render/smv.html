@@ -60,6 +60,24 @@ td.zeit {
     margin-bottom: 30px;
 }
 
+
+/* NEU: zweispaltiger Bereich */
+
+.zusammenfassung {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    max-width: 1400px;
+    margin-top: 20px;
+}
+
+.zusammenfassung > div {
+    background: white;
+    padding: 5px;
+    width: 85%;
+}
+
+
 </style>
 
 </head>
@@ -105,6 +123,13 @@ td.zeit {
 <div class="footer" id="updateInfo"></div>
 
 
+
+<div class="zusammenfassung">
+
+
+<div>
+
+
 <h1>Gesamtwert</h1>
 
 <div class="gesamtwert" id="gesamtwert"></div>
@@ -117,6 +142,13 @@ Entwicklung heute
 <div class="gesamtwert" id="tagesentwicklung"></div>
 
 
+</div>
+
+
+
+<div>
+
+
 <h1>
 Entwicklung durch Kurs aktuelles Jahr
 </h1>
@@ -124,11 +156,20 @@ Entwicklung durch Kurs aktuelles Jahr
 <div class="gesamtwert" id="jahresentwicklung"></div>
 
 
+
 <h1 id="entwicklungJahrGesamt">
 Entwicklung aktuelles Jahr inkl. Zukäufe
 </h1>
 
 <div class="gesamtwert" id="jahresentwicklungGesamt"></div>
+
+
+</div>
+
+
+</div>
+
+
 
 
 <h1>Werte Jahresanfang</h1>
@@ -151,6 +192,7 @@ Entwicklung aktuelles Jahr inkl. Zukäufe
 <tbody id="historyBody"></tbody>
 
 </table>
+
 
 
 <script>
@@ -204,6 +246,7 @@ kursJA:457.889
 ];
 
 
+
 function formatZahl(value,stellen=3,tausender=false){
 
 let zahl=Number(value).toFixed(stellen);
@@ -222,6 +265,9 @@ teile[0]=teile[0].replace(
 return teile.join(",");
 
 }
+
+
+
 async function ladeTagesanfang(consorsId){
 
 const response =
@@ -347,9 +393,6 @@ zeit:exchange.DATETIME_PRICE
 
 }
 
-
-
-
 function formatDatum(value){
 
 const d =
@@ -460,7 +503,8 @@ item.anzahl *
 etf.tagesanfang;
 
 }
-id="3kq9w4"
+
+
 tbody.innerHTML+=`
 
 <tr>
@@ -554,11 +598,13 @@ Fehler bei ${item.alias}: ${err.message}
 
 
 
+
 document.getElementById("gesamtwert").innerHTML =
 
 "<strong>"+
 formatZahl(gesamtwert,2,true)+
 " €</strong>";
+
 
 
 
@@ -597,7 +643,6 @@ index++;
 
 
 
-
 if(startwertHeute !== 0){
 
 tagesentwicklungProzent =
@@ -631,6 +676,11 @@ formatZahl(tagesentwicklungProzent,2)+
 (tagesentwicklungBetrag >= 0 ? "+" : "")+
 formatZahl(tagesentwicklungBetrag,2,true)+
 " €)</strong>";
+
+
+
+
+
 const jahresentwicklung =
 ((jahresAktuell / jahresAnfang)-1)*100;
 
@@ -639,10 +689,6 @@ const jahresentwicklung =
 const jahresentwicklungBetrag =
 jahresAktuell - jahresAnfang;
 
-
-
-const jahresentwicklungGesamtBetrag =
-gesamtwert - jahresAnfang;
 
 
 
@@ -660,11 +706,19 @@ formatZahl(jahresentwicklungBetrag,2,true)+
 
 
 
+
+
+const jahresentwicklungGesamtBetrag =
+gesamtwert - jahresAnfang;
+
+
+
 document.getElementById("entwicklungJahrGesamt").innerHTML =
 
 "Entwicklung aktuelles Jahr inkl. Zukäufe (Startwert: "+
 formatZahl(jahresAnfang,2,true)+
 " €)";
+
 
 
 
@@ -685,6 +739,7 @@ Math.floor(
 
 
 
+
 const entwicklungProTag =
 jahresentwicklungGesamtBetrag /
 vergangeneTage;
@@ -702,6 +757,7 @@ formatZahl(jahresentwicklungGesamtBetrag,2,true)+
 (entwicklungProTag >= 0 ? "+" : "")+
 formatZahl(entwicklungProTag,2,true)+
 " €/Tag)</strong>";
+
 
 
 
