@@ -1004,14 +1004,25 @@ Math.abs(etf.tagesentwicklung)<0.005
 `
 <span style="color:${etf.tagesentwicklung<0?"red":"green"}">
 
-${formatZahl(etf.tagesentwicklung,2)} %
+${etf.tagesentwicklung >= 0 ? "+" : ""}${formatZahl(etf.tagesentwicklung,2)} %
+
+(${
+(
+(etf.kurs - etf.tagesanfang) * item.anzahl
+) >= 0 ? "+" : "-"
+}${formatZahl(
+Math.abs(
+(etf.kurs - etf.tagesanfang) * item.anzahl
+),
+2,
+true
+)} €)
 
 </span>
 `
 }
 
 </td>
-
 
 <td class="zeit">
 ${formatDatum(etf.zeit)}
