@@ -25,13 +25,14 @@ body {
     sans-serif;
 
     margin:0;
-    padding:25px;
+    padding:30px;
 
     background:
-    linear-gradient(
-        135deg,
-        #eef2f7,
-        #f8fafc
+    radial-gradient(
+        circle at top left,
+        #ffffff,
+        #eef2f7 45%,
+        #e5eaf2
     );
 
     color:#222;
@@ -44,25 +45,189 @@ body {
     max-width:1500px;
     margin:auto;
 
+    animation:
+    pageIn .7s ease;
+
 }
+
+
+
+@keyframes pageIn {
+
+from {
+
+    opacity:0;
+    transform:translateY(15px);
+
+}
+
+to {
+
+    opacity:1;
+    transform:translateY(0);
+
+}
+
+}
+
+
 
 
 
 h1 {
 
-    margin-top:35px;
-    margin-bottom:12px;
+    margin-top:28px;
+    margin-bottom:16px;
 
     font-size:13px;
 
     text-transform:uppercase;
-    letter-spacing:1px;
+    letter-spacing:1.2px;
 
-    color:#7b8494;
+    color:#64748b;
 
-    font-weight:600;
+    font-weight:700;
 
 }
+
+
+
+
+
+.zusammenfassung {
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(2,1fr);
+
+    gap:22px;
+
+    margin-top:8px;
+
+    margin-bottom:30px;
+
+}
+
+
+
+
+
+.card {
+
+    position:relative;
+
+    background:
+    rgba(255,255,255,.75);
+
+    backdrop-filter:
+    blur(14px);
+
+    border-radius:22px;
+
+    padding:24px;
+
+    border:
+    1px solid rgba(255,255,255,.8);
+
+    box-shadow:
+
+    0 12px 35px rgba(15,23,42,.10),
+
+    inset 0 1px 0 rgba(255,255,255,.7);
+
+
+    transition:
+
+    transform .25s ease,
+    box-shadow .25s ease;
+
+
+    animation:
+    cardIn .6s ease both;
+
+}
+
+
+
+
+.card:hover {
+
+    transform:
+    translateY(-4px);
+
+    box-shadow:
+
+    0 18px 45px rgba(15,23,42,.16);
+
+}
+
+
+
+
+
+@keyframes cardIn {
+
+from {
+
+    opacity:0;
+    transform:scale(.96);
+
+}
+
+to {
+
+    opacity:1;
+    transform:scale(1);
+
+}
+
+}
+
+
+
+
+
+.metric {
+
+    font-size:42px;
+
+    font-weight:750;
+
+    margin-bottom:18px;
+
+    color:#111827;
+
+    letter-spacing:-1px;
+
+}
+
+
+
+.metric.small {
+
+    font-size:28px;
+
+}
+
+
+
+
+.label {
+
+    font-size:12px;
+
+    color:#64748b;
+
+    text-transform:uppercase;
+
+    letter-spacing:1px;
+
+    margin-bottom:8px;
+
+}
+
+
 
 
 
@@ -70,44 +235,111 @@ table {
 
     width:100%;
 
-    border-collapse:separate;
+    border-collapse:
+
+    separate;
+
     border-spacing:0;
 
     overflow:hidden;
 
-    background:white;
+    background:
 
-    border-radius:16px;
+    rgba(255,255,255,.9);
+
+    border-radius:18px;
+
+    border:
+
+    1px solid #e5e7eb;
+
 
     box-shadow:
-    0 8px 25px rgba(0,0,0,.08);
+
+    0 12px 30px rgba(15,23,42,.09);
+
+
+    transition:
+
+    box-shadow .25s ease;
 
 }
+
+
+
+table:hover {
+
+    box-shadow:
+
+    0 18px 40px rgba(15,23,42,.14);
+
+}
+
+
 
 
 
 th {
 
-    background:#f1f5f9;
+    background:
+
+    linear-gradient(
+        180deg,
+        #f8fafc,
+        #eef2f7
+    );
 
     color:#475569;
 
-    font-size:13px;
+    font-size:12px;
 
-    font-weight:600;
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    letter-spacing:.4px;
 
 }
+
+
 
 
 
 th,
 td {
 
-    padding:13px 14px;
+    padding:
 
-    border-bottom:1px solid #e5e7eb;
+    14px 16px;
+
+    border-bottom:
+
+    1px solid #e5e7eb;
 
 }
+
+
+
+
+
+tbody tr {
+
+    transition:
+
+    background .2s ease,
+    transform .2s ease;
+
+}
+
+
+
+tbody tr:hover {
+
+    background:#f8fafc;
+
+}
+
+
 
 
 
@@ -116,6 +348,8 @@ tr:last-child td {
     border-bottom:none;
 
 }
+
+
 
 
 
@@ -131,7 +365,7 @@ td.kurs {
 
     text-align:right;
 
-    font-weight:600;
+    font-weight:650;
 
 }
 
@@ -149,9 +383,13 @@ td.zeit {
 
 
 
+
+
 .footer {
 
-    margin-top:12px;
+    margin-top:16px;
+
+    padding-left:5px;
 
     color:#64748b;
 
@@ -162,75 +400,11 @@ td.zeit {
 
 
 
+.section-title {
 
-.zusammenfassung {
+    margin-top:35px;
 
-    display:grid;
-
-    grid-template-columns:
-    repeat(2,1fr);
-
-    gap:25px;
-
-    margin-top:5px;
-
-}
-
-
-
-.card {
-
-    background:
-    rgba(255,255,255,.85);
-
-    backdrop-filter:
-    blur(10px);
-
-    border-radius:20px;
-
-    padding:20px;
-
-    box-shadow:
-    0 10px 30px rgba(0,0,0,.08);
-
-}
-
-
-
-.metric {
-
-    font-size:40px;
-
-    font-weight:700;
-
-    margin-bottom:15px;
-
-    color:#111827;
-
-}
-
-
-
-.metric.small {
-
-    font-size:26px;
-
-}
-
-
-
-
-.label {
-
-    font-size:13px;
-
-    color:#64748b;
-
-    text-transform:uppercase;
-
-    letter-spacing:.8px;
-
-    margin-bottom:6px;
+    padding-left:4px;
 
 }
 
@@ -250,8 +424,6 @@ td.zeit {
 
 table {
 
-    font-size:12px;
-
     display:block;
 
     overflow-x:auto;
@@ -262,7 +434,7 @@ table {
 
 .metric {
 
-    font-size:24px;
+    font-size:26px;
 
 }
 
@@ -286,7 +458,9 @@ table {
 
 
 
-<h1>Depotübersicht</h1>
+<h1 class="section-title">
+Depotübersicht
+</h1>
 
 
 
@@ -359,7 +533,9 @@ id="jahresentwicklungGesamt">
 
 
 
-<h1>Aktuelle Kurse</h1>
+<h1 class="section-title">
+Aktuelle Kurse
+</h1>
 
 
 
@@ -404,7 +580,9 @@ Lade Daten...
 
 
 
-<h1>Werte Jahresanfang</h1>
+<h1 class="section-title">
+Werte Jahresanfang
+</h1>
 
 
 
@@ -433,13 +611,9 @@ Lade Daten...
 </table>
 
 
-
 <script>
 
-
 const STANDDATUM = "23.06.2026";
-
-
 const isins = [
 {
 alias:"ETF Core MSCI World",
@@ -504,6 +678,8 @@ return teile.join(",");
 
 }
 
+
+
 async function ladeTagesanfang(consorsId){
 
 const response =
@@ -530,6 +706,7 @@ return null;
 }
 
 }
+
 
 
 
