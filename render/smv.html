@@ -318,8 +318,25 @@ td {
 
 }
 
+td a {
+    color:inherit;
+    text-decoration:none;
+    font-weight:400;
+}
 
+td a:hover {
+    text-decoration:underline;
+}
 
+.tagesanfang-link {
+    color: inherit;
+    text-decoration: none;
+    font-weight:650;
+}
+
+.tagesanfang-link:hover {
+    text-decoration: underline;
+}
 
 
 tbody tr {
@@ -576,6 +593,24 @@ Lade Daten...
 <div class="footer" id="updateInfo"></div>
 
 
+<h1 class="section-title">
+Sparplanübersicht
+</h1>
+
+<table>
+
+<thead>
+<tr>
+<th>Anlage</th>
+<th>Sparplanbetrag</th>
+<th>Sparplanrhythmus</th>
+</tr>
+</thead>
+
+<tbody id="sparplanBody"></tbody>
+
+</table>
+
 
 <h1 class="section-title">
 Werte Jahresanfang
@@ -617,22 +652,31 @@ const isins = [
 {
 alias:"ETF Core MSCI World",
 isin:"IE00B4L5Y983",
+link:"https://www.onvista.de/etf/iShares-Core-MSCI-World-ETF-IE00B4L5Y983?notation=244540011",
 anzahl:500.084082,
 anzahlJA:500.084082,
-kursJA:111.74
+kursJA:111.74,
+sparplanBetrag:400.00,
+sparplanRhytmus:"monatlich",
+sparplanTag:2
 },
 
 {
 alias:"ETF MSCI World SRI",
 isin:"IE00BYX2JD69",
+link:"https://www.onvista.de/etf/iShares-MSCI-World-SRI-EUR-ACC-ETF-IE00BYX2JD69?notation=289979926",
 anzahl:4655.231737,
 anzahlJA:3792.520514,
-kursJA:12.19
+kursJA:12.19,
+sparplanBetrag:400.00,
+sparplanRhytmus:"monatlich",
+sparplanTag:2
 },
 
 {
 alias:"Aktie Allianz",
 isin:"DE0008404005",
+link:"https://www.onvista.de/aktien/Allianz-Aktie-DE0008404005?notation=244494211",
 anzahl:91.862,
 anzahlJA:91.862,
 kursJA:390.50
@@ -641,6 +685,7 @@ kursJA:390.50
 {
 alias:"ETF AI Infrastructure",
 isin:"IE000X59ZHE2",
+link:"https://www.onvista.de/etf/iShs-III-iShs-AI-Infrastr-ETF-Reg-Shs-USD-Acc-oN-ETF-IE000X59ZHE2?notation=486568018",
 anzahl:476.198976,
 anzahlJA:476.198976,
 kursJA:6.19
@@ -649,13 +694,16 @@ kursJA:6.19
 {
 alias:"Fonds Allianz US Equity",
 isin:"LU0256843979",
+link:"https://www.onvista.de/fonds/ALLIANZ-GIF-ALLIANZ-US-EQUITY-FUND-A-EUR-DIS-Fonds-LU0256843979?notation=273709592",
 anzahl:5.386,
 anzahlJA:4.873,
-kursJA:457.889
+kursJA:457.889,
+sparplanBetrag:40.00,
+sparplanRhytmus:"monatlich",
+sparplanTag:24
 }
 
 ];
-
 
 
 function formatZahl(value,stellen=3,tausender=false){
@@ -893,8 +941,13 @@ const history =
 document.getElementById("historyBody");
 
 
+const sparplan =
+document.getElementById("sparplanBody");
+
+
 tbody.innerHTML="";
 history.innerHTML="";
+sparplan.innerHTML="";
 
 
 let gesamtwert=0;
@@ -915,7 +968,27 @@ item.kursJA;
 jahresAnfang +=
 historischerGesamtwert;
 
+if ((item.sparplanBetrag ?? 0) > 0) {
 
+    sparplan.innerHTML += `
+
+<tr>
+
+<td>${item.alias}</td>
+
+<td class="kurs">
+${formatZahl(item.sparplanBetrag,2,true)} €
+</td>
+
+<td>
+${item.sparplanRhytmus ?? "-"}
+</td>
+
+</tr>
+
+`;
+
+}
 
 history.innerHTML+=`
 
@@ -983,9 +1056,18 @@ tbody.innerHTML+=`
 
 <tr>
 
-<td>${item.alias}</td>
+<td>
+<a href="${item.link}" target="_blank">
+${item.alias}
+</a>
+</td>
 
-<td>${item.isin}</td>
+<td>
+    <a 
+        href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/stocks?id=${item.isin}&field=BasicV1&field=ExchangesV2" target="_blank">
+        ${item.isin}
+    </a>
+</td>
 
 <td class="kurs">
 ${formatZahl(item.anzahl,6,true)}
@@ -1009,7 +1091,13 @@ ${formatZahl(wert,2,true)} €
 ${
 etf.tagesanfang!==null
 ?
-formatZahl(etf.tagesanfang,3)+" €"
+`
+<a class="tagesanfang-link"
+   href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/securities?id=${etf.consorsId}&field=ChartHistoryV1&idTypeOffset=51&historySince=0&resolution=15m&pagesize=2000&sortorder=DATETIME_FIRST"
+   target="_blank">
+   ${formatZahl(etf.tagesanfang,3)} €
+</a>
+`
 :
 "-"
 }
