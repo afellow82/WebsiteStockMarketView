@@ -1001,7 +1001,12 @@ ${item.alias}
 </a>
 </td>
 
-<td>${item.isin}</td>
+<td>
+    <a 
+        href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/stocks?id=${item.isin}&field=BasicV1&field=ExchangesV2" target="_blank">
+        ${item.isin}
+    </a>
+</td>
 
 <td class="kurs">
 ${formatZahl(item.anzahl,6,true)}
