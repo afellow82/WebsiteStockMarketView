@@ -328,6 +328,15 @@ td a:hover {
     text-decoration:underline;
 }
 
+.tagesanfang-link {
+    color: inherit;
+    text-decoration: none;
+    font-weight:650;
+}
+
+.tagesanfang-link:hover {
+    text-decoration: underline;
+}
 
 
 tbody tr {
@@ -1030,7 +1039,13 @@ ${formatZahl(wert,2,true)} €
 ${
 etf.tagesanfang!==null
 ?
-formatZahl(etf.tagesanfang,3)+" €"
+`
+<a class="tagesanfang-link"
+   href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/securities?id=${etf.consorsId}&field=ChartHistoryV1&idTypeOffset=51&historySince=0&resolution=15m&pagesize=2000&sortorder=DATETIME_FIRST"
+   target="_blank">
+   ${formatZahl(etf.tagesanfang,3)} €
+</a>
+`
 :
 "-"
 }
