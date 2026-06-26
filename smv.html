@@ -617,6 +617,7 @@ const isins = [
 {
 alias:"ETF Core MSCI World",
 isin:"IE00B4L5Y983",
+link:"https://www.onvista.de/etf/iShares-Core-MSCI-World-ETF-IE00B4L5Y983?notation=244540011",
 anzahl:500.084082,
 anzahlJA:500.084082,
 kursJA:111.74
@@ -625,6 +626,7 @@ kursJA:111.74
 {
 alias:"ETF MSCI World SRI",
 isin:"IE00BYX2JD69",
+link:"https://www.onvista.de/etf/iShares-MSCI-World-SRI-EUR-ACC-ETF-IE00BYX2JD69?notation=289979926",
 anzahl:4655.231737,
 anzahlJA:3792.520514,
 kursJA:12.19
@@ -633,6 +635,7 @@ kursJA:12.19
 {
 alias:"Aktie Allianz",
 isin:"DE0008404005",
+link:"https://www.onvista.de/aktien/Allianz-Aktie-DE0008404005?notation=244494211",
 anzahl:91.862,
 anzahlJA:91.862,
 kursJA:390.50
@@ -641,6 +644,7 @@ kursJA:390.50
 {
 alias:"ETF AI Infrastructure",
 isin:"IE000X59ZHE2",
+link:"https://www.onvista.de/etf/iShs-III-iShs-AI-Infrastr-ETF-Reg-Shs-USD-Acc-oN-ETF-IE000X59ZHE2?notation=486568018",
 anzahl:476.198976,
 anzahlJA:476.198976,
 kursJA:6.19
@@ -649,13 +653,13 @@ kursJA:6.19
 {
 alias:"Fonds Allianz US Equity",
 isin:"LU0256843979",
+link:"https://www.onvista.de/fonds/ALLIANZ-GIF-ALLIANZ-US-EQUITY-FUND-A-EUR-DIS-Fonds-LU0256843979?notation=273709592",
 anzahl:5.386,
 anzahlJA:4.873,
 kursJA:457.889
 }
 
 ];
-
 
 
 function formatZahl(value,stellen=3,tausender=false){
@@ -983,7 +987,11 @@ tbody.innerHTML+=`
 
 <tr>
 
-<td>${item.alias}</td>
+<td>
+<a href="${item.link}" target="_blank">
+${item.alias}
+</a>
+</td>
 
 <td>${item.isin}</td>
 
