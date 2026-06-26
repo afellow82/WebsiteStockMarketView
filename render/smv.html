@@ -461,9 +461,6 @@ table {
 <h1 class="section-title">
 Depotübersicht
 </h1>
-
-
-
 <div class="zusammenfassung">
 
 
@@ -614,7 +611,9 @@ Werte Jahresanfang
 <script>
 
 const STANDDATUM = "23.06.2026";
+
 const isins = [
+
 {
 alias:"ETF Core MSCI World",
 isin:"IE00B4L5Y983",
@@ -680,6 +679,8 @@ return teile.join(",");
 
 
 
+
+
 async function ladeTagesanfang(consorsId){
 
 const response =
@@ -691,11 +692,20 @@ await response.json();
 
 try{
 
-return Number(
+return {
+
+preis:Number(
 data[0]
 .ChartHistoryV1
 .PERF_START_PRICE
-);
+),
+
+datum:
+data[0]
+.ChartHistoryV1
+.DATETIME_PERF_START_PRICE
+
+};
 
 }
 
@@ -765,9 +775,6 @@ throw new Error(
 );
 
 }
-
-
-
 const consorsId =
 exchange.CONSORS_ID ??
 "nicht gefunden";
@@ -775,6 +782,7 @@ exchange.CONSORS_ID ??
 
 
 let tagesanfang=null;
+let tagesanfangDatum=null;
 
 
 
@@ -783,8 +791,23 @@ if(consorsId!=="nicht gefunden"){
 
 try{
 
-tagesanfang =
+
+const start =
 await ladeTagesanfang(consorsId);
+
+
+
+if(start){
+
+tagesanfang =
+start.preis;
+
+
+tagesanfangDatum =
+start.datum;
+
+}
+
 
 }
 
@@ -821,6 +844,7 @@ return {
 isin,
 consorsId,
 tagesanfang,
+tagesanfangDatum,
 kurs,
 tagesentwicklung,
 zeit:exchange.DATETIME_PRICE
@@ -1024,13 +1048,18 @@ true
 
 </td>
 
+
 <td class="zeit">
+
 ${formatDatum(etf.zeit)}
+
 </td>
 
 
 <td style="display:none;">
+
 ${etf.consorsId}
+
 </td>
 
 
@@ -1064,11 +1093,6 @@ ${err.message}
 
 
 }
-
-
-
-
-
 document.getElementById("gesamtwert").innerHTML =
 "<strong>"+
 formatZahl(gesamtwert,2,true)+
@@ -1103,6 +1127,7 @@ Math.round((wert/gesamtwert)*100)+" %";
 index++;
 
 }
+
 
 
 
@@ -1250,6 +1275,34 @@ formatZahl(Math.abs(entwicklungProTag),2,true)+
 
 
 
+
+let startDatumText="";
+
+
+for(const item of isins){
+
+const start =
+await ladeETF(item.isin);
+
+
+if(
+start.tagesanfangDatum
+){
+
+startDatumText =
+
+" | Tagesanfangskurs: "+
+formatDatum(start.tagesanfangDatum);
+
+break;
+
+}
+
+}
+
+
+
+
 document.getElementById(
 "updateInfo"
 ).textContent =
@@ -1273,7 +1326,9 @@ minute:"2-digit"
 +
 " | automatische Aktualisierung alle 5 Minuten | Stand Anteile: "
 +
-STANDDATUM;
+STANDDATUM
++
+startDatumText;
 
 
 }
