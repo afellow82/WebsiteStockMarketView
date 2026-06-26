@@ -597,6 +597,20 @@ Lade Daten...
 Sparplanübersicht
 </h1>
 
+<table>
+
+<thead>
+<tr>
+<th>Anlage</th>
+<th>Sparplanbetrag</th>
+<th>Sparplanrhythmus</th>
+</tr>
+</thead>
+
+<tbody id="sparplanBody"></tbody>
+
+</table>
+
 
 <h1 class="section-title">
 Werte Jahresanfang
@@ -642,8 +656,9 @@ link:"https://www.onvista.de/etf/iShares-Core-MSCI-World-ETF-IE00B4L5Y983?notati
 anzahl:500.084082,
 anzahlJA:500.084082,
 kursJA:111.74,
-sparplan:400.00,
-sparplanRhytmus:"monatlich"
+sparplanBetrag:400.00,
+sparplanRhytmus:"monatlich",
+sparplanTag:2
 },
 
 {
@@ -653,8 +668,9 @@ link:"https://www.onvista.de/etf/iShares-MSCI-World-SRI-EUR-ACC-ETF-IE00BYX2JD69
 anzahl:4655.231737,
 anzahlJA:3792.520514,
 kursJA:12.19,
-sparplan:400.00,
-sparplanRhytmus:"monatlich"
+sparplanBetrag:400.00,
+sparplanRhytmus:"monatlich",
+sparplanTag:2
 },
 
 {
@@ -682,8 +698,9 @@ link:"https://www.onvista.de/fonds/ALLIANZ-GIF-ALLIANZ-US-EQUITY-FUND-A-EUR-DIS-
 anzahl:5.386,
 anzahlJA:4.873,
 kursJA:457.889,
-sparplan:40.00,
-sparplanRhytmus:"monatlich"
+sparplanBetrag:40.00,
+sparplanRhytmus:"monatlich",
+sparplanTag:24
 }
 
 ];
@@ -924,8 +941,13 @@ const history =
 document.getElementById("historyBody");
 
 
+const sparplan =
+document.getElementById("sparplanBody");
+
+
 tbody.innerHTML="";
 history.innerHTML="";
+sparplan.innerHTML="";
 
 
 let gesamtwert=0;
@@ -946,7 +968,27 @@ item.kursJA;
 jahresAnfang +=
 historischerGesamtwert;
 
+if ((item.sparplanBetrag ?? 0) > 0) {
 
+    sparplan.innerHTML += `
+
+<tr>
+
+<td>${item.alias}</td>
+
+<td class="kurs">
+${formatZahl(item.sparplanBetrag,2,true)} €
+</td>
+
+<td>
+${item.sparplanRhytmus ?? "-"}
+</td>
+
+</tr>
+
+`;
+
+}
 
 history.innerHTML+=`
 
