@@ -604,6 +604,7 @@ Sparplanübersicht
 <th>Anlage</th>
 <th>Sparplanbetrag</th>
 <th>Sparplanrhythmus</th>
+<th>Nächste Ausführung</th>
 </tr>
 </thead>
 
@@ -927,7 +928,27 @@ minute:"2-digit"
 }
 
 
+function naechsteAusfuehrung(tag) {
 
+    const heute = new Date();
+
+    let jahr = heute.getFullYear();
+    let monat = heute.getMonth();
+
+    let ausfuehrung = new Date(jahr, monat, tag);
+
+    // Ist der Termin dieses Monats bereits vorbei,
+    // dann den nächsten Monat verwenden.
+    if (ausfuehrung < heute) {
+        ausfuehrung = new Date(jahr, monat + 1, tag);
+    }
+
+    return ausfuehrung.toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    });
+}
 
 
 async function ladeAlleKurse(){
@@ -970,7 +991,7 @@ historischerGesamtwert;
 
 if ((item.sparplanBetrag ?? 0) > 0) {
 
-    sparplan.innerHTML += `
+sparplan.innerHTML += `
 
 <tr>
 
@@ -984,10 +1005,13 @@ ${formatZahl(item.sparplanBetrag,2,true)} €
 ${item.sparplanRhytmus ?? "-"}
 </td>
 
+<td class="kurs">
+${item.sparplanTag ? naechsteAusfuehrung(item.sparplanTag) : "-"}
+</td>
+
 </tr>
 
 `;
-
 }
 
 history.innerHTML+=`
