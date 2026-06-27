@@ -190,7 +190,7 @@ to {
 
 .metric {
 
-    font-size:42px;
+    font-size:70px;
 
     font-weight:750;
 
@@ -210,7 +210,9 @@ to {
 
 }
 
-
+#tagesentwicklung {
+    font-size:40px;
+}
 
 
 .label {
@@ -227,7 +229,9 @@ to {
 
 }
 
-
+#restkaeufeJahrGesamt {
+    margin-bottom:0;
+}
 
 
 
@@ -536,6 +540,13 @@ Entwicklung aktuelles Jahr inkl. Zukäufe
 id="jahresentwicklungGesamt">
 </div>
 
+<div class="label">
+Geplante Restkäufe über Sparpläne Jahr gesamt
+</div>
+
+<div class="metric small"
+id="restkaeufeJahrGesamt">
+</div>
 
 
 </div>
@@ -604,6 +615,8 @@ Sparplanübersicht
 <th>Anlage</th>
 <th>Sparplanbetrag</th>
 <th>Sparplanrhythmus</th>
+<th>Nächste Ausführung</th>
+<th>Restkäufe Jahr</th>
 </tr>
 </thead>
 
@@ -927,7 +940,50 @@ minute:"2-digit"
 }
 
 
+function naechsteAusfuehrung(tag) {
 
+    const heute = new Date();
+
+    let jahr = heute.getFullYear();
+    let monat = heute.getMonth();
+
+    let ausfuehrung = new Date(jahr, monat, tag);
+
+    // Ist der Termin dieses Monats bereits vorbei,
+    // dann den nächsten Monat verwenden.
+    if (ausfuehrung < heute) {
+        ausfuehrung = new Date(jahr, monat + 1, tag);
+    }
+
+    return ausfuehrung.toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    });
+}
+
+
+function restKaeufeImJahr(tag, betrag) {
+
+    const heute = new Date();
+
+    const jahr = heute.getFullYear();
+
+    let summe = 0;
+
+    for (let monat = heute.getMonth(); monat < 12; monat++) {
+
+        const termin = new Date(jahr, monat, tag);
+
+        // Im aktuellen Monat nur zukünftige Termine berücksichtigen
+        if (termin >= heute) {
+            summe += betrag;
+        }
+
+    }
+
+    return summe;
+}
 
 
 async function ladeAlleKurse(){
@@ -954,7 +1010,7 @@ let gesamtwert=0;
 let startwertHeute=0;
 let jahresAktuell=0;
 let jahresAnfang=0;
-
+let restkaeufeJahrGesamt=0;
 
 
 for(const item of isins){
@@ -970,7 +1026,12 @@ historischerGesamtwert;
 
 if ((item.sparplanBetrag ?? 0) > 0) {
 
-    sparplan.innerHTML += `
+restkaeufeJahrGesamt += restKaeufeImJahr(
+    item.sparplanTag,
+    item.sparplanBetrag
+);
+
+sparplan.innerHTML += `
 
 <tr>
 
@@ -984,10 +1045,28 @@ ${formatZahl(item.sparplanBetrag,2,true)} €
 ${item.sparplanRhytmus ?? "-"}
 </td>
 
+<td class="kurs">
+${item.sparplanTag ? naechsteAusfuehrung(item.sparplanTag) : "-"}
+</td>
+
+<td class="kurs">
+${
+    item.sparplanTag
+    ? formatZahl(
+        restKaeufeImJahr(
+            item.sparplanTag,
+            item.sparplanBetrag
+        ),
+        2,
+        true
+      ) + " €"
+    : "-"
+}
+</td>
+
 </tr>
 
 `;
-
 }
 
 history.innerHTML+=`
@@ -1361,7 +1440,13 @@ formatZahl(Math.abs(entwicklungProTag),2,true)+
 " €/Tag)</strong>";
 
 
+document.getElementById(
+"restkaeufeJahrGesamt"
+).innerHTML =
 
+"<strong>"+
+formatZahl(restkaeufeJahrGesamt,2,true)+
+" €</strong>";
 
 
 let startDatumText="";
