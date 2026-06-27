@@ -190,7 +190,7 @@ to {
 
 .metric {
 
-    font-size:42px;
+    font-size:70px;
 
     font-weight:750;
 
@@ -210,7 +210,9 @@ to {
 
 }
 
-
+#tagesentwicklung {
+    font-size:40px;
+}
 
 
 .label {
@@ -227,7 +229,9 @@ to {
 
 }
 
-
+#restkaeufeJahrGesamt {
+    margin-bottom:0;
+}
 
 
 
@@ -536,6 +540,13 @@ Entwicklung aktuelles Jahr inkl. Zukäufe
 id="jahresentwicklungGesamt">
 </div>
 
+<div class="label">
+Geplante Restkäufe über Sparpläne Jahr gesamt
+</div>
+
+<div class="metric small"
+id="restkaeufeJahrGesamt">
+</div>
 
 
 </div>
@@ -999,7 +1010,7 @@ let gesamtwert=0;
 let startwertHeute=0;
 let jahresAktuell=0;
 let jahresAnfang=0;
-
+let restkaeufeJahrGesamt=0;
 
 
 for(const item of isins){
@@ -1014,6 +1025,11 @@ jahresAnfang +=
 historischerGesamtwert;
 
 if ((item.sparplanBetrag ?? 0) > 0) {
+
+restkaeufeJahrGesamt += restKaeufeImJahr(
+    item.sparplanTag,
+    item.sparplanBetrag
+);
 
 sparplan.innerHTML += `
 
@@ -1424,7 +1440,13 @@ formatZahl(Math.abs(entwicklungProTag),2,true)+
 " €/Tag)</strong>";
 
 
+document.getElementById(
+"restkaeufeJahrGesamt"
+).innerHTML =
 
+"<strong>"+
+formatZahl(restkaeufeJahrGesamt,2,true)+
+" €</strong>";
 
 
 let startDatumText="";
