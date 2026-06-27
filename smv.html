@@ -605,6 +605,7 @@ Sparplanübersicht
 <th>Sparplanbetrag</th>
 <th>Sparplanrhythmus</th>
 <th>Nächste Ausführung</th>
+<th>Restkäufe Jahr</th>
 </tr>
 </thead>
 
@@ -951,6 +952,29 @@ function naechsteAusfuehrung(tag) {
 }
 
 
+function restKaeufeImJahr(tag, betrag) {
+
+    const heute = new Date();
+
+    const jahr = heute.getFullYear();
+
+    let summe = 0;
+
+    for (let monat = heute.getMonth(); monat < 12; monat++) {
+
+        const termin = new Date(jahr, monat, tag);
+
+        // Im aktuellen Monat nur zukünftige Termine berücksichtigen
+        if (termin >= heute) {
+            summe += betrag;
+        }
+
+    }
+
+    return summe;
+}
+
+
 async function ladeAlleKurse(){
 
 
@@ -1007,6 +1031,21 @@ ${item.sparplanRhytmus ?? "-"}
 
 <td class="kurs">
 ${item.sparplanTag ? naechsteAusfuehrung(item.sparplanTag) : "-"}
+</td>
+
+<td class="kurs">
+${
+    item.sparplanTag
+    ? formatZahl(
+        restKaeufeImJahr(
+            item.sparplanTag,
+            item.sparplanBetrag
+        ),
+        2,
+        true
+      ) + " €"
+    : "-"
+}
 </td>
 
 </tr>
