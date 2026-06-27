@@ -498,6 +498,58 @@ table {
 }
 
 
+.tages-badge {
+
+    display:inline-block;
+
+    padding:5px 10px;
+
+    border-radius:999px;
+
+    font-size:13px;
+
+    font-weight:750;
+
+    line-height:1.2;
+
+}
+
+
+.tages-badge.darkgreen {
+
+    background:#bbf7d0;
+
+    color:#14532d;
+
+}
+
+
+.tages-badge.green {
+
+    background:#dcfce7;
+
+    color:#166534;
+
+}
+
+
+.tages-badge.orange {
+
+    background:#ffedd5;
+
+    color:#9a3412;
+
+}
+
+
+.tages-badge.red {
+
+    background:#fee2e2;
+
+    color:#991b1b;
+
+}
+
 
 </style>
 
@@ -575,7 +627,7 @@ id="jahresentwicklungGesamt">
 </div>
 
 <div class="label">
-Geplante Restkäufe über Sparpläne Jahr gesamt
+Geplante Restkäufe durch Sparpläne Jahr gesamt
 </div>
 
 <div class="metric small"
@@ -1278,15 +1330,41 @@ Math.abs(etf.tagesentwicklung)<0.005
 ""
 :
 `
-<span style="color:${etf.tagesentwicklung<0?"red":"green"}">
+<span class="tages-badge ${
+    
+    etf.tagesentwicklung > 2
+    ? "darkgreen"
 
-${etf.tagesentwicklung >= 0 ? "+" : ""}${formatZahl(etf.tagesentwicklung,2)} %
+    :
+
+    etf.tagesentwicklung > 0
+    ? "green"
+
+    :
+
+    etf.tagesentwicklung < -2
+    ? "red"
+
+    :
+
+    etf.tagesentwicklung < 0
+    ? "orange"
+
+    :
+
+    ""
+
+}">
+
+${etf.tagesentwicklung >= 0 ? "+" : ""}
+${formatZahl(etf.tagesentwicklung,2)} %
 
 (${
 (
 (etf.kurs - etf.tagesanfang) * item.anzahl
 ) >= 0 ? "+" : "-"
-}${formatZahl(
+}
+${formatZahl(
 Math.abs(
 (etf.kurs - etf.tagesanfang) * item.anzahl
 ),
