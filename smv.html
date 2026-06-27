@@ -866,24 +866,24 @@ catch(e){}
 
 
 
-const kurs =
-Number(exchange.PRICE);
+const kurs = Number(exchange.PRICE);
+
+// Falls kein gültiger Tagesanfangskurs vorhanden ist,
+// aktuellen Kurs verwenden
+if (
+    tagesanfang === null ||
+    !Number.isFinite(tagesanfang) ||
+    tagesanfang <= 0
+) {
+    tagesanfang = kurs;
+}
+
+let tagesentwicklung = null;
 
 
-
-let tagesentwicklung=null;
-
-
-
-if(
-tagesanfang!==null &&
-tagesanfang!==0
-){
 
 tagesentwicklung =
-((kurs-tagesanfang)/tagesanfang)*100;
-
-}
+((kurs - tagesanfang) / tagesanfang) * 100;
 
 
 
