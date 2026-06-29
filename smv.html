@@ -814,6 +814,7 @@ id="restkaeufeJahrGesamt">
                 <th>Anlage</th>
                 <th>Kurs</th>
                 <th>Wert</th>
+                <th>Anteil</th>
 
             </tr>
 
@@ -1352,14 +1353,17 @@ ${item.alias}
 ${formatZahl(etf.kurs,3)} €
 </td>
 
-<td class="kurs">
+<td class="kurs vorsorge-wert">
 ${formatZahl(wert,2,true)} €
+</td>
+
+<td class="kurs vorsorge-anteil">
+0 %
 </td>
 
 </tr>
 
 `;
-
 }
 gesamtwert += wert;
 
@@ -1572,7 +1576,45 @@ index++;
 
 }
 
+const vorsorgeWerte =
+document.querySelectorAll(".vorsorge-wert");
 
+const vorsorgeAnteile =
+document.querySelectorAll(".vorsorge-anteil");
+
+
+let vorsorgeGesamt = 0;
+
+vorsorgeWerte.forEach(zelle => {
+
+    vorsorgeGesamt +=
+    Number(
+        zelle.innerText
+        .replace(/\./g,"")
+        .replace(",",".")
+        .replace(" €","")
+    );
+
+});
+
+
+vorsorgeWerte.forEach((zelle, i) => {
+
+    const wert =
+    Number(
+        zelle.innerText
+        .replace(/\./g,"")
+        .replace(",",".")
+        .replace(" €","")
+    );
+
+
+    vorsorgeAnteile[i].innerHTML =
+    Math.round(
+        (wert / vorsorgeGesamt) * 100
+    ) + " %";
+
+});
 
 
 const tagesentwicklungProzent =
