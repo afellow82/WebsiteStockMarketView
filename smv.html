@@ -590,6 +590,28 @@ table {
     display: block;
 }
 
+.prognose-kacheln {
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(3,1fr);
+
+    gap:22px;
+
+    margin-top:22px;
+
+}
+
+
+@media(max-width:900px){
+
+    .prognose-kacheln {
+        grid-template-columns:1fr;
+    }
+
+}
+
 </style>
 
 
@@ -871,10 +893,93 @@ id="restkaeufeJahrGesamt">
 </tbody>
     </table>
 
+    <h1 class="section-title">
+        Prognose
+    </h1>
+
+
+    <div style="
+        display:flex;
+        align-items:center;
+        gap:12px;
+        margin-left:4px;
+        margin-top:10px;
+    ">
+
+        <div class="label" style="
+            margin-bottom:0;
+            font-size:14px;
+            text-transform:none;
+            letter-spacing:0;
+        ">
+            Zielwert (€):
+        </div>
+
+
+        <input 
+    type="text"
+    id="zielwert"
+    value="150000,00"
+            style="
+                padding:10px 14px;
+                border-radius:12px;
+                border:1px solid #e5e7eb;
+                background:white;
+                font-size:14px;
+                width:180px;
+                box-shadow:0 4px 12px rgba(15,23,42,.08);
+            "
+        >
+
+    </div>
+
+
+
+<div class="prognose-kacheln">
+
+
+    <div class="card">
+
+        <div class="label">
+            Prognose 1
+        </div>
+
+        <div class="metric small" id="prognose1">
+        </div>
+
+    </div>
+
+
+
+    <div class="card">
+
+        <div class="label">
+            Prognose 2
+        </div>
+
+        <div class="metric small" id="prognose2">
+        </div>
+
+    </div>
+
+
+
+    <div class="card">
+
+        <div class="label">
+            Prognose 3
+        </div>
+
+        <div class="metric small" id="prognose3">
+        </div>
+
+    </div>
+
 
 </div>
-</div>
 
+</div>
+</div> <!-- Ende Altersvorsorge Tab -->
 
 <script>
 
@@ -1978,6 +2083,71 @@ historischeSummen.forEach((zelle, index) => {
 
 });
 
+// Prognosen berechnen
+
+const zielwert =
+Number(
+    document.getElementById("zielwert")
+    .value
+    .replace(/\./g,"")
+    .replace(",",".")
+);
+
+
+
+const entwicklungProTagWerte =
+document.querySelectorAll(".entwicklung-pro-tag");
+
+
+let prognoseWerte = [];
+
+
+entwicklungProTagWerte.forEach(zelle => {
+
+    prognoseWerte.push(
+        Number(
+            zelle.innerText
+            .replace(/\./g,"")
+            .replace(",",".")
+            .replace(" €/Tag","")
+        )
+    );
+
+});
+
+
+
+const prognoseTage = prognoseWerte.map(
+    wert => {
+
+        if(wert <= 0){
+            return 0;
+        }
+
+        return Math.round(
+            (zielwert - vorsorgeGesamtWert)
+            /
+            wert
+        );
+
+    }
+);
+
+
+
+document.getElementById("prognose1").innerHTML =
+formatZahl(prognoseTage[0],0,true)
++ " Tage";
+
+
+document.getElementById("prognose2").innerHTML =
+formatZahl(prognoseTage[1],0,true)
++ " Tage";
+
+
+document.getElementById("prognose3").innerHTML =
+formatZahl(prognoseTage[2],0,true)
++ " Tage";
 
 // Update Info
 
