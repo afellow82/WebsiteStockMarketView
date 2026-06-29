@@ -801,7 +801,7 @@ id="restkaeufeJahrGesamt">
 
     </div>
     
-    <!-- Altersvorsorge -->
+   <!-- Altersvorsorge -->
 
 <div class="tab-content" id="altersvorsorge">
 
@@ -824,8 +824,51 @@ id="restkaeufeJahrGesamt">
 
     </table>
 
-</div>
 
+    <h1 class="section-title">
+        Entwicklung
+    </h1>
+
+
+    <table>
+
+        <thead>
+
+    <tr>
+
+        <th>Start Betrachtung</th>
+        <th>Historische Summe</th>
+        <th>Entwicklung</th>
+
+    </tr>
+
+</thead>
+
+
+<tbody>
+
+    <tr>
+    <td>01.09.2023</td>
+    <td class="kurs historische-summe">39.067,20 €</td>
+    <td class="kurs entwicklung">0 €</td>
+</tr>
+
+<tr>
+    <td>01.01.2025</td>
+    <td class="kurs historische-summe">76.422,57 €</td>
+    <td class="kurs entwicklung">0 €</td>
+</tr>
+
+<tr>
+    <td>01.01.2026</td>
+    <td class="kurs historische-summe">102.110,22 €</td>
+    <td class="kurs entwicklung">0 €</td>
+</tr>
+</tbody>
+    </table>
+
+
+</div>
 </div>
 
 
@@ -1792,7 +1835,97 @@ break;
 
 }
 
+// Entwicklung Altersvorsorge berechnen
 
+const entwicklungZellen =
+document.querySelectorAll(".entwicklung");
+
+const historischeSummen =
+document.querySelectorAll(".historische-summe");
+
+
+historischeSummen.forEach((zelle, index) => {
+
+    const historisch =
+    Number(
+        zelle.innerText
+        .replace(/\./g,"")
+        .replace(",",".")
+        .replace(" €","")
+    );
+
+
+// Entwicklung Altersvorsorge berechnen
+
+const entwicklungZellen =
+document.querySelectorAll(".entwicklung");
+
+const historischeSummen =
+document.querySelectorAll(".historische-summe");
+
+
+// Summe der Werte aus Altersvorsorge-Tabelle
+
+const vorsorgeWerte =
+document.querySelectorAll(".vorsorge-wert");
+
+
+let vorsorgeGesamtWert = 0;
+
+
+vorsorgeWerte.forEach(zelle => {
+
+    vorsorgeGesamtWert +=
+    Number(
+        zelle.innerText
+        .replace(/\./g,"")
+        .replace(",",".")
+        .replace(" €","")
+    );
+
+});
+
+
+
+// Entwicklung = Altersvorsorge Gesamtwert - historische Summe
+
+historischeSummen.forEach((zelle, index) => {
+
+    const historisch =
+    Number(
+        zelle.innerText
+        .replace(/\./g,"")
+        .replace(",",".")
+        .replace(" €","")
+    );
+
+
+    const entwicklung =
+    vorsorgeGesamtWert - historisch;
+
+
+    entwicklungZellen[index].innerHTML =
+    (entwicklung >= 0 ? "+" : "") +
+    formatZahl(
+        entwicklung,
+        2,
+        true
+    ) +
+    " €";
+
+});
+
+
+    entwicklungZellen[index].innerHTML =
+    (entwicklung >= 0 ? "+" : "") +
+    formatZahl(
+        entwicklung,
+        2,
+        true
+    ) +
+    " €";
+
+});
 
 
 document.getElementById(
