@@ -603,6 +603,11 @@ table {
 
 }
 
+.prognose-kacheln .card {
+
+    padding:16px;
+
+}
 
 @media(max-width:900px){
 
@@ -2135,19 +2140,51 @@ const prognoseTage = prognoseWerte.map(
 
 
 
+function prognoseDatum(tage){
+
+    const datum = new Date();
+
+    datum.setDate(
+        datum.getDate() + tage
+    );
+
+    return datum.toLocaleDateString(
+        "de-DE",
+        {
+            day:"2-digit",
+            month:"2-digit",
+            year:"numeric"
+        }
+    );
+
+}
+
+
+
 document.getElementById("prognose1").innerHTML =
 formatZahl(prognoseTage[0],0,true)
-+ " Tage";
++ " Tage"
++ "<br><span style='font-size:13px;color:#64748b;font-weight:500;'>"
++ prognoseDatum(prognoseTage[0])
++ "</span>";
+
 
 
 document.getElementById("prognose2").innerHTML =
 formatZahl(prognoseTage[1],0,true)
-+ " Tage";
++ " Tage"
++ "<br><span style='font-size:13px;color:#64748b;font-weight:500;'>"
++ prognoseDatum(prognoseTage[1])
++ "</span>";
+
 
 
 document.getElementById("prognose3").innerHTML =
 formatZahl(prognoseTage[2],0,true)
-+ " Tage";
++ " Tage"
++ "<br><span style='font-size:13px;color:#64748b;font-weight:500;'>"
++ prognoseDatum(prognoseTage[2])
++ "</span>";
 
 // Update Info
 
