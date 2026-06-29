@@ -838,7 +838,8 @@ id="restkaeufeJahrGesamt">
 
         <th>Start Betrachtung</th>
         <th>Historische Summe</th>
-        <th>Entwicklung</th>
+        <th>Gesamtentwicklung</th>
+        <th>Entwicklung pro Tag</th>
 
     </tr>
 
@@ -851,18 +852,21 @@ id="restkaeufeJahrGesamt">
     <td>01.09.2023</td>
     <td class="kurs historische-summe">39.067,20 €</td>
     <td class="kurs entwicklung">0 €</td>
+<td class="kurs entwicklung-pro-tag">0 €/Tag</td>
 </tr>
 
 <tr>
     <td>01.01.2025</td>
     <td class="kurs historische-summe">76.422,57 €</td>
     <td class="kurs entwicklung">0 €</td>
+<td class="kurs entwicklung-pro-tag">0 €/Tag</td>
 </tr>
 
 <tr>
     <td>01.01.2026</td>
     <td class="kurs historische-summe">102.110,22 €</td>
     <td class="kurs entwicklung">0 €</td>
+<td class="kurs entwicklung-pro-tag">0 €/Tag</td>
 </tr>
 </tbody>
     </table>
@@ -1840,25 +1844,8 @@ break;
 const entwicklungZellen =
 document.querySelectorAll(".entwicklung");
 
-const historischeSummen =
-document.querySelectorAll(".historische-summe");
-
-
-historischeSummen.forEach((zelle, index) => {
-
-    const historisch =
-    Number(
-        zelle.innerText
-        .replace(/\./g,"")
-        .replace(",",".")
-        .replace(" €","")
-    );
-
-
-// Entwicklung Altersvorsorge berechnen
-
-const entwicklungZellen =
-document.querySelectorAll(".entwicklung");
+const entwicklungProTagZellen =
+document.querySelectorAll(".entwicklung-pro-tag");
 
 const historischeSummen =
 document.querySelectorAll(".historische-summe");
@@ -1866,14 +1853,14 @@ document.querySelectorAll(".historische-summe");
 
 // Summe der Werte aus Altersvorsorge-Tabelle
 
-const vorsorgeWerte =
+const vorsorgeWerteNeu =
 document.querySelectorAll(".vorsorge-wert");
 
 
 let vorsorgeGesamtWert = 0;
 
 
-vorsorgeWerte.forEach(zelle => {
+vorsorgeWerteNeu.forEach(zelle => {
 
     vorsorgeGesamtWert +=
     Number(
@@ -1885,6 +1872,82 @@ vorsorgeWerte.forEach(zelle => {
 
 });
 
+
+
+historischeSummen.forEach((zelle, index) => {
+
+
+    const historisch =
+    Number(
+        zelle.innerText
+        .replace(/\./g,"")
+        .replace(",",".")
+        .replace(" €","")
+    );
+
+
+    const entwicklung =
+    vorsorgeGesamtWert - historisch;
+
+
+    entwicklungZellen[index].innerHTML =
+    (entwicklung >= 0 ? "+" : "") +
+    formatZahl(
+        entwicklung,
+        2,
+        true
+    ) +
+    " €";
+
+
+
+    // Tage seit Start Betrachtung berechnen
+
+    const startDatum =
+    zelle.parentElement
+    .querySelector("td")
+    .innerText;
+
+
+    const start =
+    new Date(
+        startDatum
+        .split(".")
+        .reverse()
+        .join("-")
+    );
+
+
+    const heute =
+    new Date();
+
+
+    const tage =
+    Math.floor(
+        (heute - start)
+        /
+        (1000*60*60*24)
+    );
+
+
+    const proTag =
+    tage > 0
+    ? entwicklung / tage
+    : 0;
+
+
+
+    entwicklungProTagZellen[index].innerHTML =
+    (proTag >= 0 ? "+" : "") +
+    formatZahl(
+        proTag,
+        2,
+        true
+    ) +
+    " €/Tag";
+
+
+});
 
 
 // Entwicklung = Altersvorsorge Gesamtwert - historische Summe
@@ -1916,17 +1979,7 @@ historischeSummen.forEach((zelle, index) => {
 });
 
 
-    entwicklungZellen[index].innerHTML =
-    (entwicklung >= 0 ? "+" : "") +
-    formatZahl(
-        entwicklung,
-        2,
-        true
-    ) +
-    " €";
-
-});
-
+// Update Info
 
 document.getElementById(
 "updateInfo"
@@ -1937,13 +1990,11 @@ document.getElementById(
 new Date().toLocaleString(
 "de-DE",
 {
-
-day:"2-digit",
-month:"2-digit",
-year:"numeric",
-hour:"2-digit",
-minute:"2-digit"
-
+    day:"2-digit",
+    month:"2-digit",
+    year:"numeric",
+    hour:"2-digit",
+    minute:"2-digit"
 }
 
 )
