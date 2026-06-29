@@ -550,6 +550,45 @@ table {
 
 }
 
+.tabs {
+    margin-top: 30px;
+}
+
+.tab-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.tab-button {
+    border: none;
+    background: #eef2f7;
+    color: #475569;
+    padding: 11px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 650;
+    transition: all .2s ease;
+}
+
+.tab-button:hover {
+    background: #dbe4ef;
+}
+
+.tab-button.active {
+    background: #2563eb;
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
 
 </style>
 
@@ -642,105 +681,122 @@ id="restkaeufeJahrGesamt">
 
 
 
+<div class="tabs">
+
+    <div class="tab-buttons">
+
+        <button class="tab-button active"
+                data-tab="kurse">
+            Aktuelle Kurse
+        </button>
+
+        <button class="tab-button"
+                data-tab="sparplan">
+            Sparplanübersicht
+        </button>
+
+        <button class="tab-button"
+                data-tab="jahresanfang">
+            Werte Jahresanfang
+        </button>
+
+    </div>
 
 
-<h1 class="section-title">
-Aktuelle Kurse
-</h1>
+    <!-- Aktuelle Kurse -->
+
+    <div class="tab-content active" id="kurse">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Anlage</th>
+                    <th>ISIN</th>
+                    <th>Anteile</th>
+                    <th>Kurs</th>
+                    <th>Wert</th>
+                    <th>Anteil</th>
+                    <th>Kurs Tagesanfang</th>
+                    <th>Tagesentwicklung</th>
+                    <th>Zeitpunkt</th>
+                    <th style="display:none;">ConsorsID</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="tableBody">
+
+                <tr>
+                    <td colspan="10">Lade Daten...</td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+        <div class="footer" id="updateInfo"></div>
+
+    </div>
 
 
+    <!-- Sparplan -->
 
-<table>
+    <div class="tab-content" id="sparplan">
 
-<thead>
+        <table>
 
-<tr>
+            <thead>
 
-<th>Anlage</th>
-<th>ISIN</th>
-<th>Anteile</th>
-<th>Kurs</th>
-<th>Wert</th>
-<th>Anteil</th>
-<th>Kurs Tagesanfang</th>
-<th>Tagesentwicklung</th>
-<th>Zeitpunkt</th>
-<th style="display:none;">ConsorsID</th>
+                <tr>
 
-</tr>
+                    <th>Anlage</th>
+                    <th>Betrag</th>
+                    <th>Rhythmus</th>
+                    <th>Nächste Ausführung</th>
+                    <th>Status</th>
+                    <th>Restkäufe Jahr</th>
 
-</thead>
+                </tr>
 
+            </thead>
 
-<tbody id="tableBody">
+            <tbody id="sparplanBody"></tbody>
 
-<tr>
-<td colspan="10">
-Lade Daten...
-</td>
-</tr>
+        </table>
+
+    </div>
 
 
-</tbody>
+    <!-- Jahresanfang -->
 
-</table>
+    <div class="tab-content" id="jahresanfang">
 
+        <table>
 
+            <thead>
 
-<div class="footer" id="updateInfo"></div>
+                <tr>
 
+                    <th>Anlage</th>
+                    <th>Anteile Jahresanfang</th>
+                    <th>Kurs Jahresanfang</th>
+                    <th>Wert Jahresanfang</th>
 
-<h1 class="section-title">
-Sparplanübersicht
-</h1>
+                </tr>
 
-<table>
+            </thead>
 
-<thead>
-<tr>
-<th>Anlage</th>
-<th>Betrag</th>
-<th>Rhythmus</th>
-<th>Nächste Ausführung</th>
-<th>Status</th>
-<th>Restkäufe Jahr</th>
-</tr>
-</thead>
+            <tbody id="historyBody"></tbody>
 
-<tbody id="sparplanBody"></tbody>
+        </table>
 
-</table>
+    </div>
 
-
-<h1 class="section-title">
-Werte Jahresanfang
-</h1>
-
-
-
-<table>
-
-
-<thead>
-
-<tr>
-
-<th>Anlage</th>
-<th>Anteile Jahresanfang</th>
-<th>Kurs Jahresanfang</th>
-<th>Wert Jahresanfang</th>
-
-
-</tr>
-
-
-</thead>
-
-
-<tbody id="historyBody"></tbody>
-
-
-</table>
+</div>
 
 
 <script>
@@ -1669,7 +1725,25 @@ startDatumText;
 
 }
 
+document.querySelectorAll(".tab-button").forEach(button => {
 
+    button.addEventListener("click", () => {
+
+        document.querySelectorAll(".tab-button")
+            .forEach(btn => btn.classList.remove("active"));
+
+        document.querySelectorAll(".tab-content")
+            .forEach(tab => tab.classList.remove("active"));
+
+        button.classList.add("active");
+
+        document
+            .getElementById(button.dataset.tab)
+            .classList.add("active");
+
+    });
+
+});
 
 
 
