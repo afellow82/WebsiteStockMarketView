@@ -696,9 +696,14 @@ id="restkaeufeJahrGesamt">
         </button>
 
         <button class="tab-button"
-                data-tab="jahresanfang">
-            Werte Jahresanfang
-        </button>
+        data-tab="jahresanfang">
+    Werte Jahresanfang
+</button>
+
+<button class="tab-button"
+        data-tab="altersvorsorge">
+    Altersvorsorge
+</button>
 
     </div>
 
@@ -795,6 +800,30 @@ id="restkaeufeJahrGesamt">
         </table>
 
     </div>
+    
+    <!-- Altersvorsorge -->
+
+<div class="tab-content" id="altersvorsorge">
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Anlage</th>
+                <th>Kurs</th>
+                <th>Wert</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="vorsorgeBody"></tbody>
+
+    </table>
+
+</div>
 
 </div>
 
@@ -1190,10 +1219,14 @@ const sparplan =
 document.getElementById("sparplanBody");
 
 
+const vorsorge =
+document.getElementById("vorsorgeBody");
+
+
 tbody.innerHTML="";
 history.innerHTML="";
 sparplan.innerHTML="";
-
+vorsorge.innerHTML="";
 
 let gesamtwert=0;
 let startwertHeute=0;
@@ -1302,7 +1335,32 @@ const wert =
 item.anzahl *
 etf.kurs;
 
+if (
+    item.alias === "ETF Core MSCI World" ||
+    item.alias === "ETF MSCI World SRI"
+) {
 
+vorsorge.innerHTML += `
+
+<tr>
+
+<td>
+${item.alias}
+</td>
+
+<td class="kurs">
+${formatZahl(etf.kurs,3)} €
+</td>
+
+<td class="kurs">
+${formatZahl(wert,2,true)} €
+</td>
+
+</tr>
+
+`;
+
+}
 gesamtwert += wert;
 
 
