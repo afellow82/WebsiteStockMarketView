@@ -2195,33 +2195,6 @@ historischeSummen.forEach((zelle, index) => {
 });
 
 
-// Entwicklung = Altersvorsorge Gesamtwert - historische Summe
-
-historischeSummen.forEach((zelle, index) => {
-
-    const historisch =
-    Number(
-        zelle.innerText
-        .replace(/\./g,"")
-        .replace(",",".")
-        .replace(" €","")
-    );
-
-
-    const entwicklung =
-    vorsorgeGesamtWert - historisch;
-
-
-    entwicklungZellen[index].innerHTML =
-    (entwicklung >= 0 ? "+" : "") +
-    formatZahl(
-        entwicklung,
-        2,
-        true
-    ) +
-    " €";
-
-});
 
 setTimeout(() => {
     aktualisierePrognosen(vorsorgeGesamtWert);
