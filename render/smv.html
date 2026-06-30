@@ -604,9 +604,7 @@ table {
 }
 
 .prognose-kacheln .card {
-
-    padding:16px;
-
+    padding:12px 16px;
 }
 
 @media(max-width:900px){
@@ -617,11 +615,16 @@ table {
 
 }
 
+.prognose-kacheln .metric.small {
+    font-size:22px;
+    margin-bottom:0;
+}
+
 #altersvorsorge .card {
-    height:100%;
+    height:auto;
     display:flex;
     flex-direction:column;
-    justify-content:center;
+    justify-content:flex-start;
 }
 
 </style>
@@ -944,7 +947,7 @@ id="restkaeufeJahrGesamt">
             text-transform:none;
             letter-spacing:0;
         ">
-            Zielwert (€):
+            Zielwert Altersvorsorge (€):
         </div>
 
 
@@ -1387,6 +1390,110 @@ function statusNaechsteAusfuehrung(tag) {
             ${text}
         </span>
     `;
+}
+
+function aktualisierePrognosen(vorsorgeGesamtWert){
+
+    const zielwert = Number(
+        document.getElementById("zielwert")
+        .value
+        .replace(/\./g,"")
+        .replace(",",".")
+    );
+
+
+    if (zielwert <= vorsorgeGesamtWert) {
+
+        document.getElementById("prognose1").innerHTML = "-";
+        document.getElementById("prognose2").innerHTML = "-";
+        document.getElementById("prognose3").innerHTML = "-";
+
+        return;
+    }
+
+
+const entwicklungProTagWerte =
+        document.querySelectorAll("#altersvorsorge .entwicklung-pro-tag");
+
+
+    const prognoseTage = [];
+
+
+    entwicklungProTagWerte.forEach(zelle => {
+
+        const wert = Number(
+            zelle.innerText
+            .replace(/\./g,"")
+            .replace(",",".")
+            .replace(" €/Tag","")
+        );
+
+
+        if(wert !== null && Number.isFinite(wert) && wert > 0){
+
+            prognoseTage.push(
+                Math.round(
+                    (zielwert - vorsorgeGesamtWert) / wert
+                )
+            );
+
+        }
+        else {
+
+            prognoseTage.push(null);
+
+        }
+
+    });
+
+
+
+    function prognoseDatum(tage){
+
+        const datum = new Date();
+
+        datum.setDate(
+            datum.getDate()+tage
+        );
+
+        return datum.toLocaleDateString(
+            "de-DE",
+            {
+                day:"2-digit",
+                month:"2-digit",
+                year:"numeric"
+            }
+        );
+
+    }
+
+
+
+    ["prognose1","prognose2","prognose3"].forEach((id,index)=>{
+
+
+        if(prognoseTage[index] === null){
+
+            document.getElementById(id).innerHTML="-";
+
+            return;
+
+        }
+
+
+        document.getElementById(id).innerHTML =
+            formatZahl(
+                prognoseTage[index],
+                0,
+                true
+            )
+            +" Tage"
+            +"<br><span style='font-size:13px;color:#64748b;font-weight:500;'>"
+            +prognoseDatum(prognoseTage[index])
+            +"</span>";
+
+    });
+
 }
 
 async function ladeAlleKurse(){
@@ -2116,103 +2223,9 @@ historischeSummen.forEach((zelle, index) => {
 
 });
 
-// Prognosen berechnen
-
-const zielwert =
-Number(
-    document.getElementById("zielwert")
-    .value
-    .replace(/\./g,"")
-    .replace(",",".")
-);
-
-
-
-const entwicklungProTagWerte =
-document.querySelectorAll(".entwicklung-pro-tag");
-
-
-let prognoseWerte = [];
-
-
-entwicklungProTagWerte.forEach(zelle => {
-
-    prognoseWerte.push(
-        Number(
-            zelle.innerText
-            .replace(/\./g,"")
-            .replace(",",".")
-            .replace(" €/Tag","")
-        )
-    );
-
-});
-
-
-
-const prognoseTage = prognoseWerte.map(
-    wert => {
-
-        if(wert <= 0){
-            return 0;
-        }
-
-        return Math.round(
-            (zielwert - vorsorgeGesamtWert)
-            /
-            wert
-        );
-
-    }
-);
-
-
-
-function prognoseDatum(tage){
-
-    const datum = new Date();
-
-    datum.setDate(
-        datum.getDate() + tage
-    );
-
-    return datum.toLocaleDateString(
-        "de-DE",
-        {
-            day:"2-digit",
-            month:"2-digit",
-            year:"numeric"
-        }
-    );
-
-}
-
-
-
-document.getElementById("prognose1").innerHTML =
-formatZahl(prognoseTage[0],0,true)
-+ " Tage"
-+ "<br><span style='font-size:13px;color:#64748b;font-weight:500;'>"
-+ prognoseDatum(prognoseTage[0])
-+ "</span>";
-
-
-
-document.getElementById("prognose2").innerHTML =
-formatZahl(prognoseTage[1],0,true)
-+ " Tage"
-+ "<br><span style='font-size:13px;color:#64748b;font-weight:500;'>"
-+ prognoseDatum(prognoseTage[1])
-+ "</span>";
-
-
-
-document.getElementById("prognose3").innerHTML =
-formatZahl(prognoseTage[2],0,true)
-+ " Tage"
-+ "<br><span style='font-size:13px;color:#64748b;font-weight:500;'>"
-+ prognoseDatum(prognoseTage[2])
-+ "</span>";
+setTimeout(() => {
+    aktualisierePrognosen(vorsorgeGesamtWert);
+}, 100);
 
 // Update Info
 
@@ -2268,6 +2281,19 @@ document.querySelectorAll(".tab-button").forEach(button => {
 
 ladeAlleKurse();
 
+document.getElementById("zielwert").addEventListener("input", () => {
+
+    const vorsorgeGesamtWert = Number(
+        document.getElementById("summeAltersvorsorge")
+            .innerText
+            .replace(/\./g,"")
+            .replace(",",".")
+            .replace(" €","")
+    );
+
+    aktualisierePrognosen(vorsorgeGesamtWert);
+
+});
 
 setInterval(
 ladeAlleKurse,
