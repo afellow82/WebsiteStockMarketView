@@ -627,6 +627,78 @@ table {
     justify-content:flex-start;
 }
 
+.vorsorge-layout {
+
+    display:grid;
+
+    grid-template-columns:
+    minmax(700px,1fr) 280px;
+
+    gap:22px;
+
+    align-items:stretch;
+
+}
+
+.zielwert-zeile {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    margin-left:4px;
+
+    margin-top:10px;
+
+}
+
+.zielwert-label {
+
+    margin-bottom:0;
+
+    font-size:14px;
+
+    text-transform:none;
+
+    letter-spacing:0;
+
+}
+
+.zielwert-input {
+
+    padding:10px 14px;
+
+    border-radius:12px;
+
+    border:1px solid #e5e7eb;
+
+    background:white;
+
+    font-size:14px;
+
+    width:180px;
+
+    box-shadow:
+    0 4px 12px rgba(15,23,42,.08);
+
+}
+
+.prognose-datum {
+
+    font-size:13px;
+
+    color:#64748b;
+
+    font-weight:500;
+
+}
+
+.hidden-column {
+    display:none;
+}
+
 </style>
 
 
@@ -764,7 +836,7 @@ id="restkaeufeJahrGesamt">
                     <th>Kurs Tagesanfang</th>
                     <th>Tagesentwicklung</th>
                     <th>Zeitpunkt</th>
-                    <th style="display:none;">ConsorsID</th>
+                    <th class="hidden-column">ConsorsID</th>
 
                 </tr>
 
@@ -851,12 +923,7 @@ id="restkaeufeJahrGesamt">
 
 <div class="tab-content" id="altersvorsorge">
 
-    <div style="
-        display:grid;
-        grid-template-columns:minmax(700px,1fr) 280px;
-        gap:22px;
-        align-items:stretch;
-    ">
+  <div class="vorsorge-layout">
 
         <table>
 
@@ -942,38 +1009,18 @@ id="restkaeufeJahrGesamt">
     </h1>
 
 
-    <div style="
-        display:flex;
-        align-items:center;
-        gap:12px;
-        margin-left:4px;
-        margin-top:10px;
-    ">
+<div class="zielwert-zeile">
 
-        <div class="label" style="
-            margin-bottom:0;
-            font-size:14px;
-            text-transform:none;
-            letter-spacing:0;
-        ">
+  <div class="label zielwert-label">
             Zielwert Altersvorsorge (€):
         </div>
 
 
-        <input 
-    type="text"
-    id="zielwert"
-    value="150000,00"
-            style="
-                padding:10px 14px;
-                border-radius:12px;
-                border:1px solid #e5e7eb;
-                background:white;
-                font-size:14px;
-                width:180px;
-                box-shadow:0 4px 12px rgba(15,23,42,.08);
-            "
-        >
+ <input 
+type="text"
+id="zielwert"
+class="zielwert-input"
+value="150000,00">
 
     </div>
 
@@ -1497,7 +1544,7 @@ const entwicklungProTagWerte =
                 true
             )
             +" Tage"
-            +"<br><span style='font-size:13px;color:#64748b;font-weight:500;'>"
+            +"<br><span class='prognose-datum'>"
             +prognoseDatum(prognoseTage[index])
             +"</span>";
 
@@ -1820,7 +1867,7 @@ ${formatDatum(etf.zeit)}
 </td>
 
 
-<td style="display:none;">
+<td class="hidden-column">
 
 ${etf.consorsId}
 
