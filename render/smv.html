@@ -636,8 +636,12 @@ table {
 
     gap:22px;
 
-    align-items:stretch;
+    align-items:start;
 
+}
+
+.vorsorge-chart canvas {
+    max-height:100%;
 }
 
 .zielwert-zeile {
@@ -701,19 +705,12 @@ table {
     display:none;
 }
 
-.kurse-layout {
-
-    display:block;
-
-}
-
-
 .chart-card {
 
     width:350px;
     max-width:100%;
 
-    margin:22px 0 0 0;
+    margin:0;
 
     background:
     rgba(255,255,255,.75);
@@ -735,21 +732,46 @@ table {
 
     justify-content:center;
 
-    height:350px;
+    height:100%;   /* vorher auto */
+}
+
+#kurse .chart-card {
+    margin-top:22px;
 }
 
 .chart-card canvas {
-    max-height:450px;
+    width:100% !important;
+    height:100% !important;
 }
 
 
 @media(max-width:900px){
 
     .kurse-layout {
+    display:grid;
+    grid-template-columns: 1fr 350px;
+    gap:22px;
+    align-items:stretch;
+}
 
-        grid-template-columns:1fr;
+}
 
-    }
+.vorsorge-layout {
+
+    grid-template-columns:
+    minmax(770px,1fr) 280px 280px;
+
+    align-items:stretch;   /* vorher start */
+}
+
+
+.vorsorge-chart {
+
+    margin:0;
+
+    height:auto;
+
+    min-height:0;
 
 }
 
@@ -1002,7 +1024,6 @@ id="restkaeufeJahrGesamt">
                 <th>Anlage</th>
                 <th>Kurs</th>
                 <th>Wert</th>
-                <th>Anteil</th>
 
             </tr>
 
@@ -1011,6 +1032,12 @@ id="restkaeufeJahrGesamt">
         <tbody id="vorsorgeBody"></tbody>
 
     </table>
+
+<div class="chart-card vorsorge-chart">
+
+    <canvas id="vorsorgeChart"></canvas>
+
+</div>
 
 <div class="card">
 
@@ -1790,10 +1817,6 @@ ${formatZahl(etf.kurs,3)} €
 ${formatZahl(wert,2,true)} €
 </td>
 
-<td class="kurs vorsorge-anteil">
-0 %
-</td>
-
 </tr>
 
 `;
@@ -1976,47 +1999,6 @@ document.getElementById("gesamtwert").innerHTML =
 formatZahl(gesamtwert,2,true)+
 " €</strong>";
 
-
-
-const vorsorgeWerte =
-document.querySelectorAll(".vorsorge-wert");
-
-const vorsorgeAnteile =
-document.querySelectorAll(".vorsorge-anteil");
-
-
-let vorsorgeGesamt = 0;
-
-vorsorgeWerte.forEach(zelle => {
-
-    vorsorgeGesamt +=
-    Number(
-        zelle.innerText
-        .replace(/\./g,"")
-        .replace(",",".")
-        .replace(" €","")
-    );
-
-});
-
-
-vorsorgeWerte.forEach((zelle, i) => {
-
-    const wert =
-    Number(
-        zelle.innerText
-        .replace(/\./g,"")
-        .replace(",",".")
-        .replace(" €","")
-    );
-
-
-    vorsorgeAnteile[i].innerHTML =
-    Math.round(
-        (wert / vorsorgeGesamt) * 100
-    ) + " %";
-
-});
 
 
 const tagesentwicklungProzent =
@@ -2379,6 +2361,7 @@ data:chartValues
 options:{
 
 responsive:true,
+maintainAspectRatio:false,
 
 plugins:{
 
@@ -2434,6 +2417,110 @@ formatZahl(prozent,2)
 }
 
 });
+
+if(window.vorsorgeChartInstance){
+    window.vorsorgeChartInstance.destroy();
+}
+
+
+const vorsorgeLabels = [];
+const vorsorgeValues = [];
+
+
+document.querySelectorAll("#vorsorgeBody tr")
+.forEach(row => {
+
+    vorsorgeLabels.push(
+        row.children[0].innerText
+    );
+
+    vorsorgeValues.push(
+        Number(
+            row.children[2]
+            .innerText
+            .replace(/\./g,"")
+            .replace(",",".")
+            .replace(" €","")
+        )
+    );
+
+});
+
+
+window.vorsorgeChartInstance =
+new Chart(
+document.getElementById("vorsorgeChart"),
+{
+
+type:"doughnut",
+
+data:{
+
+labels:vorsorgeLabels,
+
+datasets:[{
+
+data:vorsorgeValues
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+maintainAspectRatio:false,
+
+plugins:{
+
+title:{
+display:false,
+text:"Anteile Altersvorsorge",
+font:{
+size:16,
+weight:"700"
+}
+},
+
+legend:{
+display:false
+},
+
+tooltip:{
+
+callbacks:{
+
+label:function(context){
+
+const wert=context.raw;
+
+const gesamt=
+context.dataset.data
+.reduce((a,b)=>a+b,0);
+
+return (
+formatZahl(wert,2,true)
++" € ("+
+formatZahl(
+wert/gesamt*100,
+2
+)
++" %)"
+);
+
+}
+
+}
+
+}
+
+}
+
+}
+
+});
+
+
 }
 
 document.querySelectorAll(".tab-button").forEach(button => {
