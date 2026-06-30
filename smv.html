@@ -729,12 +729,12 @@ id="restkaeufeJahrGesamt">
 
         <button class="tab-button"
                 data-tab="sparplan">
-            Sparplanübersicht
+            Sparpläne
         </button>
 
         <button class="tab-button"
         data-tab="jahresanfang">
-    Werte Jahresanfang
+    Jahresanfang
 </button>
 
 <button class="tab-button"
@@ -921,7 +921,7 @@ id="restkaeufeJahrGesamt">
 
 <tr>
     <td>01.01.2026</td>
-    <td class="kurs historische-summe">102.110,22 €</td>
+    <td class="kurs historische-summe">102.110,23 €</td>
     <td class="kurs entwicklung">0 €</td>
 <td class="kurs entwicklung-pro-tag">0 €/Tag</td>
 </tr>
@@ -976,7 +976,7 @@ id="restkaeufeJahrGesamt">
     <div class="card">
 
         <div class="label">
-            Prognose 1
+            Prognose (seit Beginn)
         </div>
 
         <div class="metric small" id="prognose1">
@@ -989,7 +989,7 @@ id="restkaeufeJahrGesamt">
     <div class="card">
 
         <div class="label">
-            Prognose 2
+            Prognose (seit Beginn Vorjahr)
         </div>
 
         <div class="metric small" id="prognose2">
@@ -1002,7 +1002,7 @@ id="restkaeufeJahrGesamt">
     <div class="card">
 
         <div class="label">
-            Prognose 3
+            Prognose (seit Jahresbeginn)
         </div>
 
         <div class="metric small" id="prognose3">
@@ -2188,11 +2188,18 @@ heute.setHours(0,0,0,0);
 start.setHours(0,0,0,0);
 
     const tage =
-    Math.floor(
-        (heute - start)
-        /
-        (1000*60*60*24)
-    );
+Math.floor(
+    (heute - start)
+    /
+    (1000*60*60*24)
+);
+
+// Datum in der ersten Spalte um "(vor XXX Tagen)" ergänzen
+const startZelle =
+zelle.parentElement.querySelector("td");
+
+startZelle.innerHTML =
+`${startDatum} <span style="color:#64748b;">(vor ${formatZahl(tage,0,true)} Tagen)</span>`;
 
 
     const proTag =
