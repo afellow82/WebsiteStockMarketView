@@ -701,8 +701,59 @@ table {
     display:none;
 }
 
+.kurse-layout {
+
+    display:block;
+
+}
+
+
+.chart-card {
+
+    background:
+    rgba(255,255,255,.75);
+
+    backdrop-filter:blur(14px);
+
+    border-radius:22px;
+
+    padding:20px;
+
+    border:1px solid rgba(255,255,255,.8);
+
+    box-shadow:
+    0 12px 35px rgba(15,23,42,.10);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    margin-top:22px;
+
+    height:350px;   /* hier größer machen */
+}
+
+
+.chart-card canvas {
+    max-height:450px;
+}
+
+
+@media(max-width:900px){
+
+    .kurse-layout {
+
+        grid-template-columns:1fr;
+
+    }
+
+}
+
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 
@@ -823,7 +874,11 @@ id="restkaeufeJahrGesamt">
 
     <div class="tab-content active" id="kurse">
 
-        <table>
+<div class="kurse-layout">
+
+<div>
+
+<table>
 
             <thead>
 
@@ -834,7 +889,6 @@ id="restkaeufeJahrGesamt">
                     <th>Anteile</th>
                     <th>Kurs</th>
                     <th>Wert</th>
-                    <th>Anteil</th>
                     <th>Kurs Tagesanfang</th>
                     <th>Tagesentwicklung</th>
                     <th>Zeitpunkt</th>
@@ -854,7 +908,17 @@ id="restkaeufeJahrGesamt">
 
         </table>
 
+</div>
+
+</div>
+
         <div class="footer" id="updateInfo"></div>
+
+<div class="chart-card">
+
+    <canvas id="wertChart"></canvas>
+
+</div>
 
     </div>
 
@@ -1589,6 +1653,8 @@ sparplan.innerHTML="";
 vorsorge.innerHTML="";
 
 let gesamtwert=0;
+const chartLabels = [];
+const chartValues = [];
 let startwertHeute=0;
 let jahresAktuell=0;
 let jahresAnfang=0;
@@ -1732,7 +1798,8 @@ ${formatZahl(wert,2,true)} €
 }
 gesamtwert += wert;
 
-
+chartLabels.push(item.alias);
+chartValues.push(wert);
 
 jahresAktuell +=
 item.anzahlJA *
@@ -1778,10 +1845,6 @@ ${formatZahl(etf.kurs,3)} €
 
 <td class="kurs">
 ${formatZahl(wert,2,true)} €
-</td>
-
-<td class="kurs anteil">
-0 %
 </td>
 
 
@@ -1912,36 +1975,6 @@ formatZahl(gesamtwert,2,true)+
 " €</strong>";
 
 
-
-
-const anteilSpalten =
-document.querySelectorAll(".anteil");
-
-
-let index=0;
-
-
-for(const item of isins){
-
-const etf =
-kursDaten[item.isin];
-
-if(!etf) continue;
-
-
-const wert =
-item.anzahl *
-etf.kurs;
-
-if(anteilSpalten[index]){
-    anteilSpalten[index].innerHTML =
-    Math.round((wert/gesamtwert)*100)+" %";
-}
-
-
-index++;
-
-}
 
 const vorsorgeWerte =
 document.querySelectorAll(".vorsorge-wert");
@@ -2319,6 +2352,75 @@ document.getElementById("summeJahresanfang").innerHTML =
 formatZahl(summeWertJahresanfang,2,true) +
 " €</strong>";
 
+if(window.wertChartInstance){
+    window.wertChartInstance.destroy();
+}
+
+window.wertChartInstance =
+new Chart(
+document.getElementById("wertChart"),
+{
+type:"doughnut",
+
+data:{
+
+labels:chartLabels,
+
+datasets:[{
+
+data:chartValues
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+
+plugins:{
+
+legend:{
+    display:false,
+},
+
+tooltip:{
+
+callbacks:{
+
+label:function(context){
+
+const wert =
+context.raw;
+
+const gesamt =
+context.dataset.data
+.reduce((a,b)=>a+b,0);
+
+const prozent =
+(wert / gesamt) * 100;
+
+
+return (
+formatZahl(wert,2,true)
++
+" € ("+
+formatZahl(prozent,2)
++
+" %)"
+);
+
+}
+
+}
+
+}
+
+}
+
+}
+
+});
 }
 
 document.querySelectorAll(".tab-button").forEach(button => {
