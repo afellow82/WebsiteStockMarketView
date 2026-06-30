@@ -1502,6 +1502,16 @@ async function ladeAlleKurse(){
 const tbody =
 document.getElementById("tableBody");
 
+const kursDaten = {};
+
+for (const item of isins) {
+    try {
+        kursDaten[item.isin] = await ladeETF(item.isin);
+    }
+    catch(err) {
+        kursDaten[item.isin] = null;
+    }
+}
 
 const history =
 document.getElementById("historyBody");
@@ -1619,7 +1629,11 @@ try{
 
 
 const etf =
-await ladeETF(item.isin);
+kursDaten[item.isin];
+
+if(!etf){
+    throw new Error("Kein Kurs verfügbar");
+}
 
 
 
@@ -1849,18 +1863,20 @@ let index=0;
 
 for(const item of isins){
 
-
 const etf =
-await ladeETF(item.isin);
+kursDaten[item.isin];
+
+if(!etf) continue;
 
 
 const wert =
 item.anzahl *
 etf.kurs;
 
-
-anteilSpalten[index].innerHTML =
-Math.round((wert/gesamtwert)*100)+" %";
+if(anteilSpalten[index]){
+    anteilSpalten[index].innerHTML =
+    Math.round((wert/gesamtwert)*100)+" %";
+}
 
 
 index++;
@@ -2065,7 +2081,9 @@ let startDatumText="";
 for(const item of isins){
 
 const start =
-await ladeETF(item.isin);
+kursDaten[item.isin];
+
+if(!start) continue;
 
 
 if(
