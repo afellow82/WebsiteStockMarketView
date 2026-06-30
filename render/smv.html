@@ -2243,10 +2243,11 @@ historischeSummen.forEach((zelle, index) => {
 
     // Tage seit Start Betrachtung berechnen
 
-    const startDatum =
-    zelle.parentElement
-    .querySelector("td")
-    .innerText;
+const startZelle =
+zelle.parentElement.querySelector("td");
+
+const startDatum =
+startZelle.innerText.split(" ")[0];
 
 
     const start =
@@ -2272,12 +2273,8 @@ Math.floor(
 );
 
 // Datum in der ersten Spalte um "(vor XXX Tagen)" ergänzen
-const startZelle =
-zelle.parentElement.querySelector("td");
-
 startZelle.innerHTML =
 `${startDatum} <span style="color:#64748b;">(vor ${formatZahl(tage,0,true)} Tagen)</span>`;
-
 
     const proTag =
     tage > 0
