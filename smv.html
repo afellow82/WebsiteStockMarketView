@@ -834,6 +834,15 @@ id="restkaeufeJahrGesamt">
 
             <tbody id="historyBody"></tbody>
 
+<tfoot>
+<tr>
+    <td colspan="3"><strong>Summe</strong></td>
+    <td class="kurs" id="summeJahresanfang">
+        <strong>0,00 €</strong>
+    </td>
+</tr>
+</tfoot>
+
         </table>
 
     </div>
@@ -1535,7 +1544,7 @@ let startwertHeute=0;
 let jahresAktuell=0;
 let jahresAnfang=0;
 let restkaeufeJahrGesamt=0;
-
+let summeWertJahresanfang = 0;
 
 for(const item of isins){
 
@@ -1547,6 +1556,8 @@ item.kursJA;
 
 jahresAnfang +=
 historischerGesamtwert;
+
+summeWertJahresanfang += historischerGesamtwert;
 
 if ((item.sparplanBetrag ?? 0) > 0) {
 
@@ -2254,6 +2265,10 @@ STANDDATUM
 +
 startDatumText;
 
+document.getElementById("summeJahresanfang").innerHTML =
+"<strong>" +
+formatZahl(summeWertJahresanfang,2,true) +
+" €</strong>";
 
 }
 
