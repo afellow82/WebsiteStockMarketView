@@ -627,8 +627,135 @@ table {
     justify-content:flex-start;
 }
 
+.vorsorge-layout {
+
+    display:grid;
+
+    grid-template-columns:
+    minmax(700px,1fr) 280px;
+
+    gap:22px;
+
+    align-items:stretch;
+
+}
+
+.zielwert-zeile {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    margin-left:4px;
+
+    margin-top:10px;
+
+}
+
+.zielwert-label {
+
+    margin-bottom:0;
+
+    font-size:14px;
+
+    text-transform:none;
+
+    letter-spacing:0;
+
+}
+
+.zielwert-input {
+
+    padding:10px 14px;
+
+    border-radius:12px;
+
+    border:1px solid #e5e7eb;
+
+    background:white;
+
+    font-size:14px;
+
+    width:110px;
+
+    text-align:right;
+
+    box-shadow:
+    0 4px 12px rgba(15,23,42,.08);
+
+}
+
+.prognose-datum {
+
+    font-size:13px;
+
+    color:#64748b;
+
+    font-weight:500;
+
+}
+
+.hidden-column {
+    display:none;
+}
+
+.kurse-layout {
+
+    display:block;
+
+}
+
+
+.chart-card {
+
+    width:350px;
+    max-width:100%;
+
+    margin:22px 0 0 0;
+
+    background:
+    rgba(255,255,255,.75);
+
+    backdrop-filter:blur(14px);
+
+    border-radius:22px;
+
+    padding:20px;
+
+    border:1px solid rgba(255,255,255,.8);
+
+    box-shadow:
+    0 12px 35px rgba(15,23,42,.10);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    height:350px;
+}
+
+.chart-card canvas {
+    max-height:450px;
+}
+
+
+@media(max-width:900px){
+
+    .kurse-layout {
+
+        grid-template-columns:1fr;
+
+    }
+
+}
+
 </style>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 </head>
 
@@ -729,12 +856,12 @@ id="restkaeufeJahrGesamt">
 
         <button class="tab-button"
                 data-tab="sparplan">
-            Sparplanübersicht
+            Sparpläne
         </button>
 
         <button class="tab-button"
         data-tab="jahresanfang">
-    Werte Jahresanfang
+    Jahresanfang
 </button>
 
 <button class="tab-button"
@@ -749,7 +876,11 @@ id="restkaeufeJahrGesamt">
 
     <div class="tab-content active" id="kurse">
 
-        <table>
+<div class="kurse-layout">
+
+<div>
+
+<table>
 
             <thead>
 
@@ -760,11 +891,10 @@ id="restkaeufeJahrGesamt">
                     <th>Anteile</th>
                     <th>Kurs</th>
                     <th>Wert</th>
-                    <th>Anteil</th>
                     <th>Kurs Tagesanfang</th>
                     <th>Tagesentwicklung</th>
                     <th>Zeitpunkt</th>
-                    <th style="display:none;">ConsorsID</th>
+                    <th class="hidden-column">ConsorsID</th>
 
                 </tr>
 
@@ -780,7 +910,17 @@ id="restkaeufeJahrGesamt">
 
         </table>
 
+</div>
+
+</div>
+
         <div class="footer" id="updateInfo"></div>
+
+<div class="chart-card">
+
+    <canvas id="wertChart"></canvas>
+
+</div>
 
     </div>
 
@@ -834,6 +974,15 @@ id="restkaeufeJahrGesamt">
 
             <tbody id="historyBody"></tbody>
 
+<tfoot>
+<tr>
+    <td colspan="3"><strong>Summe</strong></td>
+    <td class="kurs" id="summeJahresanfang">
+        <strong>0,00 €</strong>
+    </td>
+</tr>
+</tfoot>
+
         </table>
 
     </div>
@@ -842,12 +991,7 @@ id="restkaeufeJahrGesamt">
 
 <div class="tab-content" id="altersvorsorge">
 
-    <div style="
-        display:grid;
-        grid-template-columns:minmax(700px,1fr) 280px;
-        gap:22px;
-        align-items:stretch;
-    ">
+  <div class="vorsorge-layout">
 
         <table>
 
@@ -921,7 +1065,7 @@ id="restkaeufeJahrGesamt">
 
 <tr>
     <td>01.01.2026</td>
-    <td class="kurs historische-summe">102.110,22 €</td>
+    <td class="kurs historische-summe">102.110,23 €</td>
     <td class="kurs entwicklung">0 €</td>
 <td class="kurs entwicklung-pro-tag">0 €/Tag</td>
 </tr>
@@ -933,38 +1077,18 @@ id="restkaeufeJahrGesamt">
     </h1>
 
 
-    <div style="
-        display:flex;
-        align-items:center;
-        gap:12px;
-        margin-left:4px;
-        margin-top:10px;
-    ">
+<div class="zielwert-zeile">
 
-        <div class="label" style="
-            margin-bottom:0;
-            font-size:14px;
-            text-transform:none;
-            letter-spacing:0;
-        ">
+  <div class="label zielwert-label">
             Zielwert Altersvorsorge (€):
         </div>
 
 
-        <input 
-    type="text"
-    id="zielwert"
-    value="150000,00"
-            style="
-                padding:10px 14px;
-                border-radius:12px;
-                border:1px solid #e5e7eb;
-                background:white;
-                font-size:14px;
-                width:180px;
-                box-shadow:0 4px 12px rgba(15,23,42,.08);
-            "
-        >
+ <input 
+type="text"
+id="zielwert"
+class="zielwert-input"
+value="150000,00">
 
     </div>
 
@@ -976,7 +1100,7 @@ id="restkaeufeJahrGesamt">
     <div class="card">
 
         <div class="label">
-            Prognose 1
+            Prognose (seit Beginn)
         </div>
 
         <div class="metric small" id="prognose1">
@@ -989,7 +1113,7 @@ id="restkaeufeJahrGesamt">
     <div class="card">
 
         <div class="label">
-            Prognose 2
+            Prognose (seit Beginn Vorjahr)
         </div>
 
         <div class="metric small" id="prognose2">
@@ -1002,7 +1126,7 @@ id="restkaeufeJahrGesamt">
     <div class="card">
 
         <div class="label">
-            Prognose 3
+            Prognose (seit Jahresbeginn)
         </div>
 
         <div class="metric small" id="prognose3">
@@ -1488,7 +1612,7 @@ const entwicklungProTagWerte =
                 true
             )
             +" Tage"
-            +"<br><span style='font-size:13px;color:#64748b;font-weight:500;'>"
+            +"<br><span class='prognose-datum'>"
             +prognoseDatum(prognoseTage[index])
             +"</span>";
 
@@ -1531,11 +1655,13 @@ sparplan.innerHTML="";
 vorsorge.innerHTML="";
 
 let gesamtwert=0;
+const chartLabels = [];
+const chartValues = [];
 let startwertHeute=0;
 let jahresAktuell=0;
 let jahresAnfang=0;
 let restkaeufeJahrGesamt=0;
-
+let summeWertJahresanfang = 0;
 
 for(const item of isins){
 
@@ -1547,6 +1673,8 @@ item.kursJA;
 
 jahresAnfang +=
 historischerGesamtwert;
+
+summeWertJahresanfang += historischerGesamtwert;
 
 if ((item.sparplanBetrag ?? 0) > 0) {
 
@@ -1672,7 +1800,8 @@ ${formatZahl(wert,2,true)} €
 }
 gesamtwert += wert;
 
-
+chartLabels.push(item.alias);
+chartValues.push(wert);
 
 jahresAktuell +=
 item.anzahlJA *
@@ -1718,10 +1847,6 @@ ${formatZahl(etf.kurs,3)} €
 
 <td class="kurs">
 ${formatZahl(wert,2,true)} €
-</td>
-
-<td class="kurs anteil">
-0 %
 </td>
 
 
@@ -1809,7 +1934,7 @@ ${formatDatum(etf.zeit)}
 </td>
 
 
-<td style="display:none;">
+<td class="hidden-column">
 
 ${etf.consorsId}
 
@@ -1852,36 +1977,6 @@ formatZahl(gesamtwert,2,true)+
 " €</strong>";
 
 
-
-
-const anteilSpalten =
-document.querySelectorAll(".anteil");
-
-
-let index=0;
-
-
-for(const item of isins){
-
-const etf =
-kursDaten[item.isin];
-
-if(!etf) continue;
-
-
-const wert =
-item.anzahl *
-etf.kurs;
-
-if(anteilSpalten[index]){
-    anteilSpalten[index].innerHTML =
-    Math.round((wert/gesamtwert)*100)+" %";
-}
-
-
-index++;
-
-}
 
 const vorsorgeWerte =
 document.querySelectorAll(".vorsorge-wert");
@@ -2188,11 +2283,18 @@ heute.setHours(0,0,0,0);
 start.setHours(0,0,0,0);
 
     const tage =
-    Math.floor(
-        (heute - start)
-        /
-        (1000*60*60*24)
-    );
+Math.floor(
+    (heute - start)
+    /
+    (1000*60*60*24)
+);
+
+// Datum in der ersten Spalte um "(vor XXX Tagen)" ergänzen
+const startZelle =
+zelle.parentElement.querySelector("td");
+
+startZelle.innerHTML =
+`${startDatum} <span style="color:#64748b;">(vor ${formatZahl(tage,0,true)} Tagen)</span>`;
 
 
     const proTag =
@@ -2247,7 +2349,91 @@ STANDDATUM
 +
 startDatumText;
 
+document.getElementById("summeJahresanfang").innerHTML =
+"<strong>" +
+formatZahl(summeWertJahresanfang,2,true) +
+" €</strong>";
 
+if(window.wertChartInstance){
+    window.wertChartInstance.destroy();
+}
+
+window.wertChartInstance =
+new Chart(
+document.getElementById("wertChart"),
+{
+type:"doughnut",
+
+data:{
+
+labels:chartLabels,
+
+datasets:[{
+
+data:chartValues
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+
+plugins:{
+
+title: {
+    display: true,
+    text: "Anteile Gesamtwert",
+    font: {
+        size: 16,
+        weight: "700"
+    },
+    padding: {
+        bottom: 15
+    }
+},
+
+legend:{
+    display:false,
+},
+tooltip:{
+
+callbacks:{
+
+label:function(context){
+
+const wert =
+context.raw;
+
+const gesamt =
+context.dataset.data
+.reduce((a,b)=>a+b,0);
+
+const prozent =
+(wert / gesamt) * 100;
+
+
+return (
+formatZahl(wert,2,true)
++
+" € ("+
+formatZahl(prozent,2)
++
+" %)"
+);
+
+}
+
+}
+
+}
+
+}
+
+}
+
+});
 }
 
 document.querySelectorAll(".tab-button").forEach(button => {
