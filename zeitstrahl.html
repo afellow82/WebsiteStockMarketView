@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jahres-Zeitstrahl</title>
+<style>
+  :root{
+    --ink:#12233f;        /* dunkles Marineblau, Text/Linie */
+    --ink-soft:#4a5b73;   /* gedämpfter Text */
+    --paper:#f7f6f2;      /* warmer Hintergrund */
+    --line:#c7cdd6;       /* neutrale Linie/Rahmen */
+    --accent:#c99b3f;     /* gedecktes Gold für "heute" */
+    --card:#ffffff;
+  }
+
+  *{ box-sizing:border-box; }
+
+  .zeitstrahl-wrapper{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Iowan Old Style","Georgia",serif;
+    padding:56px 40px 64px;
+    border-radius:4px;
+    max-width:960px;
+    margin:0 auto;
+  }
+
+  .zs-header{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:6px;
+  }
+
+  .zs-title{
+    font-size:28px;
+    font-weight:600;
+    margin:0 0 40px 0;
+    letter-spacing:-0.01em;
+  }
+
+  .zs-title .jahr{
+    color:var(--accent);
+  }
+
+  .zs-track-area{
+    position:relative;
+    padding:70px 6px 54px;
+  }
+
+  .zs-line{
+    position:absolute;
+    left:0; right:0; top:50%;
+    height:2px;
+    background:var(--line);
+    transform:translateY(-50%);
+  }
+
+  .zs-line-fill{
+    position:absolute;
+    left:0; top:50%;
+    height:2px;
+    background:var(--ink);
+    transform:translateY(-50%);
+    transition:width 0.6s ease;
+  }
+
+  .zs-punkt{
+    position:absolute;
+    top:50%;
+    transform:translate(-50%,-50%);
+    width:12px;
+    height:12px;
+    border-radius:50%;
+    background:var(--ink);
+    border:2px solid var(--paper);
+    z-index:2;
+  }
+
+  .zs-punkt.heute{
+    width:16px;
+    height:16px;
+    background:var(--accent);
+    box-shadow:0 0 0 4px rgba(201,155,63,0.18);
+  }
+
+  .zs-marker{
+    position:absolute;
+    transform:translateX(-50%);
+    text-align:center;
+    width:190px;
+  }
+
+  .zs-marker.oben{
+    bottom:calc(50% + 26px);
+  }
+  .zs-marker.unten{
+    top:calc(50% + 26px);
+  }
+
+  .zs-marker .betrag{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:19px;
+    font-weight:700;
+    color:var(--ink);
+    white-space:nowrap;
+  }
+
+  .zs-marker.heute .betrag{
+    color:var(--accent);
+    font-size:22px;
+  }
+
+  .zs-marker .datum{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:12px;
+    color:var(--ink-soft);
+    margin-top:3px;
+    letter-spacing:0.02em;
+  }
+
+  .zs-marker.heute .datum{
+    font-weight:600;
+    color:var(--ink);
+  }
+
+  .zs-marker .tag{
+    display:none;
+  }
+
+  .zs-marker.heute .tag{
+    display:inline-block;
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:10px;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    color:#fff;
+    background:var(--accent);
+    padding:2px 8px;
+    border-radius:10px;
+    margin-bottom:6px;
+  }
+
+  .zs-enden{
+    position:absolute;
+    top:50%;
+    transform:translateY(-50%);
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-size:11px;
+    color:var(--ink-soft);
+  }
+  .zs-enden.links{ left:0; }
+  .zs-enden.rechts{ right:0; text-align:right; }
+
+  @media (max-width:640px){
+    .zeitstrahl-wrapper{ padding:36px 18px 48px; }
+    .zs-title{ font-size:22px; }
+    .zs-marker{ width:130px; }
+    .zs-marker .betrag{ font-size:15px; }
+    .zs-marker.heute .betrag{ font-size:17px; }
+    .zs-track-area{ padding:78px 4px 60px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="zeitstrahl-wrapper">
+  <div class="zs-header">Jahresübersicht</div>
+  <h1 class="zs-title">Verlauf <span class="jahr" id="zs-jahr"></span></h1>
+
+  <div class="zs-track-area">
+    <div class="zs-line"></div>
+    <div class="zs-line-fill" id="zs-fill"></div>
+
+    <!-- Startpunkt: 01.01. -->
+    <div class="zs-punkt" style="left:0%;"></div>
+    <div class="zs-marker oben" style="left:0%; transform:translateX(0);">
+      <div class="betrag" id="zs-betrag-start"></div>
+      <div class="datum" id="zs-datum-start"></div>
+    </div>
+
+    <!-- Heute -->
+    <div class="zs-punkt heute" id="zs-punkt-heute"></div>
+    <div class="zs-marker unten heute" id="zs-marker-heute">
+      <div class="tag">Heute</div>
+      <div class="betrag" id="zs-betrag-heute"></div>
+      <div class="datum" id="zs-datum-heute"></div>
+    </div>
+
+    <!-- Endpunkt: 31.12. -->
+    <div class="zs-punkt" style="left:100%;"></div>
+    <div class="zs-marker oben" style="left:100%; transform:translateX(0%) translateX(-190px);">
+      <div class="betrag" id="zs-betrag-ende"></div>
+      <div class="datum" id="zs-datum-ende"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ---- Hier die Beträge anpassen ----
+  const betragStart = 111111.11;
+  const betragHeute = 222222.22;
+  const betragEnde  = 333333.33;
+  // ------------------------------------
+
+  function formatEuro(zahl){
+    return zahl.toLocaleString('de-DE', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €';
+  }
+
+  function formatDatum(d){
+    return d.toLocaleDateString('de-DE', {day:'2-digit', month:'2-digit', year:'numeric'});
+  }
+
+  const heute = new Date();
+  const jahr = heute.getFullYear();
+  const start = new Date(jahr, 0, 1);
+  const ende = new Date(jahr, 11, 31);
+
+  const gesamtMs = ende - start;
+  const verstricheneMs = heute - start;
+  let anteil = verstricheneMs / gesamtMs;
+  anteil = Math.max(0, Math.min(1, anteil));
+  const prozent = (anteil * 100).toFixed(2);
+
+  document.getElementById('zs-jahr').textContent = jahr;
+
+  document.getElementById('zs-betrag-start').textContent = formatEuro(betragStart);
+  document.getElementById('zs-datum-start').textContent = formatDatum(start);
+
+  document.getElementById('zs-betrag-ende').textContent = formatEuro(betragEnde);
+  document.getElementById('zs-datum-ende').textContent = formatDatum(ende) + ' (Prognose)';
+
+  document.getElementById('zs-betrag-heute').textContent = formatEuro(betragHeute);
+  document.getElementById('zs-datum-heute').textContent = formatDatum(heute);
+
+  document.getElementById('zs-fill').style.width = prozent + '%';
+  document.getElementById('zs-punkt-heute').style.left = prozent + '%';
+
+  const markerHeute = document.getElementById('zs-marker-heute');
+  markerHeute.style.left = prozent + '%';
+
+  // Marker am Rand nicht abschneiden
+  requestAnimationFrame(() => {
+    if (anteil < 0.12) {
+      markerHeute.style.transform = 'translateX(0)';
+    } else if (anteil > 0.88) {
+      markerHeute.style.transform = 'translateX(-100%)';
+    }
+  });
+</script>
+
+</body>
+</html>
