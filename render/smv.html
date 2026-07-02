@@ -780,6 +780,116 @@ table {
 
 }
 
+.jahresverlauf-card {
+    margin-top:22px;
+    overflow:hidden;
+}
+
+.zeitstrahl {
+    position:relative;
+    height:130px;
+    margin:10px 0 6px 0;
+    --inset:130px;
+}
+
+.zeitstrahl-linie-links,
+.zeitstrahl-linie-rechts {
+    position:absolute;
+    top:50%;
+    height:5px;
+    transform:translateY(-50%);
+}
+
+.zeitstrahl-linie-links {
+    left:var(--inset);
+    background:#9ca3af;
+    border-radius:3px 0 0 3px;
+}
+
+.zeitstrahl-linie-rechts {
+    right:var(--inset);
+    background:#d1d5db;
+    border-radius:0 3px 3px 0;
+}
+
+.zeitstrahl-punkt {
+    position:absolute;
+    top:50%;
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    background:#9ca3af;
+    border:3px solid #fff;
+    box-shadow:0 2px 6px rgba(15,23,42,.35);
+    transform:translate(-50%,-50%);
+}
+
+.zeitstrahl-punkt.start {
+    left:var(--inset);
+}
+
+.zeitstrahl-punkt.ende {
+    left:calc(100% - var(--inset));
+}
+
+.zeitstrahl-punkt.heute {
+    width:18px;
+    height:18px;
+    background:#9ca3af;
+    box-shadow:0 2px 8px rgba(156,163,175,.5);
+}
+
+.zeitstrahl-label {
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:5px;
+    white-space:nowrap;
+}
+
+.zeitstrahl-punkt.start .zeitstrahl-label,
+.zeitstrahl-punkt.ende .zeitstrahl-label {
+    bottom:100%;
+    margin-bottom:11px;
+}
+
+.zeitstrahl-punkt.heute .zeitstrahl-label {
+    top:100%;
+    margin-top:11px;
+}
+
+.zeitstrahl-datum {
+    font-size:18px;
+    color:#9ca3af;
+    letter-spacing:.5px;
+    font-weight:700;
+}
+
+.zeitstrahl-wert {
+    font-size:22px;
+    font-weight:750;
+    color:#111827;
+}
+
+@media(max-width:900px){
+
+.zeitstrahl {
+    --inset:78px;
+}
+
+.zeitstrahl-datum {
+    font-size:12px;
+}
+
+.zeitstrahl-wert {
+    font-size:16px;
+}
+
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -886,9 +996,11 @@ id="restkaeufeJahrGesamt">
             Sparpläne
         </button>
 
-        <button class="tab-button"
-        data-tab="jahresanfang">
-    Jahresanfang
+<button
+    id="jahresTabButton"
+    class="tab-button"
+    data-tab="jahresanfang">
+    Jahr
 </button>
 
 <button class="tab-button"
@@ -984,6 +1096,11 @@ id="restkaeufeJahrGesamt">
 
     <div class="tab-content" id="jahresanfang">
 
+
+    <h1 class="section-title">
+        Jahresanfang
+    </h1>
+
         <table>
 
             <thead>
@@ -1011,6 +1128,42 @@ id="restkaeufeJahrGesamt">
 </tfoot>
 
         </table>
+
+<h1 class="section-title">
+    Jahresverlauf
+</h1>
+
+<div class="card jahresverlauf-card">
+
+    <div class="zeitstrahl" id="zeitstrahl">
+
+        <div class="zeitstrahl-linie-links" id="zeitstrahlLinieLinks"></div>
+        <div class="zeitstrahl-linie-rechts" id="zeitstrahlLinieRechts"></div>
+
+        <div class="zeitstrahl-punkt start">
+            <div class="zeitstrahl-label">
+                <div class="zeitstrahl-datum" id="zeitstrahlStartDatum"></div>
+                <div class="zeitstrahl-wert" id="zeitstrahlStartWert"></div>
+            </div>
+        </div>
+
+        <div class="zeitstrahl-punkt heute" id="zeitstrahlHeutePunkt">
+            <div class="zeitstrahl-label">
+                <div class="zeitstrahl-datum" id="zeitstrahlHeuteDatum"></div>
+                <div class="zeitstrahl-wert" id="zeitstrahlHeuteWert"></div>
+            </div>
+        </div>
+
+        <div class="zeitstrahl-punkt ende">
+            <div class="zeitstrahl-label">
+                <div class="zeitstrahl-datum" id="zeitstrahlEndeDatum"></div>
+                <div class="zeitstrahl-wert" id="zeitstrahlEndeWert"></div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
 
     </div>
     
@@ -2127,6 +2280,61 @@ vergangeneTage;
 
 
 
+// Jahresverlauf-Zeitstrahl aktualisieren
+
+const jahresEnde =
+new Date(
+jetztDatum.getFullYear(),
+11,
+31
+);
+
+const gesamtTageJahr =
+Math.floor(
+(jahresEnde-jahresStart)/
+(1000*60*60*24)
+)+1;
+
+const restTageJahr =
+gesamtTageJahr - vergangeneTage;
+
+const prognoseEndwert =
+gesamtwert +
+(restTageJahr * entwicklungProTag);
+
+const heutePosition =
+((vergangeneTage-1) / (gesamtTageJahr-1)) * 100;
+
+document.getElementById("zeitstrahlStartDatum").textContent =
+"01.01." + jetztDatum.getFullYear();
+
+document.getElementById("zeitstrahlStartWert").textContent =
+formatZahl(jahresAnfang,2,true) + " €";
+
+document.getElementById("zeitstrahlEndeDatum").textContent =
+"31.12." + jetztDatum.getFullYear() + " (Prognose)";
+
+document.getElementById("zeitstrahlEndeWert").textContent =
+formatZahl(prognoseEndwert,2,true) + " €";
+
+document.getElementById("zeitstrahlHeuteDatum").textContent =
+jetztDatum.toLocaleDateString(
+"de-DE",
+{day:"2-digit",month:"2-digit",year:"numeric"}
+);
+
+document.getElementById("zeitstrahlHeuteWert").textContent =
+formatZahl(gesamtwert,2,true) + " €";
+
+document.getElementById("zeitstrahlHeutePunkt").style.left =
+"calc(var(--inset) + (100% - (var(--inset) * 2)) * "+(heutePosition/100)+")";
+
+document.getElementById("zeitstrahlLinieLinks").style.width =
+"calc((100% - (var(--inset) * 2)) * "+(heutePosition/100)+")";
+
+document.getElementById("zeitstrahlLinieRechts").style.left =
+"calc(var(--inset) + (100% - (var(--inset) * 2)) * "+(heutePosition/100)+")";
+
 document.getElementById(
 "jahresentwicklungGesamt"
 ).innerHTML =
@@ -2545,6 +2753,10 @@ document.querySelectorAll(".tab-button").forEach(button => {
 
 });
 
+const aktuellesJahr = new Date().getFullYear();
+
+document.getElementById("jahresTabButton").textContent =
+    "Jahr " + aktuellesJahr;
 
 
 ladeAlleKurse();
