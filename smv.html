@@ -886,9 +886,11 @@ id="restkaeufeJahrGesamt">
             Sparpläne
         </button>
 
-        <button class="tab-button"
-        data-tab="jahresanfang">
-    Jahresanfang
+<button
+    id="jahresTabButton"
+    class="tab-button"
+    data-tab="jahresanfang">
+    Jahr
 </button>
 
 <button class="tab-button"
@@ -984,6 +986,11 @@ id="restkaeufeJahrGesamt">
 
     <div class="tab-content" id="jahresanfang">
 
+
+    <h1 class="section-title">
+        Jahresanfang
+    </h1>
+
         <table>
 
             <thead>
@@ -1011,6 +1018,10 @@ id="restkaeufeJahrGesamt">
 </tfoot>
 
         </table>
+
+<h1 class="section-title">
+    Jahresverlauf
+</h1>
 
     </div>
     
@@ -2545,6 +2556,10 @@ document.querySelectorAll(".tab-button").forEach(button => {
 
 });
 
+const aktuellesJahr = new Date().getFullYear();
+
+document.getElementById("jahresTabButton").textContent =
+    "Jahr " + aktuellesJahr;
 
 
 ladeAlleKurse();
