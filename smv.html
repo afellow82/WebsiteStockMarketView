@@ -1769,12 +1769,12 @@ const entwicklungProTagWerte =
 
     entwicklungProTagWerte.forEach(zelle => {
 
-        const wert = Number(
-            zelle.innerText
-            .replace(/\./g,"")
-            .replace(",",".")
-            .replace(" €/Tag","")
-        );
+const wert = Number(
+    zelle.innerText
+        .replace(/\./g,"")
+        .replace(",",".")
+        .replace(/[^\d.-]/g,"")
+);
 
 
         if(wert !== null && Number.isFinite(wert) && wert > 0){
@@ -2589,14 +2589,10 @@ startZelle.innerHTML =
 
 
 
-    entwicklungProTagZellen[index].innerHTML =
-    (proTag >= 0 ? "+" : "") +
-    formatZahl(
-        proTag,
-        2,
-        true
-    ) +
-    " €/Tag";
+entwicklungProTagZellen[index].innerHTML =
+(proTag >= 0 ? "+ " : "") +
+formatZahl(proTag, 2, true) +
+" €/Tag";
 
 
 });
