@@ -2627,7 +2627,7 @@ setTimeout(() => {
 
 const updateInfoEl = document.getElementById("updateInfo");
 
-updateInfoEl.textContent =
+updateInfoEl.innerHTML =
 "Letzte Aktualisierung: " +
 new Date().toLocaleString("de-DE", {
     day: "2-digit",
@@ -2636,8 +2636,10 @@ new Date().toLocaleString("de-DE", {
     hour: "2-digit",
     minute: "2-digit"
 }) +
-" | automatische Aktualisierung alle 5 Minuten | Stand Anteile: " +
+" | automatische Aktualisierung alle 5 Minuten | " +
+"<span id='standAnteileText'>Stand Anteile: " +
 STANDDATUM +
+"</span>" +
 startDatumText;
 
 
@@ -2653,9 +2655,12 @@ const now = new Date();
 const diffDays =
 Math.floor((now - standDate) / (1000 * 60 * 60 * 24));
 
-if (diffDays > 31) {
-    updateInfoEl.classList.add("stand-datum-alt");
+const standEl = document.getElementById("standAnteileText");
+
+if (diffDays >= 31) {
+    standEl.classList.add("stand-datum-alt");
 }
+
 document.getElementById("summeJahresanfang").innerHTML =
 "<strong>" +
 formatZahl(summeWertJahresanfang,2,true) +
