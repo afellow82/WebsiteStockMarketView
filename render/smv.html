@@ -890,6 +890,21 @@ table {
 
 }
 
+.summe-zeile {
+    background: #f8fafc;
+    font-weight: 700;
+}
+
+.summe-zeile td {
+    padding: 16px 16px;
+    border-bottom: none;
+}
+
+.summe-zeile td strong {
+    font-size: 17px;
+    letter-spacing: 0.3px;
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -987,14 +1002,19 @@ id="restkaeufeJahrGesamt">
     <div class="tab-buttons">
 
         <button class="tab-button active"
-                data-tab="kurse">
-            Aktuelle Kurse
-        </button>
+        data-tab="kurse">
+    Aktuelle Kurse
+</button>
 
-        <button class="tab-button"
-                data-tab="sparplan">
-            Sparpläne
-        </button>
+<button class="tab-button"
+        data-tab="performance">
+    Performance
+</button>
+
+<button class="tab-button"
+        data-tab="sparplan">
+    Sparpläne
+</button>
 
 <button
     id="jahresTabButton"
@@ -1064,6 +1084,35 @@ id="restkaeufeJahrGesamt">
     </div>
 
 
+<!-- Performance -->
+
+<div class="tab-content" id="performance">
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Anlage</th>
+                <th>Wert</th>
+                <th>Investition</th>
+                <th>Gewinn / Verlust</th>
+            </tr>
+        </thead>
+
+        <tbody id="performanceBody">
+            <tr>
+                <td colspan="4">Lade Daten...</td>
+            </tr>
+        </tbody>
+
+    </table>
+
+<div class="footer">
+    Stand Investitionen: 03.07.2026
+</div>
+
+</div>
+
     <!-- Sparplan -->
 
     <div class="tab-content" id="sparplan">
@@ -1119,7 +1168,7 @@ id="restkaeufeJahrGesamt">
             <tbody id="historyBody"></tbody>
 
 <tfoot>
-<tr>
+<tr class="summe-zeile">
     <td colspan="3"><strong>Summe</strong></td>
     <td class="kurs" id="summeJahresanfang">
         <strong>0,00 €</strong>
@@ -1340,7 +1389,8 @@ anzahlJA:3792.520514,
 kursJA:12.19,
 sparplanBetrag:400.00,
 sparplanRhytmus:"monatlich",
-sparplanTag:2
+sparplanTag:2,
+investition:53642.58
 },
 
 {
@@ -1352,7 +1402,8 @@ anzahlJA:500.084082,
 kursJA:111.74,
 sparplanBetrag:400.00,
 sparplanRhytmus:"monatlich",
-sparplanTag:2
+sparplanTag:2,
+investition:34282.47
 },
 
 {
@@ -1361,7 +1412,8 @@ isin:"DE0008404005",
 link:"https://www.onvista.de/aktien/Allianz-Aktie-DE0008404005?notation=244494211",
 anzahl:91.862,
 anzahlJA:91.862,
-kursJA:390.50
+kursJA:390.50,
+investition:19449.00
 },
 
 {
@@ -1370,7 +1422,8 @@ isin:"IE000X59ZHE2",
 link:"https://www.onvista.de/etf/iShs-III-iShs-AI-Infrastr-ETF-Reg-Shs-USD-Acc-oN-ETF-IE000X59ZHE2?notation=486568018",
 anzahl:476.198976,
 anzahlJA:476.198976,
-kursJA:6.19
+kursJA:6.19,
+investition:3000.05
 },
 
 {
@@ -1382,7 +1435,8 @@ anzahlJA:4.873,
 kursJA:457.889,
 sparplanBetrag:40.00,
 sparplanRhytmus:"monatlich",
-sparplanTag:24
+sparplanTag:24,
+investition:2000
 }
 
 ];
@@ -1730,12 +1784,12 @@ const entwicklungProTagWerte =
 
     entwicklungProTagWerte.forEach(zelle => {
 
-        const wert = Number(
-            zelle.innerText
-            .replace(/\./g,"")
-            .replace(",",".")
-            .replace(" €/Tag","")
-        );
+const wert = Number(
+    zelle.innerText
+        .replace(/\./g,"")
+        .replace(",",".")
+        .replace(/[^\d.-]/g,"")
+);
 
 
         if(wert !== null && Number.isFinite(wert) && wert > 0){
@@ -1833,11 +1887,14 @@ document.getElementById("sparplanBody");
 const vorsorge =
 document.getElementById("vorsorgeBody");
 
+const performance =
+document.getElementById("performanceBody");
 
 tbody.innerHTML="";
 history.innerHTML="";
 sparplan.innerHTML="";
 vorsorge.innerHTML="";
+performance.innerHTML="";
 
 let gesamtwert=0;
 const chartLabels = [];
@@ -1847,6 +1904,8 @@ let jahresAktuell=0;
 let jahresAnfang=0;
 let restkaeufeJahrGesamt=0;
 let summeWertJahresanfang = 0;
+
+const performanceDaten = [];
 
 for(const item of isins){
 
@@ -1953,6 +2012,20 @@ if(!etf){
 const wert =
 item.anzahl *
 etf.kurs;
+
+const investition = item.investition ?? 0;
+const gewinnVerlust = wert - investition;
+const prozent = investition !== 0
+    ? (gewinnVerlust / investition) * 100
+    : 0;
+
+performanceDaten.push({
+    alias: item.alias,
+    wert,
+    investition,
+    gewinnVerlust,
+    prozent
+});
 
 if (
     item.alias === "ETF Core MSCI World" ||
@@ -2152,6 +2225,41 @@ ${err.message}
 
 
 }
+
+performanceDaten
+    .sort((a, b) => b.gewinnVerlust - a.gewinnVerlust)
+    .forEach(item => {
+
+        performance.innerHTML += `
+
+<tr>
+
+    <td>${item.alias}</td>
+
+    <td class="kurs">
+        ${formatZahl(item.wert,2,true)} €
+    </td>
+
+    <td class="kurs">
+        ${formatZahl(item.investition,2,true)} €
+    </td>
+
+    <td class="kurs"
+        style="color:${item.gewinnVerlust >= 0 ? "#15803d" : "#b91c1c"};font-weight:650;">
+
+${(item.gewinnVerlust >= 0 ? "+" : "")}
+${formatZahl(item.gewinnVerlust,2,true)} €
+(${item.prozent >= 0 ? "+ " : ""}${formatZahl(item.prozent,2)} %)
+
+    </td>
+
+</tr>
+
+`;
+
+    });
+
+
 document.getElementById("gesamtwert").innerHTML =
 "<strong>"+
 formatZahl(gesamtwert,2,true)+
@@ -2444,7 +2552,7 @@ historischeSummen.forEach((zelle, index) => {
 
 
     entwicklungZellen[index].innerHTML =
-    (entwicklung >= 0 ? "+" : "") +
+    (entwicklung >= 0 ? "+ " : "") +
     formatZahl(
         entwicklung,
         2,
@@ -2496,14 +2604,10 @@ startZelle.innerHTML =
 
 
 
-    entwicklungProTagZellen[index].innerHTML =
-    (proTag >= 0 ? "+" : "") +
-    formatZahl(
-        proTag,
-        2,
-        true
-    ) +
-    " €/Tag";
+entwicklungProTagZellen[index].innerHTML =
+(proTag >= 0 ? "+ " : "") +
+formatZahl(proTag, 2, true) +
+" €/Tag";
 
 
 });
