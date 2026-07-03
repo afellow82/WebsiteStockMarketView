@@ -905,6 +905,11 @@ table {
     letter-spacing: 0.3px;
 }
 
+.stand-datum-alt {
+    color: #b91c1c;
+    font-weight: 700;
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -2620,31 +2625,37 @@ setTimeout(() => {
 
 // Update Info
 
-document.getElementById(
-"updateInfo"
-).textContent =
+const updateInfoEl = document.getElementById("updateInfo");
 
-"Letzte Aktualisierung: "+
-
-new Date().toLocaleString(
-"de-DE",
-{
-    day:"2-digit",
-    month:"2-digit",
-    year:"numeric",
-    hour:"2-digit",
-    minute:"2-digit"
-}
-
-)
-
-+
-" | automatische Aktualisierung alle 5 Minuten | Stand Anteile: "
-+
-STANDDATUM
-+
+updateInfoEl.textContent =
+"Letzte Aktualisierung: " +
+new Date().toLocaleString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+}) +
+" | automatische Aktualisierung alle 5 Minuten | Stand Anteile: " +
+STANDDATUM +
 startDatumText;
 
+
+// --- NEU: Datum prüfen ---
+function parseDEDate(str) {
+    const [d, m, y] = str.split(".");
+    return new Date(`${y}-${m}-${d}`);
+}
+
+const standDate = parseDEDate(STANDDATUM);
+const now = new Date();
+
+const diffDays =
+Math.floor((now - standDate) / (1000 * 60 * 60 * 24));
+
+if (diffDays > 31) {
+    updateInfoEl.classList.add("stand-datum-alt");
+}
 document.getElementById("summeJahresanfang").innerHTML =
 "<strong>" +
 formatZahl(summeWertJahresanfang,2,true) +
