@@ -1029,6 +1029,11 @@ id="restkaeufeJahrGesamt">
 </button>
 
 <button class="tab-button"
+        data-tab="prognose">
+    Prognose
+</button>
+
+<button class="tab-button"
         data-tab="altersvorsorge">
     Altersvorsorge
 </button>
@@ -1220,6 +1225,30 @@ id="restkaeufeJahrGesamt">
 </div>
 
     </div>
+  
+  <!-- Prognose -->
+
+<div class="tab-content" id="prognose">
+
+    <table>
+
+        <thead>
+
+            <tr>
+                <th>Meilenstein</th>
+                <th>Resttage</th>
+                <th>Datum</th>
+            </tr>
+
+        </thead>
+
+        <tbody id="prognoseMeilensteineBody">
+
+        </tbody>
+
+    </table>
+
+</div>
     
    <!-- Altersvorsorge -->
 
@@ -2480,6 +2509,73 @@ formatZahl(Math.abs(jahresentwicklungGesamtBetrag),2,true)+
 formatZahl(Math.abs(entwicklungProTag),2,true)+
 
 " €/Tag)</strong>";
+
+
+// Prognose-Meilensteine
+
+const prognoseBody =
+document.getElementById("prognoseMeilensteineBody");
+
+prognoseBody.innerHTML = "";
+
+for(let meilenstein = 200000;
+    meilenstein <= 1000000;
+    meilenstein += 100000){
+
+    let resttage = null;
+    let datum = "-";
+
+    if(entwicklungProTag > 0){
+
+        resttage = Math.ceil(
+            (meilenstein - gesamtwert) /
+            entwicklungProTag
+        );
+
+        const zielDatum = new Date();
+
+        zielDatum.setDate(
+            zielDatum.getDate() + resttage
+        );
+
+        datum =
+        zielDatum.toLocaleDateString(
+            "de-DE",
+            {
+                day:"2-digit",
+                month:"2-digit",
+                year:"numeric"
+            }
+        );
+    }
+
+    prognoseBody.innerHTML += `
+
+<tr>
+
+<td class="kurs">
+${formatZahl(meilenstein,2,true)} €
+</td>
+
+<td class="kurs">
+${
+resttage !== null
+?
+formatZahl(resttage,0,true)+" Tage"
+:
+"-"
+}
+</td>
+
+<td class="kurs">
+${datum}
+</td>
+
+</tr>
+
+`;
+
+}
 
 
 document.getElementById(
