@@ -1296,6 +1296,13 @@ id="restkaeufeJahrGesamt">
 </tr>
 
 <tr>
+    <td>01.01.2024</td>
+    <td class="kurs historische-summe">46.366,15 €</td>
+    <td class="kurs entwicklung">0 €</td>
+<td class="kurs entwicklung-pro-tag">0 €/Tag</td>
+</tr>
+
+<tr>
     <td>01.01.2025</td>
     <td class="kurs historische-summe">76.422,57 €</td>
     <td class="kurs entwicklung">0 €</td>
@@ -1837,30 +1844,31 @@ const wert = Number(
 
 
 
-    ["prognose1","prognose2","prognose3"].forEach((id,index)=>{
+    const prognoseZuordnung = [
+    prognoseTage[0],                              // seit Beginn
+    prognoseTage[prognoseTage.length - 2],        // seit Beginn Vorjahr
+    prognoseTage[prognoseTage.length - 1]         // seit Jahresbeginn
+];
 
+["prognose1","prognose2","prognose3"].forEach((id,index)=>{
 
-        if(prognoseTage[index] === null){
+    const tage = prognoseZuordnung[index];
 
-            document.getElementById(id).innerHTML="-";
+    if(tage === null || !Number.isFinite(tage)){
 
-            return;
+        document.getElementById(id).innerHTML = "-";
+        return;
 
-        }
+    }
 
+    document.getElementById(id).innerHTML =
+        formatZahl(tage,0,true) +
+        " Tage" +
+        "<br><span class='prognose-datum'>" +
+        prognoseDatum(tage) +
+        "</span>";
 
-        document.getElementById(id).innerHTML =
-            formatZahl(
-                prognoseTage[index],
-                0,
-                true
-            )
-            +" Tage"
-            +"<br><span class='prognose-datum'>"
-            +prognoseDatum(prognoseTage[index])
-            +"</span>";
-
-    });
+});
 
 }
 
