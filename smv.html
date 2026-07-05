@@ -1182,9 +1182,9 @@ id="restkaeufeJahrGesamt">
                     <th>Anlage</th>
                     <th>Anteile Jahresanfang</th>
                     <th>Kurs Jahresanfang</th>
-                    <th>Wert Jahresanfang</th>
                     <th>Kurs</th>
                     <th>Jahreskursentwicklung</th>
+                    <th>Wert Jahresanfang</th>
                 </tr>
 
             </thead>
@@ -1193,14 +1193,11 @@ id="restkaeufeJahrGesamt">
 
 <tfoot>
 <tr class="summe-zeile">
-<td colspan="3"><strong>Summe</strong></td>
+    <td colspan="5"><strong>Summe</strong></td>
 
-<td class="kurs" id="summeJahresanfang">
-    <strong>0,00 €</strong>
-</td>
-
-<td></td>
-<td></td>
+    <td class="kurs" id="summeJahresanfang">
+        <strong>0,00 €</strong>
+    </td>
 </tr>
 </tfoot>
 
@@ -2075,10 +2072,6 @@ ${formatZahl(item.kursJA,3)} €
 </td>
 
 <td class="kurs">
-${formatZahl(historischerGesamtwert,2,true)} €
-</td>
-
-<td class="kurs">
 ${aktuellerKurs}
 </td>
 
@@ -2086,8 +2079,11 @@ ${aktuellerKurs}
 ${kursEntwicklung}
 </td>
 
-</tr>
+<td class="kurs">
+${formatZahl(historischerGesamtwert,2,true)} €
+</td>
 
+</tr>
 `;
 
 
