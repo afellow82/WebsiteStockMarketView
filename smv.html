@@ -2051,13 +2051,13 @@ if (etfHistory) {
     const prozent =
         diff / item.kursJA * 100;
 
-    kursEntwicklung = `
-        <span style="color:${diff >= 0 ? "#15803d" : "#b91c1c"};font-weight:650;">
-            ${diff >= 0 ? "+" : ""}
-            ${formatZahl(diff,2)} €
-            (${prozent >= 0 ? "+" : ""}${formatZahl(prozent,2)} %)
-        </span>
-    `;
+kursEntwicklung = `
+    <span style="color:${diff >= 0 ? "#15803d" : "#b91c1c"};font-weight:650;">
+        ${prozent >= 0 ? "+" : ""}${formatZahl(prozent,2)} %
+        (${diff >= 0 ? "+" : ""}${formatZahl(diff,2)} €)
+    </span>
+`;
+
 }
 
 history.innerHTML += `
