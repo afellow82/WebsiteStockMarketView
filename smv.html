@@ -1074,7 +1074,7 @@ id="restkaeufeJahrGesamt">
                     <th>Kurs</th>
                     <th>Wert</th>
                     <th>Kurs Tagesanfang</th>
-                    <th>Tagesentwicklung</th>
+                    <th>Tageswertentwicklung</th>
                     <th>Zeitpunkt</th>
                     <th class="hidden-column">ConsorsID</th>
 
@@ -1183,7 +1183,8 @@ id="restkaeufeJahrGesamt">
                     <th>Anteile Jahresanfang</th>
                     <th>Kurs Jahresanfang</th>
                     <th>Wert Jahresanfang</th>
-
+                    <th>Kurs</th>
+                    <th>Jahreskursentwicklung</th>
                 </tr>
 
             </thead>
@@ -1192,10 +1193,14 @@ id="restkaeufeJahrGesamt">
 
 <tfoot>
 <tr class="summe-zeile">
-    <td colspan="3"><strong>Summe</strong></td>
-    <td class="kurs" id="summeJahresanfang">
-        <strong>0,00 €</strong>
-    </td>
+<td colspan="3"><strong>Summe</strong></td>
+
+<td class="kurs" id="summeJahresanfang">
+    <strong>0,00 €</strong>
+</td>
+
+<td></td>
+<td></td>
 </tr>
 </tfoot>
 
@@ -2030,7 +2035,32 @@ ${
 `;
 }
 
-history.innerHTML+=`
+const etfHistory = kursDaten[item.isin];
+
+let aktuellerKurs = "-";
+let kursEntwicklung = "-";
+
+if (etfHistory) {
+
+    aktuellerKurs =
+        formatZahl(etfHistory.kurs,3) + " €";
+
+    const diff =
+        etfHistory.kurs - item.kursJA;
+
+    const prozent =
+        diff / item.kursJA * 100;
+
+    kursEntwicklung = `
+        <span style="color:${diff >= 0 ? "#15803d" : "#b91c1c"};font-weight:650;">
+            ${diff >= 0 ? "+" : ""}
+            ${formatZahl(diff,2)} €
+            (${prozent >= 0 ? "+" : ""}${formatZahl(prozent,2)} %)
+        </span>
+    `;
+}
+
+history.innerHTML += `
 
 <tr>
 
@@ -2045,17 +2075,20 @@ ${formatZahl(item.kursJA,3)} €
 </td>
 
 <td class="kurs">
-${formatZahl(
-historischerGesamtwert,
-2,
-true
-)} €
+${formatZahl(historischerGesamtwert,2,true)} €
+</td>
+
+<td class="kurs">
+${aktuellerKurs}
+</td>
+
+<td class="kurs">
+${kursEntwicklung}
 </td>
 
 </tr>
 
 `;
-
 
 
 try{
