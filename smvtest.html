@@ -1,0 +1,3133 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Stock Market View</title>
+
+
+<style>
+
+* {
+    box-sizing:border-box;
+}
+
+
+html {
+    scrollbar-gutter: stable;
+}
+
+body {
+
+    font-family:
+    Inter,
+    "Segoe UI",
+    Arial,
+    sans-serif;
+
+    margin:0;
+    padding:30px;
+
+    background:
+    radial-gradient(
+        circle at top left,
+        #ffffff,
+        #eef2f7 45%,
+        #e5eaf2
+    );
+
+    color:#222;
+    overflow-y: scroll;
+}
+
+
+
+.container {
+
+    max-width:1500px;
+    margin:auto;
+
+    animation:
+    pageIn .7s ease;
+
+}
+
+
+
+@keyframes pageIn {
+
+from {
+
+    opacity:0;
+    transform:translateY(15px);
+
+}
+
+to {
+
+    opacity:1;
+    transform:translateY(0);
+
+}
+
+}
+
+
+
+
+
+h1 {
+
+    margin-top:28px;
+    margin-bottom:16px;
+
+    font-size:13px;
+
+    text-transform:uppercase;
+    letter-spacing:1.2px;
+
+    color:#64748b;
+
+    font-weight:700;
+
+}
+
+
+
+
+
+.zusammenfassung {
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(2,1fr);
+
+    gap:22px;
+
+    margin-top:8px;
+
+    margin-bottom:30px;
+
+}
+
+
+
+
+
+.card {
+
+    position:relative;
+
+    background:
+    rgba(255,255,255,.75);
+
+    backdrop-filter:
+    blur(14px);
+
+    border-radius:22px;
+
+    padding:24px;
+
+    border:
+    1px solid rgba(255,255,255,.8);
+
+    box-shadow:
+
+    0 12px 35px rgba(15,23,42,.10),
+
+    inset 0 1px 0 rgba(255,255,255,.7);
+
+
+    transition:
+
+    transform .25s ease,
+    box-shadow .25s ease;
+
+
+    animation:
+    cardIn .6s ease both;
+
+}
+
+
+
+
+.card:hover {
+
+    transform:
+    translateY(-4px);
+
+    box-shadow:
+
+    0 18px 45px rgba(15,23,42,.16);
+
+}
+
+
+
+
+
+@keyframes cardIn {
+
+from {
+
+    opacity:0;
+    transform:scale(.96);
+
+}
+
+to {
+
+    opacity:1;
+    transform:scale(1);
+
+}
+
+}
+
+
+
+
+
+.metric {
+
+    font-size:70px;
+
+    font-weight:750;
+
+    margin-bottom:18px;
+
+    color:#111827;
+
+    letter-spacing:-1px;
+
+}
+
+
+
+.metric.small {
+
+    font-size:28px;
+
+}
+
+#tagesentwicklung {
+    font-size:40px;
+}
+
+
+.label {
+
+    font-size:12px;
+
+    color:#64748b;
+
+    text-transform:uppercase;
+
+    letter-spacing:1px;
+
+    margin-bottom:8px;
+
+}
+
+#restkaeufeJahrGesamt {
+    margin-bottom:0;
+}
+
+
+
+table {
+
+    width:100%;
+
+    border-collapse:
+
+    separate;
+
+    border-spacing:0;
+
+    overflow:hidden;
+
+    background:
+
+    rgba(255,255,255,.9);
+
+    border-radius:18px;
+
+    border:
+
+    1px solid #e5e7eb;
+
+
+    box-shadow:
+
+    0 12px 30px rgba(15,23,42,.09);
+
+
+    transition:
+
+    box-shadow .25s ease;
+
+}
+
+
+
+table:hover {
+
+    box-shadow:
+
+    0 18px 40px rgba(15,23,42,.14);
+
+}
+
+
+
+
+
+th {
+
+    background:
+
+    linear-gradient(
+        180deg,
+        #f8fafc,
+        #eef2f7
+    );
+
+    color:#475569;
+
+    font-size:12px;
+
+    font-weight:700;
+
+    text-transform:uppercase;
+
+    letter-spacing:.4px;
+
+}
+
+
+
+
+
+th,
+td {
+
+    padding:
+
+    14px 16px;
+
+    border-bottom:
+
+    1px solid #e5e7eb;
+
+}
+
+td a {
+    color:inherit;
+    text-decoration:none;
+    font-weight:400;
+}
+
+td a:hover {
+    text-decoration:underline;
+}
+
+.tagesanfang-link {
+    color: inherit;
+    text-decoration: none;
+    font-weight:650;
+}
+
+.tagesanfang-link:hover {
+    text-decoration: underline;
+}
+
+
+tbody tr {
+
+    transition:
+
+    background .2s ease,
+    transform .2s ease;
+
+}
+
+
+
+tbody tr:hover {
+
+    background:#f8fafc;
+
+}
+
+
+
+
+
+tr:last-child td {
+
+    border-bottom:none;
+
+}
+
+
+
+
+
+td {
+
+    font-size:14px;
+
+}
+
+
+
+td.kurs {
+
+    text-align:right;
+
+    font-weight:650;
+
+}
+
+
+
+td.zeit {
+
+    white-space:nowrap;
+
+    color:#64748b;
+
+    font-size:13px;
+
+}
+
+
+td.status {
+    text-align:center;
+        height: 56px;
+    vertical-align: middle;
+}
+
+
+.status-badge {
+
+    display:inline-block;
+
+    padding:5px 12px;
+
+    border-radius:999px;
+
+    font-size:12px;
+
+    font-weight:700;
+
+    background:#f1f5f9;
+
+    color:#475569;
+
+    line-height:1.2;
+
+}
+
+
+.status-badge.near {
+
+    background:#dcfce7;
+
+    color:#166534;
+
+}
+
+
+
+
+.footer {
+
+    margin-top:16px;
+
+    padding-left:5px;
+
+    color:#64748b;
+
+    font-size:13px;
+
+}
+
+
+
+
+.section-title {
+
+    margin-top:35px;
+
+    padding-left:4px;
+
+}
+
+
+
+
+
+@media(max-width:900px){
+
+
+.zusammenfassung {
+
+    grid-template-columns:1fr;
+
+}
+
+
+table {
+
+    display:block;
+
+    overflow-x:auto;
+
+}
+
+
+
+.metric {
+
+    font-size:26px;
+
+}
+
+
+
+}
+
+
+.tages-badge {
+
+    display:inline-block;
+
+    padding:5px 10px;
+
+    border-radius:999px;
+
+    font-size:13px;
+
+    font-weight:750;
+
+    line-height:1.2;
+    
+    white-space: nowrap;
+
+}
+
+
+.tages-badge.darkgreen {
+
+    background:#bbf7d0;
+
+    color:#14532d;
+
+}
+
+
+.tages-badge.green {
+
+    background:#dcfce7;
+
+    color:#166534;
+
+}
+
+
+.tages-badge.orange {
+
+    background:#ffedd5;
+
+    color:#9a3412;
+
+}
+
+
+.tages-badge.red {
+
+    background:#fee2e2;
+
+    color:#991b1b;
+
+}
+
+.tabs {
+    margin-top: 30px;
+}
+
+.tab-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+}
+
+.tab-button {
+    border: none;
+    background: #eef2f7;
+    color: #475569;
+    padding: 11px 18px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 650;
+    transition: all .2s ease;
+}
+
+.tab-button:hover {
+    background: #dbe4ef;
+}
+
+.tab-button.active {
+    background: #2563eb;
+    color: white;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.prognose-kacheln {
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(3,1fr);
+
+    gap:22px;
+
+    margin-top:22px;
+
+}
+
+.prognose-kacheln .card {
+    padding:12px 16px;
+}
+
+@media(max-width:900px){
+
+    .prognose-kacheln {
+        grid-template-columns:1fr;
+    }
+
+}
+
+.prognose-kacheln .metric.small {
+    font-size:22px;
+    margin-bottom:0;
+}
+
+#altersvorsorge .card {
+    height:auto;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-start;
+}
+
+.vorsorge-layout {
+
+    display:grid;
+
+    grid-template-columns:
+    minmax(700px,1fr) 280px;
+
+    gap:22px;
+
+    align-items:start;
+
+}
+
+.vorsorge-chart canvas {
+    max-height:100%;
+}
+
+.zielwert-zeile {
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    margin-left:4px;
+
+    margin-top:10px;
+
+}
+
+.zielwert-label {
+
+    margin-bottom:0;
+
+    font-size:14px;
+
+    text-transform:none;
+
+    letter-spacing:0;
+
+}
+
+.zielwert-input {
+
+    padding:10px 14px;
+
+    border-radius:12px;
+
+    border:1px solid #e5e7eb;
+
+    background:white;
+
+    font-size:14px;
+
+    width:110px;
+
+    text-align:right;
+
+    box-shadow:
+    0 4px 12px rgba(15,23,42,.08);
+
+}
+
+.prognose-datum {
+
+    font-size:13px;
+
+    color:#64748b;
+
+    font-weight:500;
+
+}
+
+.hidden-column {
+    display:none;
+}
+
+.chart-card {
+    width:350px;
+    height:350px;   /* WICHTIG: feste Höhe */
+    max-width:100%;
+    margin:0;
+    background: rgba(255,255,255,.75);
+    backdrop-filter: blur(14px);
+    border-radius:22px;
+    padding:20px;
+    border:1px solid rgba(255,255,255,.8);
+    box-shadow: 0 12px 35px rgba(15,23,42,.10);
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+#kurse .chart-card {
+    margin-top:22px;
+}
+
+.chart-card canvas {
+    width:100% !important;
+    height:100% !important;
+    max-width:100%;
+    max-height:100%;
+}
+
+
+@media(max-width:900px){
+
+    .kurse-layout {
+    display:grid;
+    grid-template-columns: 1fr 350px;
+    gap:22px;
+    align-items:stretch;
+}
+
+}
+
+.vorsorge-layout {
+
+    grid-template-columns:
+    minmax(770px,1fr) 280px 280px;
+
+    align-items:stretch;   /* vorher start */
+}
+
+
+.vorsorge-chart {
+
+    margin:0;
+
+}
+
+/* Höher spezifisch als ".vorsorge-chart" allein, damit die feste
+   Höhe aus ".chart-card" NICHT mehr überschrieben wird. Ohne feste,
+   vom Canvas-Inhalt unabhängige Höhe entsteht ein Resize-Loop
+   zwischen Chart.js (maintainAspectRatio:false) und dem Container,
+   der beim Tab-Wechsel während des Ladens zu einem viel zu großen
+   Diagramm führt. */
+.chart-card.vorsorge-chart {
+    height:350px;
+    min-height:350px;
+}
+
+.jahresverlauf-card {
+    margin-top:22px;
+    overflow:hidden;
+}
+
+.zeitstrahl {
+    position:relative;
+    height:130px;
+    margin:10px 0 6px 0;
+    --inset:130px;
+}
+
+.zeitstrahl-linie-links,
+.zeitstrahl-linie-rechts {
+    position:absolute;
+    top:50%;
+    height:5px;
+    transform:translateY(-50%);
+}
+
+.zeitstrahl-linie-links {
+    left:var(--inset);
+    background:#9ca3af;
+    border-radius:3px 0 0 3px;
+}
+
+.zeitstrahl-linie-rechts {
+    right:var(--inset);
+    background:#d1d5db;
+    border-radius:0 3px 3px 0;
+}
+
+.zeitstrahl-punkt {
+    position:absolute;
+    top:50%;
+    width:14px;
+    height:14px;
+    border-radius:50%;
+    background:#9ca3af;
+    border:3px solid #fff;
+    box-shadow:0 2px 6px rgba(15,23,42,.35);
+    transform:translate(-50%,-50%);
+}
+
+.zeitstrahl-punkt.start {
+    left:var(--inset);
+}
+
+.zeitstrahl-punkt.ende {
+    left:calc(100% - var(--inset));
+}
+
+.zeitstrahl-punkt.heute {
+    width:18px;
+    height:18px;
+    background:#9ca3af;
+    box-shadow:0 2px 8px rgba(156,163,175,.5);
+}
+
+.zeitstrahl-label {
+    position:absolute;
+    left:50%;
+    transform:translateX(-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:5px;
+    white-space:nowrap;
+}
+
+.zeitstrahl-punkt.start .zeitstrahl-label,
+.zeitstrahl-punkt.ende .zeitstrahl-label {
+    bottom:100%;
+    margin-bottom:11px;
+}
+
+.zeitstrahl-punkt.heute .zeitstrahl-label {
+    top:100%;
+    margin-top:11px;
+}
+
+.zeitstrahl-datum {
+    font-size:18px;
+    color:#9ca3af;
+    letter-spacing:.5px;
+    font-weight:700;
+}
+
+.zeitstrahl-wert {
+    font-size:22px;
+    font-weight:750;
+    color:#111827;
+}
+
+@media(max-width:900px){
+
+.zeitstrahl {
+    --inset:78px;
+}
+
+.zeitstrahl-datum {
+    font-size:12px;
+}
+
+.zeitstrahl-wert {
+    font-size:16px;
+}
+
+}
+
+.summe-zeile {
+    background: #f8fafc;
+    font-weight: 700;
+}
+
+.summe-zeile td {
+    padding: 16px 16px;
+    border-bottom: none;
+}
+
+.summe-zeile td strong {
+    font-size: 17px;
+    letter-spacing: 0.3px;
+}
+
+.stand-datum-alt {
+    color: #b91c1c;
+    font-weight: 700;
+}
+
+.meilenstein-col {
+    text-align: center;
+    width: 140px;
+    white-space: nowrap;
+}
+
+.prognose-table td:nth-child(2),
+.prognose-table td:nth-child(3) {
+    font-weight: 400;
+}
+
+#kurse table tbody tr {
+    height: 56px;        /* stabiler Wert – ggf. anpassen */
+}
+
+#kurse table td {
+    vertical-align: middle;
+}
+
+.info-icon {
+    position: absolute;
+    right: 18px;
+    bottom: 16px;
+
+    width: 22px;
+    height: 22px;
+
+    border: 1.5px solid #D3D3D3;
+    border-radius: 50%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 13px;
+    font-weight: 700;
+
+    color: #D3D3D3;
+
+    cursor: pointer;
+    user-select: none;
+
+    transition: all .2s ease;
+}
+
+.info-icon:hover {
+    color: #6b7280;
+    border-color: #6b7280;
+    background: #f3f4f6;
+}
+
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+
+
+<body>
+
+
+<div class="container">
+
+
+
+<h1 class="section-title">
+Depotübersicht
+</h1>
+<div class="zusammenfassung">
+
+
+<div class="card">
+
+
+<div class="label">
+Gesamtwert
+</div>
+
+
+<div class="metric" id="gesamtwert"></div>
+
+
+
+<div class="label" id="entwicklungHeute">
+Entwicklung heute
+</div>
+
+
+<div class="metric small"
+id="tagesentwicklung">
+</div>
+
+
+</div>
+
+
+
+
+
+<div class="card">
+
+
+<div class="label">
+Entwicklung durch Kurs aktuelles Jahr
+</div>
+
+
+<div class="metric small"
+id="jahresentwicklung">
+</div>
+
+
+
+
+<div class="label"
+id="entwicklungJahrGesamt">
+
+Entwicklung aktuelles Jahr inkl. Zukäufe
+
+</div>
+
+
+<div class="metric small"
+id="jahresentwicklungGesamt">
+</div>
+
+<div class="label">
+Geplante Restkäufe durch Sparpläne Jahr gesamt
+</div>
+
+<div class="metric small"
+id="restkaeufeJahrGesamt">
+</div>
+
+<div class="info-icon" title="Version: 1.00 (06.07.2026)">
+    i
+</div>
+
+</div>
+
+
+</div>
+
+
+
+<div class="tabs">
+
+    <div class="tab-buttons">
+
+        <button class="tab-button active"
+        data-tab="kurse">
+    Aktuelle Kurse
+</button>
+
+<button class="tab-button"
+        data-tab="performance">
+    Performance
+</button>
+
+<button class="tab-button"
+        data-tab="sparplan">
+    Sparpläne
+</button>
+
+<button
+    id="jahresTabButton"
+    class="tab-button"
+    data-tab="jahresanfang">
+    Jahr
+</button>
+
+<button class="tab-button"
+        data-tab="prognose">
+    Prognose
+</button>
+
+<button class="tab-button"
+        data-tab="altersvorsorge">
+    Altersvorsorge
+</button>
+
+    </div>
+
+
+    <!-- Aktuelle Kurse -->
+
+    <div class="tab-content active" id="kurse">
+
+<div class="kurse-layout">
+
+<div>
+
+<table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Anlage</th>
+                    <th>ISIN</th>
+                    <th>Anteile</th>
+                    <th>Kurs</th>
+                    <th>Wert</th>
+                    <th>Kurs Tagesanfang</th>
+                    <th>Tageswertentwicklung</th>
+                    <th>Zeitpunkt</th>
+                    <th class="hidden-column">ConsorsID</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="tableBody">
+
+                <tr>
+                    <td colspan="10">Lade Daten...</td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+</div>
+
+</div>
+
+        <div class="footer" id="updateInfo"></div>
+
+<div class="chart-card">
+
+    <canvas id="wertChart"></canvas>
+
+</div>
+
+    </div>
+
+
+<!-- Performance -->
+
+<div class="tab-content" id="performance">
+
+    <table>
+
+        <thead>
+            <tr>
+                <th>Anlage</th>
+                <th>Wert</th>
+                <th>Investition</th>
+                <th>Gewinn / Verlust</th>
+            </tr>
+        </thead>
+
+        <tbody id="performanceBody">
+            <tr>
+                <td colspan="4">Lade Daten...</td>
+            </tr>
+        </tbody>
+
+    </table>
+
+<div class="footer" id="performanceUpdateInfo">
+    Stand Investitionen: 03.07.2026
+</div>
+
+</div>
+
+    <!-- Sparplan -->
+
+    <div class="tab-content" id="sparplan">
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Anlage</th>
+                    <th>Betrag</th>
+                    <th>Rhythmus</th>
+                    <th>Nächste Ausführung</th>
+                    <th>Status</th>
+                    <th>Restkäufe Jahr</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="sparplanBody"></tbody>
+
+        </table>
+
+    </div>
+
+
+    <!-- Jahresanfang -->
+
+    <div class="tab-content" id="jahresanfang">
+
+
+    <h1 class="section-title">
+        Jahresanfang
+    </h1>
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Anlage</th>
+                    <th>Anteile Jahresanfang</th>
+                    <th>Kurs Jahresanfang</th>
+                    <th>Kurs</th>
+                    <th>Jahreskursentwicklung</th>
+                    <th>Wert Jahresanfang</th>
+                </tr>
+
+            </thead>
+
+            <tbody id="historyBody"></tbody>
+
+<tfoot>
+<tr class="summe-zeile">
+    <td colspan="5"><strong>Summe</strong></td>
+
+    <td class="kurs" id="summeJahresanfang">
+        <strong>0,00 €</strong>
+    </td>
+</tr>
+</tfoot>
+
+        </table>
+
+<h1 class="section-title">
+    Jahresverlauf
+</h1>
+
+<div class="card jahresverlauf-card">
+
+    <div class="zeitstrahl" id="zeitstrahl">
+
+        <div class="zeitstrahl-linie-links" id="zeitstrahlLinieLinks"></div>
+        <div class="zeitstrahl-linie-rechts" id="zeitstrahlLinieRechts"></div>
+
+        <div class="zeitstrahl-punkt start">
+            <div class="zeitstrahl-label">
+                <div class="zeitstrahl-datum" id="zeitstrahlStartDatum"></div>
+                <div class="zeitstrahl-wert" id="zeitstrahlStartWert"></div>
+            </div>
+        </div>
+
+        <div class="zeitstrahl-punkt heute" id="zeitstrahlHeutePunkt">
+            <div class="zeitstrahl-label">
+                <div class="zeitstrahl-datum" id="zeitstrahlHeuteDatum"></div>
+                <div class="zeitstrahl-wert" id="zeitstrahlHeuteWert"></div>
+            </div>
+        </div>
+
+        <div class="zeitstrahl-punkt ende">
+            <div class="zeitstrahl-label">
+                <div class="zeitstrahl-datum" id="zeitstrahlEndeDatum"></div>
+                <div class="zeitstrahl-wert" id="zeitstrahlEndeWert"></div>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+    </div>
+  
+  <!-- Prognose -->
+
+<div class="tab-content" id="prognose">
+
+    <table class="prognose-table">
+
+        <thead>
+
+            <tr>
+                <th>Meilenstein</th>
+                <th>Rest</th>
+                <th>Resttage</th>
+                <th>Prognosedatum</th>
+            </tr>
+
+        </thead>
+
+        <tbody id="prognoseMeilensteineBody">
+
+        </tbody>
+
+    </table>
+
+</div>
+    
+   <!-- Altersvorsorge -->
+
+<div class="tab-content" id="altersvorsorge">
+
+  <div class="vorsorge-layout">
+
+        <table>
+
+        <thead>
+
+            <tr>
+
+                <th>Anlage</th>
+                <th>Kurs</th>
+                <th>Wert</th>
+
+            </tr>
+
+        </thead>
+
+        <tbody id="vorsorgeBody"></tbody>
+
+    </table>
+
+<div class="chart-card vorsorge-chart">
+
+    <canvas id="vorsorgeChart"></canvas>
+
+</div>
+
+<div class="card">
+
+    <div class="label">
+        Summe Wert Altersvorsorge
+    </div>
+
+    <div class="metric small" id="summeAltersvorsorge">
+        0,00 €
+    </div>
+
+</div>
+
+</div>
+
+    <h1 class="section-title">
+        Entwicklung
+    </h1>
+
+
+    <table>
+
+        <thead>
+
+    <tr>
+
+        <th>Start Betrachtung</th>
+        <th>Historische Summe</th>
+        <th>Jahresentwicklung</th>
+        <th>Gesamtentwicklung</th>
+        <th>Entwicklung pro Tag</th>
+
+    </tr>
+
+</thead>
+
+
+<tbody>
+
+    <tr>
+    <td>01.09.2023</td>
+    <td class="kurs historische-summe">39.067,20 €</td>
+    <td class="kurs jahresentwicklung-historisch">-</td>
+    <td class="kurs entwicklung">0 €</td>
+<td class="kurs entwicklung-pro-tag">0 €/Tag</td>
+</tr>
+
+<tr>
+    <td>01.01.2024</td>
+    <td class="kurs historische-summe">46.366,15 €</td>
+    <td class="kurs jahresentwicklung-historisch">-</td>
+    <td class="kurs entwicklung">0 €</td>
+<td class="kurs entwicklung-pro-tag">0 €/Tag</td>
+</tr>
+
+<tr>
+    <td>01.01.2025</td>
+    <td class="kurs historische-summe">76.422,57 €</td>
+    <td class="kurs jahresentwicklung-historisch">-</td>
+    <td class="kurs entwicklung">0 €</td>
+<td class="kurs entwicklung-pro-tag">0 €/Tag</td>
+</tr>
+
+<tr>
+    <td>01.01.2026</td>
+    <td class="kurs historische-summe">102.110,23 €</td>
+    <td class="kurs jahresentwicklung-historisch">-</td>
+    <td class="kurs entwicklung">0 €</td>
+<td class="kurs entwicklung-pro-tag">0 €/Tag</td>
+</tr>
+</tbody>
+    </table>
+
+    <h1 class="section-title">
+        Prognose
+    </h1>
+
+
+<div class="zielwert-zeile">
+
+  <div class="label zielwert-label">
+            Zielwert Altersvorsorge (€):
+        </div>
+
+
+ <input 
+type="text"
+id="zielwert"
+class="zielwert-input"
+value="150000,00">
+
+    </div>
+
+
+
+<div class="prognose-kacheln">
+
+
+    <div class="card">
+
+        <div class="label">
+            Prognose (seit Beginn)
+        </div>
+
+        <div class="metric small" id="prognose1">
+        </div>
+
+    </div>
+
+
+
+    <div class="card">
+
+        <div class="label">
+            Prognose (seit Beginn Vorjahr)
+        </div>
+
+        <div class="metric small" id="prognose2">
+        </div>
+
+    </div>
+
+
+
+    <div class="card">
+
+        <div class="label">
+            Prognose (seit Jahresbeginn)
+        </div>
+
+        <div class="metric small" id="prognose3">
+        </div>
+
+    </div>
+
+
+</div>
+
+</div>
+</div> <!-- Ende Altersvorsorge Tab -->
+
+<script>
+
+const STANDDATUM = "02.07.2026";
+
+const isins = [
+
+{
+alias:"ETF MSCI World SRI",
+isin:"IE00BYX2JD69",
+link:"https://www.onvista.de/etf/iShares-MSCI-World-SRI-EUR-ACC-ETF-IE00BYX2JD69?notation=289979926",
+anzahl:4684.94112,
+anzahlJA:3792.520514,
+kursJA:12.19,
+sparplanBetrag:400.00,
+sparplanRhytmus:"monatlich",
+sparplanTag:2,
+investition:53642.58
+},
+
+{
+alias:"ETF Core MSCI World",
+isin:"IE00B4L5Y983",
+link:"https://www.onvista.de/etf/iShares-Core-MSCI-World-ETF-IE00B4L5Y983?notation=244540011",
+anzahl:503.265889,
+anzahlJA:500.084082,
+kursJA:111.74,
+sparplanBetrag:400.00,
+sparplanRhytmus:"monatlich",
+sparplanTag:2,
+investition:34282.47
+},
+
+{
+alias:"Aktie Allianz",
+isin:"DE0008404005",
+link:"https://www.onvista.de/aktien/Allianz-Aktie-DE0008404005?notation=244494211",
+anzahl:91.862,
+anzahlJA:91.862,
+kursJA:390.50,
+investition:19449.00
+},
+
+{
+alias:"ETF AI Infrastructure",
+isin:"IE000X59ZHE2",
+link:"https://www.onvista.de/etf/iShs-III-iShs-AI-Infrastr-ETF-Reg-Shs-USD-Acc-oN-ETF-IE000X59ZHE2?notation=486568018",
+anzahl:476.198976,
+anzahlJA:476.198976,
+kursJA:6.19,
+investition:3000.05
+},
+
+{
+alias:"Fonds Allianz US Equity",
+isin:"LU0256843979",
+link:"https://www.onvista.de/fonds/ALLIANZ-GIF-ALLIANZ-US-EQUITY-FUND-A-EUR-DIS-Fonds-LU0256843979?notation=273709592",
+anzahl:5.386,
+anzahlJA:4.873,
+kursJA:457.889,
+sparplanBetrag:40.00,
+sparplanRhytmus:"monatlich",
+sparplanTag:24,
+investition:2000
+}
+
+];
+
+
+function formatZahl(value,stellen=3,tausender=false){
+
+let zahl=Number(value).toFixed(stellen);
+
+let teile=zahl.split(".");
+
+if(tausender){
+
+teile[0]=teile[0].replace(
+/\B(?=(\d{3})+(?!\d))/g,
+"."
+);
+
+}
+
+return teile.join(",");
+
+}
+
+
+
+
+
+async function ladeTagesanfang(consorsId){
+
+const response =
+await fetch("/api/chart/"+consorsId);
+
+const data =
+await response.json();
+
+
+try{
+
+return {
+
+preis:Number(
+data[0]
+.ChartHistoryV1
+.PERF_START_PRICE
+),
+
+datum:
+data[0]
+.ChartHistoryV1
+.DATETIME_PERF_START_PRICE
+
+};
+
+}
+
+catch(e){
+
+return null;
+
+}
+
+}
+
+
+
+
+
+async function ladeETF(isin){
+
+
+const response =
+await fetch("/api/"+isin);
+
+
+
+if(!response.ok){
+
+throw new Error(
+"HTTP Fehler "+response.status
+);
+
+}
+
+
+
+const result =
+await response.json();
+
+
+
+const data =
+result[0];
+
+
+
+
+let exchange =
+data.ExchangesV2.find(
+e=>e.CONSORS_EXCHANGE_CODE==="@_LUSG"
+);
+
+
+
+if(!exchange){
+
+exchange =
+data.ExchangesV2.find(
+e=>e.CONSORS_EXCHANGE_CODE==="_TRO"
+);
+
+}
+
+
+
+if(!exchange){
+
+throw new Error(
+"Kein Kurs gefunden"
+);
+
+}
+const consorsId =
+exchange.CONSORS_ID ??
+"nicht gefunden";
+
+
+
+let tagesanfang=null;
+let tagesanfangDatum=null;
+
+
+
+if(consorsId!=="nicht gefunden"){
+
+
+try{
+
+
+const start =
+await ladeTagesanfang(consorsId);
+
+
+
+if(start){
+
+tagesanfang =
+start.preis;
+
+
+tagesanfangDatum =
+start.datum;
+
+}
+
+
+}
+
+catch(e){}
+
+}
+
+
+
+
+const kurs = Number(exchange.PRICE);
+
+// Falls kein gültiger Tagesanfangskurs vorhanden ist,
+// aktuellen Kurs verwenden
+if (
+    tagesanfang === null ||
+    !Number.isFinite(tagesanfang) ||
+    tagesanfang <= 0
+) {
+    tagesanfang = kurs;
+}
+
+let tagesentwicklung = null;
+
+
+
+tagesentwicklung =
+((kurs - tagesanfang) / tagesanfang) * 100;
+
+
+
+return {
+
+isin,
+consorsId,
+tagesanfang,
+tagesanfangDatum,
+kurs,
+tagesentwicklung,
+zeit:exchange.DATETIME_PRICE
+
+};
+
+}
+
+
+
+
+function formatDatum(value){
+
+const d =
+new Date(value);
+
+
+return d.toLocaleString(
+"de-DE",
+{
+
+day:"2-digit",
+month:"2-digit",
+year:"numeric",
+hour:"2-digit",
+minute:"2-digit"
+
+}
+
+);
+
+}
+
+
+function naechsteAusfuehrung(tag) {
+
+    const heute = new Date();
+
+    let jahr = heute.getFullYear();
+    let monat = heute.getMonth();
+
+    let ausfuehrung = new Date(jahr, monat, tag);
+
+    // Ist der Termin dieses Monats bereits vorbei,
+    // dann den nächsten Monat verwenden.
+    if (ausfuehrung < heute) {
+        ausfuehrung = new Date(jahr, monat + 1, tag);
+    }
+
+    return ausfuehrung.toLocaleDateString("de-DE", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric"
+    });
+}
+
+
+function restKaeufeImJahr(tag, betrag) {
+
+    const heute = new Date();
+
+    const jahr = heute.getFullYear();
+
+    let summe = 0;
+
+    for (let monat = heute.getMonth(); monat < 12; monat++) {
+
+        const termin = new Date(jahr, monat, tag);
+
+        // Im aktuellen Monat nur zukünftige Termine berücksichtigen
+        if (termin >= heute) {
+            summe += betrag;
+        }
+
+    }
+
+    return summe;
+}
+
+function statusNaechsteAusfuehrung(tag) {
+
+    const heute = new Date();
+    heute.setHours(0,0,0,0);
+
+    let jahr = heute.getFullYear();
+    let monat = heute.getMonth();
+
+    let termin = new Date(jahr, monat, tag);
+    termin.setHours(0,0,0,0);
+
+    if (termin < heute) {
+        termin = new Date(jahr, monat + 1, tag);
+        termin.setHours(0,0,0,0);
+    }
+
+    const diffMs = termin - heute;
+    const diffTage = Math.round(
+        diffMs / (1000 * 60 * 60 * 24)
+    );
+
+    let text;
+
+    if (diffTage === 0) {
+        text = "heute";
+    }
+    else if (diffTage === 1) {
+        text = "morgen";
+    }
+    else {
+        text = "in " + diffTage + " Tagen";
+    }
+
+
+    const badgeKlasse =
+        diffTage <= 3
+        ? "status-badge near"
+        : "status-badge";
+
+
+    return `
+        <span class="${badgeKlasse}">
+            ${text}
+        </span>
+    `;
+}
+
+function aktualisierePrognosen(vorsorgeGesamtWert){
+
+    const zielwert = Number(
+        document.getElementById("zielwert")
+        .value
+        .replace(/\./g,"")
+        .replace(",",".")
+    );
+
+
+    if (zielwert <= vorsorgeGesamtWert) {
+
+        document.getElementById("prognose1").innerHTML = "-";
+        document.getElementById("prognose2").innerHTML = "-";
+        document.getElementById("prognose3").innerHTML = "-";
+
+        return;
+    }
+
+
+const entwicklungProTagWerte =
+        document.querySelectorAll("#altersvorsorge .entwicklung-pro-tag");
+
+
+    const prognoseTage = [];
+
+
+    entwicklungProTagWerte.forEach(zelle => {
+
+const wert = Number(
+    zelle.innerText
+        .replace(/\./g,"")
+        .replace(",",".")
+        .replace(/[^\d.-]/g,"")
+);
+
+
+        if(wert !== null && Number.isFinite(wert) && wert > 0){
+
+            prognoseTage.push(
+                Math.round(
+                    (zielwert - vorsorgeGesamtWert) / wert
+                )
+            );
+
+        }
+        else {
+
+            prognoseTage.push(null);
+
+        }
+
+    });
+
+
+
+    function prognoseDatum(tage){
+
+        const datum = new Date();
+
+        datum.setDate(
+            datum.getDate()+tage
+        );
+
+        return datum.toLocaleDateString(
+            "de-DE",
+            {
+                day:"2-digit",
+                month:"2-digit",
+                year:"numeric"
+            }
+        );
+
+    }
+
+
+
+    const prognoseZuordnung = [
+    prognoseTage[0],                              // seit Beginn
+    prognoseTage[prognoseTage.length - 2],        // seit Beginn Vorjahr
+    prognoseTage[prognoseTage.length - 1]         // seit Jahresbeginn
+];
+
+["prognose1","prognose2","prognose3"].forEach((id,index)=>{
+
+    const tage = prognoseZuordnung[index];
+
+    if(tage === null || !Number.isFinite(tage)){
+
+        document.getElementById(id).innerHTML = "-";
+        return;
+
+    }
+
+    document.getElementById(id).innerHTML =
+        formatZahl(tage,0,true) +
+        " Tage" +
+        "<br><span class='prognose-datum'>" +
+        prognoseDatum(tage) +
+        "</span>";
+
+});
+
+}
+
+async function ladeAlleKurse(){
+
+
+const tbody =
+document.getElementById("tableBody");
+
+const kursDaten = {};
+
+for (const item of isins) {
+    try {
+        kursDaten[item.isin] = await ladeETF(item.isin);
+    }
+    catch(err) {
+        kursDaten[item.isin] = null;
+    }
+}
+
+const history =
+document.getElementById("historyBody");
+
+
+const sparplan =
+document.getElementById("sparplanBody");
+
+
+const vorsorge =
+document.getElementById("vorsorgeBody");
+
+const performance =
+document.getElementById("performanceBody");
+
+tbody.innerHTML="";
+history.innerHTML="";
+sparplan.innerHTML="";
+vorsorge.innerHTML="";
+performance.innerHTML="";
+
+let gesamtwert=0;
+const chartLabels = [];
+const chartValues = [];
+let startwertHeute=0;
+let jahresAktuell=0;
+let jahresAnfang=0;
+let restkaeufeJahrGesamt=0;
+let summeWertJahresanfang = 0;
+
+const performanceDaten = [];
+
+for(const item of isins){
+
+
+const historischerGesamtwert =
+item.anzahlJA *
+item.kursJA;
+
+
+jahresAnfang +=
+historischerGesamtwert;
+
+summeWertJahresanfang += historischerGesamtwert;
+
+if ((item.sparplanBetrag ?? 0) > 0) {
+
+restkaeufeJahrGesamt += restKaeufeImJahr(
+    item.sparplanTag,
+    item.sparplanBetrag
+);
+
+sparplan.innerHTML += `
+
+<tr>
+
+<td>${item.alias}</td>
+
+<td class="kurs">
+${formatZahl(item.sparplanBetrag,2,true)} €
+</td>
+
+<td>
+${item.sparplanRhytmus ?? "-"}
+</td>
+
+<td class="kurs">
+${item.sparplanTag ? naechsteAusfuehrung(item.sparplanTag) : "-"}
+</td>
+
+<td class="status">
+${item.sparplanTag ? statusNaechsteAusfuehrung(item.sparplanTag) : "-"}
+</td>
+
+<td class="kurs">
+${
+    item.sparplanTag
+    ? formatZahl(
+        restKaeufeImJahr(
+            item.sparplanTag,
+            item.sparplanBetrag
+        ),
+        2,
+        true
+      ) + " €"
+    : "-"
+}
+</td>
+
+</tr>
+
+`;
+}
+
+const etfHistory = kursDaten[item.isin];
+
+let aktuellerKurs = "-";
+let kursEntwicklung = "-";
+
+if (etfHistory) {
+
+    aktuellerKurs =
+        formatZahl(etfHistory.kurs,3) + " €";
+
+    const diff =
+        etfHistory.kurs - item.kursJA;
+
+    const prozent =
+        diff / item.kursJA * 100;
+
+kursEntwicklung = `
+    <span style="color:${diff >= 0 ? "#15803d" : "#b91c1c"};font-weight:650;">
+        ${prozent >= 0 ? "+ " : ""}${formatZahl(prozent,2)} %
+        (${diff >= 0 ? "+ " : ""}${formatZahl(diff,2)} €)
+    </span>
+`;
+
+}
+
+history.innerHTML += `
+
+<tr>
+
+<td>${item.alias}</td>
+
+<td class="kurs">
+${formatZahl(item.anzahlJA,6,true)}
+</td>
+
+<td class="kurs">
+${formatZahl(item.kursJA,3)} €
+</td>
+
+<td class="kurs">
+${aktuellerKurs}
+</td>
+
+<td class="kurs">
+${kursEntwicklung}
+</td>
+
+<td class="kurs">
+${formatZahl(historischerGesamtwert,2,true)} €
+</td>
+
+</tr>
+`;
+
+
+try{
+
+
+const etf =
+kursDaten[item.isin];
+
+if(!etf){
+    throw new Error("Kein Kurs verfügbar");
+}
+
+
+
+const wert =
+item.anzahl *
+etf.kurs;
+
+const investition = item.investition ?? 0;
+const gewinnVerlust = wert - investition;
+const prozent = investition !== 0
+    ? (gewinnVerlust / investition) * 100
+    : 0;
+
+performanceDaten.push({
+    alias: item.alias,
+    wert,
+    investition,
+    gewinnVerlust,
+    prozent
+});
+
+if (
+    item.alias === "ETF Core MSCI World" ||
+    item.alias === "ETF MSCI World SRI"
+) {
+
+vorsorge.innerHTML += `
+
+<tr>
+
+<td>
+${item.alias}
+</td>
+
+<td class="kurs">
+${formatZahl(etf.kurs,3)} €
+</td>
+
+<td class="kurs vorsorge-wert">
+${formatZahl(wert,2,true)} €
+</td>
+
+</tr>
+
+`;
+}
+gesamtwert += wert;
+
+chartLabels.push(item.alias);
+chartValues.push(wert);
+
+jahresAktuell +=
+item.anzahlJA *
+etf.kurs;
+
+
+
+if(etf.tagesanfang!==null){
+
+startwertHeute +=
+item.anzahl *
+etf.tagesanfang;
+
+}
+
+
+
+
+tbody.innerHTML+=`
+
+<tr>
+
+<td>
+<a href="${item.link}" target="_blank">
+${item.alias}
+</a>
+</td>
+
+<td>
+    <a 
+        href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/stocks?id=${item.isin}&field=BasicV1&field=ExchangesV2" target="_blank">
+        ${item.isin}
+    </a>
+</td>
+
+<td class="kurs">
+${formatZahl(item.anzahl,6,true)}
+</td>
+
+<td class="kurs">
+${formatZahl(etf.kurs,3)} €
+</td>
+
+<td class="kurs">
+${formatZahl(wert,2,true)} €
+</td>
+
+
+<td class="kurs">
+
+${
+etf.tagesanfang!==null
+?
+`
+<a class="tagesanfang-link"
+   href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/securities?id=${etf.consorsId}&field=ChartHistoryV1&idTypeOffset=51&historySince=0&resolution=15m&pagesize=2000&sortorder=DATETIME_FIRST"
+   target="_blank">
+   ${formatZahl(etf.tagesanfang,3)} €
+</a>
+`
+:
+"-"
+}
+
+</td>
+
+
+<td class="kurs">
+
+${
+etf.tagesentwicklung===null ||
+Math.abs(etf.tagesentwicklung)<0.005
+?
+""
+:
+`
+<span class="tages-badge ${
+    
+    etf.tagesentwicklung > 2
+    ? "darkgreen"
+
+    :
+
+    etf.tagesentwicklung > 0
+    ? "green"
+
+    :
+
+    etf.tagesentwicklung < -2
+    ? "red"
+
+    :
+
+    etf.tagesentwicklung < 0
+    ? "orange"
+
+    :
+
+    ""
+
+}">
+
+${etf.tagesentwicklung >= 0 ? "+" : ""}
+${formatZahl(etf.tagesentwicklung,2)} %
+
+(${
+(
+(etf.kurs - etf.tagesanfang) * item.anzahl
+) >= 0 ? "+" : "-"
+}
+${formatZahl(
+Math.abs(
+(etf.kurs - etf.tagesanfang) * item.anzahl
+),
+2,
+true
+)} €)
+
+</span>
+`
+}
+
+</td>
+
+
+<td class="zeit">
+
+${formatDatum(etf.zeit)}
+
+</td>
+
+
+<td class="hidden-column">
+
+${etf.consorsId}
+
+</td>
+
+
+</tr>
+
+`;
+
+
+
+}
+
+catch(err){
+
+
+tbody.innerHTML+=`
+
+<tr>
+
+<td colspan="10">
+
+Fehler bei ${item.alias}:
+${err.message}
+
+</td>
+
+</tr>
+
+`;
+
+}
+
+
+}
+
+performanceDaten
+    .sort((a, b) => b.gewinnVerlust - a.gewinnVerlust)
+    .forEach(item => {
+
+        performance.innerHTML += `
+
+<tr>
+
+    <td>${item.alias}</td>
+
+    <td class="kurs">
+        ${formatZahl(item.wert,2,true)} €
+    </td>
+
+    <td class="kurs">
+        ${formatZahl(item.investition,2,true)} €
+    </td>
+
+    <td class="kurs"
+        style="color:${item.gewinnVerlust >= 0 ? "#15803d" : "#b91c1c"};font-weight:650;">
+
+${(item.gewinnVerlust >= 0 ? "+" : "")}
+${formatZahl(item.gewinnVerlust,2,true)} €
+(${item.prozent >= 0 ? "+ " : ""}${formatZahl(item.prozent,2)} %)
+
+    </td>
+
+</tr>
+
+`;
+
+    });
+
+
+document.getElementById("gesamtwert").innerHTML =
+"<strong>"+
+formatZahl(gesamtwert,2,true)+
+" €</strong>";
+
+
+
+const tagesentwicklungProzent =
+startwertHeute!==0
+?
+((gesamtwert/startwertHeute)-1)*100
+:
+0;
+
+
+
+const tagesentwicklungBetrag =
+gesamtwert-startwertHeute;
+
+
+
+document.getElementById(
+"entwicklungHeute"
+).innerHTML =
+"Entwicklung heute (Startwert: "+
+formatZahl(startwertHeute,2,true)+
+" €)";
+
+
+
+document.getElementById(
+"tagesentwicklung"
+).innerHTML =
+
+"<strong style='color:"+
+(tagesentwicklungProzent<0?"red":"green")+
+"'>"+
+
+(tagesentwicklungProzent>=0?"▲ ":"▼ ")+
+
+formatZahl(Math.abs(tagesentwicklungProzent),2)+
+
+" % ("+
+
+(tagesentwicklungBetrag>=0?"▲ ":"▼ ")+
+
+formatZahl(Math.abs(tagesentwicklungBetrag),2,true)+
+
+" €)</strong>";
+
+
+
+
+
+const jahresentwicklung =
+((jahresAktuell/jahresAnfang)-1)*100;
+
+
+const jahresentwicklungBetrag =
+jahresAktuell-jahresAnfang;
+
+
+
+document.getElementById(
+"jahresentwicklung"
+).innerHTML =
+
+"<strong style='color:"+
+(jahresentwicklung<0?"red":"black")+
+"'>"+
+
+(jahresentwicklung>=0?"▲ ":"▼ ")+
+
+formatZahl(Math.abs(jahresentwicklung),2)+
+
+" % ("+
+
+(jahresentwicklungBetrag>=0?"▲ ":"▼ ")+
+
+formatZahl(Math.abs(jahresentwicklungBetrag),2,true)+
+
+" €)</strong>";
+
+
+
+
+const jahresentwicklungGesamtBetrag =
+gesamtwert-jahresAnfang;
+
+
+document.getElementById(
+"entwicklungJahrGesamt"
+).innerHTML =
+
+"Entwicklung aktuelles Jahr inkl. Zukäufe (Startwert: "+
+formatZahl(jahresAnfang,2,true)+
+" €)";
+
+
+
+const jetztDatum =
+new Date();
+
+
+const jahresStart =
+new Date(
+jetztDatum.getFullYear(),
+0,
+1
+);
+
+
+
+const vergangeneTage =
+Math.floor(
+(jetztDatum-jahresStart)/
+(1000*60*60*24)
+)+1;
+
+
+
+const entwicklungProTag =
+jahresentwicklungGesamtBetrag /
+vergangeneTage;
+
+
+
+
+// Jahresverlauf-Zeitstrahl aktualisieren
+
+const jahresEnde =
+new Date(
+jetztDatum.getFullYear(),
+11,
+31
+);
+
+const gesamtTageJahr =
+Math.floor(
+(jahresEnde-jahresStart)/
+(1000*60*60*24)
+)+1;
+
+const restTageJahr =
+gesamtTageJahr - vergangeneTage;
+
+const prognoseEndwert =
+gesamtwert +
+(restTageJahr * entwicklungProTag);
+
+const heutePosition =
+((vergangeneTage-1) / (gesamtTageJahr-1)) * 100;
+
+document.getElementById("zeitstrahlStartDatum").textContent =
+"01.01." + jetztDatum.getFullYear();
+
+document.getElementById("zeitstrahlStartWert").textContent =
+formatZahl(jahresAnfang,2,true) + " €";
+
+document.getElementById("zeitstrahlEndeDatum").textContent =
+"31.12." + jetztDatum.getFullYear() + " (Prognose)";
+
+document.getElementById("zeitstrahlEndeWert").textContent =
+formatZahl(prognoseEndwert,2,true) + " €";
+
+document.getElementById("zeitstrahlHeuteDatum").textContent =
+jetztDatum.toLocaleDateString(
+"de-DE",
+{day:"2-digit",month:"2-digit",year:"numeric"}
+);
+
+document.getElementById("zeitstrahlHeuteWert").textContent =
+formatZahl(gesamtwert,2,true) + " €";
+
+document.getElementById("zeitstrahlHeutePunkt").style.left =
+"calc(var(--inset) + (100% - (var(--inset) * 2)) * "+(heutePosition/100)+")";
+
+document.getElementById("zeitstrahlLinieLinks").style.width =
+"calc((100% - (var(--inset) * 2)) * "+(heutePosition/100)+")";
+
+document.getElementById("zeitstrahlLinieRechts").style.left =
+"calc(var(--inset) + (100% - (var(--inset) * 2)) * "+(heutePosition/100)+")";
+
+document.getElementById(
+"jahresentwicklungGesamt"
+).innerHTML =
+
+"<strong style='color:"+
+(jahresentwicklungGesamtBetrag<0?"red":"black")+
+"'>"+
+
+(jahresentwicklungGesamtBetrag>=0?"▲ ":"▼ ")+
+
+formatZahl(Math.abs(jahresentwicklungGesamtBetrag),2,true)+
+
+" € ("+
+
+(entwicklungProTag>=0?"▲ ":"▼ ")+
+
+formatZahl(Math.abs(entwicklungProTag),2,true)+
+
+" €/Tag)</strong>";
+
+
+// Prognose-Meilensteine
+
+const prognoseBody =
+document.getElementById("prognoseMeilensteineBody");
+
+prognoseBody.innerHTML = "";
+
+for(let meilenstein = 200000;
+    meilenstein <= 1000000;
+    meilenstein += 100000){
+
+    let resttage = null;
+    let datum = "-";
+
+    if(entwicklungProTag > 0){
+
+        resttage = Math.ceil(
+            (meilenstein - gesamtwert) /
+            entwicklungProTag
+        );
+
+        const zielDatum = new Date();
+
+        zielDatum.setDate(
+            zielDatum.getDate() + resttage
+        );
+
+        datum =
+        zielDatum.toLocaleDateString(
+            "de-DE",
+            {
+                day:"2-digit",
+                month:"2-digit",
+                year:"numeric"
+            }
+        );
+    }
+
+    let rest = meilenstein - gesamtwert;
+
+prognoseBody.innerHTML += `
+<tr>
+
+<td class="meilenstein-col kurs">
+${formatZahl(meilenstein,2,true)} €
+</td>
+
+<td class="kurs">
+${formatZahl(rest,2,true)} €
+</td>
+
+<td class="kurs">
+${
+resttage !== null
+?
+formatZahl(resttage,0,true)+" Tage"
+:
+"-"
+}
+</td>
+
+<td class="kurs">
+${datum}
+</td>
+
+</tr>
+`;
+
+}
+
+
+document.getElementById(
+"restkaeufeJahrGesamt"
+).innerHTML =
+
+"<strong>"+
+formatZahl(restkaeufeJahrGesamt,2,true)+
+" €</strong>";
+
+
+let startDatumText="";
+
+
+for(const item of isins){
+
+const start =
+kursDaten[item.isin];
+
+if(!start) continue;
+
+
+if(
+start.tagesanfangDatum
+){
+
+startDatumText =
+
+" | Tagesanfangskurs: "+
+formatDatum(start.tagesanfangDatum);
+
+break;
+
+}
+
+}
+
+// Entwicklung Altersvorsorge berechnen
+
+const entwicklungZellen =
+document.querySelectorAll(".entwicklung");
+
+const entwicklungProTagZellen =
+document.querySelectorAll(".entwicklung-pro-tag");
+
+const historischeSummen =
+document.querySelectorAll(".historische-summe");
+
+const jahresentwicklungHistorischZellen =
+document.querySelectorAll(".jahresentwicklung-historisch");
+
+
+// Summe der Werte aus Altersvorsorge-Tabelle
+
+const vorsorgeWerteNeu =
+document.querySelectorAll(".vorsorge-wert");
+
+
+let vorsorgeGesamtWert = 0;
+
+
+vorsorgeWerteNeu.forEach(zelle => {
+
+    vorsorgeGesamtWert +=
+    Number(
+        zelle.innerText
+        .replace(/\./g,"")
+        .replace(",",".")
+        .replace(" €","")
+    );
+
+});
+
+document.getElementById("summeAltersvorsorge").innerHTML =
+    formatZahl(vorsorgeGesamtWert, 2, true) + " €";
+    
+historischeSummen.forEach((zelle, index) => {
+
+    const historisch =
+    Number(
+        zelle.innerText
+        .replace(/\./g,"")
+        .replace(",",".")
+        .replace(" €","")
+    );
+
+    // Neue Berechnung der Jahresentwicklung
+    if (index < 2) {
+
+        jahresentwicklungHistorischZellen[index].innerHTML = "-";
+
+    } else {
+
+        const historischVorjahr = Number(
+            historischeSummen[index - 1].innerText
+                .replace(/\./g,"")
+                .replace(",",".")
+                .replace(" €","")
+        );
+
+        const jahresentwicklungHistorisch =
+            historisch - historischVorjahr;
+
+        jahresentwicklungHistorischZellen[index].innerHTML =
+            (jahresentwicklungHistorisch >= 0 ? "+ " : "") +
+            formatZahl(jahresentwicklungHistorisch,2,true) +
+            " €";
+
+        jahresentwicklungHistorischZellen[index].style.fontWeight = "650";
+    }
+
+    const entwicklung =
+    vorsorgeGesamtWert - historisch;
+
+    entwicklungZellen[index].innerHTML =
+    (entwicklung >= 0 ? "+ " : "") +
+    formatZahl(
+        entwicklung,
+        2,
+        true
+    ) +
+    " €";
+
+
+
+    // Tage seit Start Betrachtung berechnen
+
+const startZelle =
+zelle.parentElement.querySelector("td");
+
+const startDatum =
+startZelle.innerText.split(" ")[0];
+
+
+    const start =
+    new Date(
+        startDatum
+        .split(".")
+        .reverse()
+        .join("-")
+    );
+
+
+    const heute =
+    new Date();
+
+heute.setHours(0,0,0,0);
+start.setHours(0,0,0,0);
+
+    const tage =
+Math.floor(
+    (heute - start)
+    /
+    (1000*60*60*24)
+);
+
+// Datum in der ersten Spalte um "(vor XXX Tagen)" ergänzen
+startZelle.innerHTML =
+`${startDatum} <span style="color:#64748b;">(vor ${formatZahl(tage,0,true)} Tagen)</span>`;
+
+    const proTag =
+    tage > 0
+    ? entwicklung / tage
+    : 0;
+
+
+
+entwicklungProTagZellen[index].innerHTML =
+(proTag >= 0 ? "+ " : "") +
+formatZahl(proTag, 2, true) +
+" €/Tag";
+
+
+});
+
+
+
+setTimeout(() => {
+    aktualisierePrognosen(vorsorgeGesamtWert);
+}, 100);
+
+// Update Info
+
+const updateInfoEl = document.getElementById("updateInfo");
+
+updateInfoEl.innerHTML =
+"Letzte Aktualisierung: " +
+new Date().toLocaleString("de-DE", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+}) +
+" | automatische Aktualisierung alle 5 Minuten | " +
+"<span id='standAnteileText'>Stand Anteile: " +
+STANDDATUM +
+"</span>" +
+startDatumText;
+
+
+// --- NEU: Datum prüfen ---
+function parseDEDate(str) {
+    const [d, m, y] = str.split(".");
+    return new Date(`${y}-${m}-${d}`);
+}
+
+const standDate = parseDEDate(STANDDATUM);
+const now = new Date();
+
+const diffDays =
+Math.floor((now - standDate) / (1000 * 60 * 60 * 24));
+
+const standEl = document.getElementById("standAnteileText");
+
+if (diffDays >= 31) {
+    standEl.classList.add("stand-datum-alt");
+}
+
+// --- NEU: Performance-Footer prüfen ---
+
+const performanceFooter = document.getElementById("performanceUpdateInfo");
+
+const match = performanceFooter.innerText.match(
+    /(\d{2}\.\d{2}\.\d{4})/
+);
+
+if (match) {
+    const perfDate = parseDEDate(match[1]);
+
+    const diffDaysPerf =
+        Math.floor((now - perfDate) / (1000 * 60 * 60 * 24));
+
+    if (diffDaysPerf >= 31) {
+        performanceFooter.classList.add("stand-datum-alt");
+    }
+}
+
+document.getElementById("summeJahresanfang").innerHTML =
+"<strong>" +
+formatZahl(summeWertJahresanfang,2,true) +
+" €</strong>";
+
+const renderChart = () => {
+
+    if (window.wertChartInstance) {
+        window.wertChartInstance.destroy();
+    }
+
+    window.wertChartInstance =
+        new Chart(
+            document.getElementById("wertChart"),
+            {
+                type: "doughnut",
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartValues
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: "Anteile Gesamtwert",
+                            font: {
+                                size: 16,
+                                weight: "700"
+                            },
+                            padding: {
+                                bottom: 15
+                            }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        );
+};
+
+setTimeout(() => {
+    window.wertChartInstance.resize();
+}, 0);
+
+requestAnimationFrame(() => {
+    requestAnimationFrame(renderChart);
+});
+
+if(window.vorsorgeChartInstance){
+    window.vorsorgeChartInstance.destroy();
+}
+
+
+const vorsorgeLabels = [];
+const vorsorgeValues = [];
+
+
+document.querySelectorAll("#vorsorgeBody tr")
+.forEach(row => {
+
+    vorsorgeLabels.push(
+        row.children[0].innerText
+    );
+
+    vorsorgeValues.push(
+        Number(
+            row.children[2]
+            .innerText
+            .replace(/\./g,"")
+            .replace(",",".")
+            .replace(" €","")
+        )
+    );
+
+});
+
+
+window.vorsorgeChartInstance =
+new Chart(
+document.getElementById("vorsorgeChart"),
+{
+
+type:"doughnut",
+
+data:{
+
+labels:vorsorgeLabels,
+
+datasets:[{
+
+data:vorsorgeValues
+
+}]
+
+},
+
+options:{
+
+responsive:true,
+maintainAspectRatio:false,
+
+plugins:{
+
+title:{
+display:false,
+text:"Anteile Altersvorsorge",
+font:{
+size:16,
+weight:"700"
+}
+},
+
+legend:{
+display:false
+},
+
+tooltip:{
+
+callbacks:{
+
+label:function(context){
+
+const wert=context.raw;
+
+const gesamt=
+context.dataset.data
+.reduce((a,b)=>a+b,0);
+
+return (
+formatZahl(wert,2,true)
++" € ("+
+formatZahl(
+wert/gesamt*100,
+2
+)
++" %)"
+);
+
+}
+
+}
+
+}
+
+}
+
+}
+
+});
+
+
+}
+
+document.querySelectorAll(".tab-button").forEach(button => {
+
+    button.addEventListener("click", () => {
+
+        document.querySelectorAll(".tab-button")
+            .forEach(btn => btn.classList.remove("active"));
+
+        document.querySelectorAll(".tab-content")
+            .forEach(tab => tab.classList.remove("active"));
+
+        button.classList.add("active");
+
+        document
+            .getElementById(button.dataset.tab)
+            .classList.add("active");
+
+        // Absicherung gegen Timing-Probleme: falls das jeweilige
+        // Chart.js-Diagramm zum Zeitpunkt des Tab-Wechsels schon
+        // (unsichtbar) existiert, nach dem Sichtbarwerden einmal
+        // neu vermessen. Doppeltes requestAnimationFrame, damit
+        // der Browser das Layout des jetzt sichtbaren Tabs sicher
+        // fertig berechnet hat, bevor Chart.js die Größe abliest.
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                window.wertChartInstance?.resize();
+                window.vorsorgeChartInstance?.resize();
+            });
+        });
+
+    });
+
+});
+
+const aktuellesJahr = new Date().getFullYear();
+
+document.getElementById("jahresTabButton").textContent =
+    "Jahr " + aktuellesJahr;
+
+
+ladeAlleKurse();
+
+document.getElementById("zielwert").addEventListener("input", () => {
+
+    const vorsorgeGesamtWert = Number(
+        document.getElementById("summeAltersvorsorge")
+            .innerText
+            .replace(/\./g,"")
+            .replace(",",".")
+            .replace(" €","")
+    );
+
+    aktualisierePrognosen(vorsorgeGesamtWert);
+
+});
+
+setInterval(
+ladeAlleKurse,
+300000
+);
+
+
+</script>
+
+
+</div>
+
+
+</body>
+
+</html>
