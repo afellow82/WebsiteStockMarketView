@@ -767,10 +767,17 @@ table {
 
     margin:0;
 
-    height:auto;
+}
 
-    min-height:0;
-
+/* Feste, kleine Größe – unabhängig davon, wann Chart.js das
+   Diagramm erzeugt oder der Tab sichtbar wird. Breite UND Höhe
+   sind hier bewusst explizit gesetzt (nicht "auto"), damit weder
+   die 350px-Größe von ".chart-card" noch ein Resize-Feedback-Loop
+   zwischen Canvas und Container zum Tragen kommt. */
+.chart-card.vorsorge-chart {
+    width:300px;
+    height:135px;
+    min-height:135px;
 }
 
 .jahresverlauf-card {
@@ -1038,7 +1045,7 @@ Geplante Restkäufe durch Sparpläne Jahr gesamt
 id="restkaeufeJahrGesamt">
 </div>
 
-<div class="info-icon" title="Version: 1.00 (06.07.2026)">
+<div class="info-icon" title="Version: 1.01 (07.07.2026)">
     i
 </div>
 
@@ -3069,6 +3076,19 @@ document.querySelectorAll(".tab-button").forEach(button => {
         document
             .getElementById(button.dataset.tab)
             .classList.add("active");
+
+        // Absicherung gegen Timing-Probleme: falls das jeweilige
+        // Chart.js-Diagramm zum Zeitpunkt des Tab-Wechsels schon
+        // (unsichtbar) existiert, nach dem Sichtbarwerden einmal
+        // neu vermessen. Doppeltes requestAnimationFrame, damit
+        // der Browser das Layout des jetzt sichtbaren Tabs sicher
+        // fertig berechnet hat, bevor Chart.js die Größe abliest.
+        requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+                window.wertChartInstance?.resize();
+                window.vorsorgeChartInstance?.resize();
+            });
+        });
 
     });
 
