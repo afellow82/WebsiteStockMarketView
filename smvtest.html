@@ -769,15 +769,15 @@ table {
 
 }
 
-/* Höher spezifisch als ".vorsorge-chart" allein, damit die feste
-   Höhe aus ".chart-card" NICHT mehr überschrieben wird. Ohne feste,
-   vom Canvas-Inhalt unabhängige Höhe entsteht ein Resize-Loop
-   zwischen Chart.js (maintainAspectRatio:false) und dem Container,
-   der beim Tab-Wechsel während des Ladens zu einem viel zu großen
-   Diagramm führt. */
+/* Feste, kleine Größe – unabhängig davon, wann Chart.js das
+   Diagramm erzeugt oder der Tab sichtbar wird. Breite UND Höhe
+   sind hier bewusst explizit gesetzt (nicht "auto"), damit weder
+   die 350px-Größe von ".chart-card" noch ein Resize-Feedback-Loop
+   zwischen Canvas und Container zum Tragen kommt. */
 .chart-card.vorsorge-chart {
-    height:350px;
-    min-height:350px;
+    width:220px;
+    height:220px;
+    min-height:220px;
 }
 
 .jahresverlauf-card {
