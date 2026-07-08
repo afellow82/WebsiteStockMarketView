@@ -961,6 +961,57 @@ table {
     background: #f3f4f6;
 }
 
+.info-tooltip {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    right: 0;
+
+    min-width: 260px;
+    max-width: none;
+    width: max-content;
+
+    background: rgba(255,255,255,.97);
+    color: #334155;
+
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.5;
+    text-align: left;
+    white-space: nowrap;
+
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 1px solid #e5e7eb;
+
+    box-shadow: 0 10px 25px rgba(15,23,42,.15);
+
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
+
+    transition: opacity .2s ease, transform .2s ease, visibility .2s ease;
+
+    pointer-events: none;
+
+    z-index: 20;
+}
+
+.info-tooltip::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    right: 8px;
+
+    border: 6px solid transparent;
+    border-top-color: rgba(255,255,255,.97);
+}
+
+.info-icon:hover .info-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1045,8 +1096,14 @@ Geplante Restkäufe durch Sparpläne Jahr gesamt
 id="restkaeufeJahrGesamt">
 </div>
 
-<div class="info-icon" title="Aktualisierung: automatisch alle 5 min&#10;Version: 1.02 (07.07.2026)">
+<div class="info-icon">
     i
+    <div class="info-tooltip" id="infoTooltip">
+        <span id="infoTooltipUpdate"></span><br>
+        automatische Aktualisierung alle 5 min<br>
+        <br>
+        Version: 1.03 (08.07.2026)
+    </div>
 </div>
 
 </div>
@@ -2849,7 +2906,7 @@ setTimeout(() => {
 
 const updateInfoEl = document.getElementById("updateInfo");
 
-updateInfoEl.innerHTML =
+const letzteAktualisierungText =
 "Letzte Aktualisierung: " +
 new Date().toLocaleString("de-DE", {
     day: "2-digit",
@@ -2857,12 +2914,16 @@ new Date().toLocaleString("de-DE", {
     year: "numeric",
     hour: "2-digit",
     minute: "2-digit"
-}) +
-" | " +
+});
+
+updateInfoEl.innerHTML =
 "<span id='standAnteileText'>Stand Anteile: " +
 STANDDATUM +
 "</span>" +
 startDatumText;
+
+document.getElementById("infoTooltipUpdate").textContent =
+letzteAktualisierungText;
 
 
 // --- NEU: Datum prüfen ---
