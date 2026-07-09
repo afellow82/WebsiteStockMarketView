@@ -801,13 +801,13 @@ table {
 }
 
 .zeitstrahl-linie-links {
-    left:var(--inset);
-    background:#9ca3af;
+    left:calc(var(--inset) - 30px);
+    background:#4A708B;
     border-radius:3px 0 0 3px;
 }
 
 .zeitstrahl-linie-rechts {
-    right:var(--inset);
+    right:calc(var(--inset) - 30px);
     background:#d1d5db;
     border-radius:0 3px 3px 0;
 }
@@ -818,25 +818,41 @@ table {
     width:14px;
     height:14px;
     border-radius:50%;
-    background:#9ca3af;
-    border:3px solid #fff;
-    box-shadow:0 2px 6px rgba(15,23,42,.35);
+    background:#4A708B;
     transform:translate(-50%,-50%);
 }
 
 .zeitstrahl-punkt.start {
     left:var(--inset);
+    transform:translate(-50%,-50%) translateX(-30px);
 }
 
 .zeitstrahl-punkt.ende {
     left:calc(100% - var(--inset));
+    background:#d1d5db;
+    transform:translate(-50%,-50%) translateX(30px);
 }
 
 .zeitstrahl-punkt.heute {
-    width:18px;
-    height:18px;
-    background:#9ca3af;
-    box-shadow:0 2px 8px rgba(156,163,175,.5);
+    width:0;
+    height:0;
+    background:transparent;
+    border:none;
+    box-shadow:none;
+}
+
+.zeitstrahl-punkt.heute::before {
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    width:0;
+    height:0;
+    border-top:9px solid transparent;
+    border-bottom:9px solid transparent;
+    border-left:16px solid #4A708B;
+    border-right:0;
+    transform:translate(-8px,-9px);
 }
 
 .zeitstrahl-label {
@@ -858,14 +874,19 @@ table {
 
 .zeitstrahl-punkt.heute .zeitstrahl-label {
     top:100%;
-    margin-top:11px;
+    margin-top:18px;
 }
 
 .zeitstrahl-datum {
     font-size:18px;
-    color:#9ca3af;
+    color:#d1d5db;
     letter-spacing:.5px;
     font-weight:700;
+}
+
+.zeitstrahl-punkt.start .zeitstrahl-datum,
+.zeitstrahl-punkt.heute .zeitstrahl-datum {
+    color:#4A708B;
 }
 
 .zeitstrahl-wert {
@@ -1102,7 +1123,7 @@ id="restkaeufeJahrGesamt">
         <span id="infoTooltipUpdate"></span><br>
         (automatische Aktualisierung alle 5 min)<br>
         <br>
-        Version: 1.03 (08.07.2026)
+        Version: 1.04 (09.07.2026)
     </div>
 </div>
 
@@ -2626,7 +2647,7 @@ document.getElementById("zeitstrahlHeutePunkt").style.left =
 "calc(var(--inset) + (100% - (var(--inset) * 2)) * "+(heutePosition/100)+")";
 
 document.getElementById("zeitstrahlLinieLinks").style.width =
-"calc((100% - (var(--inset) * 2)) * "+(heutePosition/100)+")";
+"calc((100% - (var(--inset) * 2)) * "+(heutePosition/100)+" + 30px)";
 
 document.getElementById("zeitstrahlLinieRechts").style.left =
 "calc(var(--inset) + (100% - (var(--inset) * 2)) * "+(heutePosition/100)+")";
