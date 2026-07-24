@@ -1123,7 +1123,7 @@ id="restkaeufeJahrGesamt">
         <span id="infoTooltipUpdate"></span><br>
         (automatische Aktualisierung alle 5 min)<br>
         <br>
-        Version: 1.06 (09.07.2026)
+        Version: 1.07 (24.07.2026)
     </div>
 </div>
 
@@ -2888,12 +2888,27 @@ startZelle.innerText.split(" ")[0];
     const heute =
     new Date();
 
-heute.setHours(0,0,0,0);
-start.setHours(0,0,0,0);
+// Tage-Differenz ueber reine UTC-Kalendertage berechnen,
+// damit die Zeitumstellung (Sommer-/Winterzeit) das Ergebnis
+// nicht verfaelscht (sonst kann Math.floor bei Zeitumstellungs-
+// Ueberschreitungen um 1 Tag zu niedrig runden).
+const heuteUTC =
+Date.UTC(
+    heute.getFullYear(),
+    heute.getMonth(),
+    heute.getDate()
+);
+
+const startUTC =
+Date.UTC(
+    start.getUTCFullYear(),
+    start.getUTCMonth(),
+    start.getUTCDate()
+);
 
     const tage =
-Math.floor(
-    (heute - start)
+Math.round(
+    (heuteUTC - startUTC)
     /
     (1000*60*60*24)
 );
