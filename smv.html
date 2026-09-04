@@ -1128,9 +1128,9 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <span id="infoTooltipUpdate"></span><br>
-        (automatische Aktualisierung alle 5 min)<br>
+        (automatische Datenaktualisierung alle 5 min)<br>
         <br>
-        Version: 1.08 (02.09.2026)
+        Version: 1.09 (04.09.2026)
     </div>
 </div>
 
@@ -1381,7 +1381,7 @@ id="restkaeufeJahrGesamt">
                 <th>Meilenstein</th>
                 <th>Rest</th>
                 <th>Resttage</th>
-                <th>Prognosedatum</th>
+                <th>Prognose Datum</th>
             </tr>
 
         </thead>
@@ -2846,13 +2846,24 @@ vorausschauZeilen.push({
     });
 }
 
+// Zeile 5: fixes Datum 29.07.2049
+{
+    const datum = new Date(2049, 6, 29);
+    const resttage = resttageZuDatum(datum);
+    vorausschauZeilen.push({
+        datum: datum,
+        resttage: resttage,
+        wert: prognoseWertFuerResttage(resttage)
+    });
+}
+
 vorausschauZeilen.forEach(zeile => {
 
 vorausschauBody.innerHTML += `
 <tr>
 
 <td>
-${formatDatumDE(zeile.datum)}
+<strong>${formatDatumDE(zeile.datum)}</strong>
 </td>
 
 <td>
@@ -3068,7 +3079,7 @@ setTimeout(() => {
 const updateInfoEl = document.getElementById("updateInfo");
 
 const letzteAktualisierungText =
-"Letzte Aktualisierung: " +
+"Letzte Datenaktualisierung: " +
 new Date().toLocaleString("de-DE", {
     day: "2-digit",
     month: "2-digit",
