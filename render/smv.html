@@ -1249,9 +1249,7 @@ id="restkaeufeJahrGesamt">
 
     </table>
 
-<div class="footer" id="performanceUpdateInfo">
-    Stand Investitionen: 02.09.2026
-</div>
+<div class="footer" id="performanceUpdateInfo"></div>
 
 </div>
 
@@ -1364,6 +1362,10 @@ id="restkaeufeJahrGesamt">
 
 <div class="tab-content" id="prognose">
 
+    <h1 class="section-title">
+        Meilensteine
+    </h1>
+
     <table class="prognose-table">
 
         <thead>
@@ -1378,6 +1380,28 @@ id="restkaeufeJahrGesamt">
         </thead>
 
         <tbody id="prognoseMeilensteineBody">
+
+        </tbody>
+
+    </table>
+
+    <h1 class="section-title">
+        Vorausschau
+    </h1>
+
+    <table class="vorausschau-table">
+
+        <thead>
+
+            <tr>
+                <th>Datum</th>
+                <th>Resttage</th>
+                <th>Prognose Gesamtwert</th>
+            </tr>
+
+        </thead>
+
+        <tbody id="vorausschauBody">
 
         </tbody>
 
@@ -1557,7 +1581,8 @@ value="150000,00">
 
 <script>
 
-const STANDDATUM = "02.09.2026";
+const STANDDATUM_ANTEILE = "02.09.2026";
+const STANDDATUM_INVESTITIONEN = "02.09.2026";
 
 const isins = [
 
@@ -2680,9 +2705,9 @@ document.getElementById("prognoseMeilensteineBody");
 
 prognoseBody.innerHTML = "";
 
-for(let meilenstein = 200000;
-    meilenstein <= 1000000;
-    meilenstein += 100000){
+const meilensteine = [200000, 300000, 500000, 750000, 1000000];
+
+meilensteine.forEach(meilenstein => {
 
     let resttage = null;
     let datum = "-";
@@ -2741,7 +2766,100 @@ ${datum}
 </tr>
 `;
 
+});
+
+
+// Vorausschau
+
+const vorausschauBody =
+document.getElementById("vorausschauBody");
+
+vorausschauBody.innerHTML = "";
+
+function formatDatumDE(datum){
+    return datum.toLocaleDateString(
+        "de-DE",
+        {day:"2-digit",month:"2-digit",year:"numeric"}
+    );
 }
+
+function resttageZuDatum(datum){
+    return Math.round(
+        (datum - jetztDatum) /
+        (1000*60*60*24)
+    );
+}
+
+function prognoseWertFuerResttage(resttage){
+    return gesamtwert + (resttage * entwicklungProTag);
+}
+
+const vorausschauZeilen = [];
+
+// Zeile 1: 31.12. aktuelles Jahr
+vorausschauZeilen.push({
+    datum: jahresEnde,
+    resttage: restTageJahr,
+    wert: prognoseEndwert
+});
+
+// Zeile 2: in 100 Tagen
+{
+    const resttage = 100;
+    const datum = new Date(jetztDatum);
+    datum.setDate(datum.getDate() + resttage);
+    vorausschauZeilen.push({
+        datum: datum,
+        resttage: resttage,
+        wert: prognoseWertFuerResttage(resttage)
+    });
+}
+
+// Zeile 3: heute + 1 Jahr
+{
+    const datum = new Date(jetztDatum);
+    datum.setFullYear(datum.getFullYear() + 1);
+    const resttage = resttageZuDatum(datum);
+    vorausschauZeilen.push({
+        datum: datum,
+        resttage: resttage,
+        wert: prognoseWertFuerResttage(resttage)
+    });
+}
+
+// Zeile 4: heute + 2 Jahre
+{
+    const datum = new Date(jetztDatum);
+    datum.setFullYear(datum.getFullYear() + 2);
+    const resttage = resttageZuDatum(datum);
+    vorausschauZeilen.push({
+        datum: datum,
+        resttage: resttage,
+        wert: prognoseWertFuerResttage(resttage)
+    });
+}
+
+vorausschauZeilen.forEach(zeile => {
+
+vorausschauBody.innerHTML += `
+<tr>
+
+<td>
+${formatDatumDE(zeile.datum)}
+</td>
+
+<td>
+${formatZahl(zeile.resttage,0,true)} Tage
+</td>
+
+<td>
+<strong>${formatZahl(zeile.wert,2,true)} €</strong>
+</td>
+
+</tr>
+`;
+
+});
 
 
 document.getElementById(
@@ -2954,7 +3072,7 @@ new Date().toLocaleString("de-DE", {
 
 updateInfoEl.innerHTML =
 "<span id='standAnteileText'>Stand Anteile: " +
-STANDDATUM +
+STANDDATUM_ANTEILE +
 "</span>" +
 startDatumText;
 
@@ -2968,7 +3086,7 @@ function parseDEDate(str) {
     return new Date(`${y}-${m}-${d}`);
 }
 
-const standDate = parseDEDate(STANDDATUM);
+const standDate = parseDEDate(STANDDATUM_ANTEILE);
 const now = new Date();
 
 const diffDays =
@@ -2984,19 +3102,15 @@ if (diffDays >= 31) {
 
 const performanceFooter = document.getElementById("performanceUpdateInfo");
 
-const match = performanceFooter.innerText.match(
-    /(\d{2}\.\d{2}\.\d{4})/
-);
+performanceFooter.textContent = "Stand Investitionen: " + STANDDATUM_INVESTITIONEN;
 
-if (match) {
-    const perfDate = parseDEDate(match[1]);
+const perfDate = parseDEDate(STANDDATUM_INVESTITIONEN);
 
-    const diffDaysPerf =
-        Math.floor((now - perfDate) / (1000 * 60 * 60 * 24));
+const diffDaysPerf =
+    Math.floor((now - perfDate) / (1000 * 60 * 60 * 24));
 
-    if (diffDaysPerf >= 31) {
-        performanceFooter.classList.add("stand-datum-alt");
-    }
+if (diffDaysPerf >= 31) {
+    performanceFooter.classList.add("stand-datum-alt");
 }
 
 document.getElementById("summeJahresanfang").innerHTML =
@@ -3038,6 +3152,21 @@ const renderChart = () => {
                         },
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const wert = context.raw;
+                                    const gesamt = context.dataset.data
+                                        .reduce((a, b) => a + b, 0);
+                                    return (
+                                        formatZahl(wert, 2, true)
+                                        + " € (" +
+                                        formatZahl(wert / gesamt * 100, 2)
+                                        + " %)"
+                                    );
+                                }
+                            }
                         }
                     }
                 }
