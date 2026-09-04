@@ -1154,7 +1154,7 @@ id="restkaeufeJahrGesamt">
 
 <button class="tab-button"
         data-tab="sparplan">
-    Sparpläne
+    Sparpläne / Käufe
 </button>
 
 <button
@@ -1261,6 +1261,10 @@ id="restkaeufeJahrGesamt">
 
     <div class="tab-content" id="sparplan">
 
+    <h1 class="section-title">
+        Sparpläne
+    </h1>
+
         <table>
 
             <thead>
@@ -1272,13 +1276,38 @@ id="restkaeufeJahrGesamt">
                     <th>Rhythmus</th>
                     <th>Nächste Ausführung</th>
                     <th>Status</th>
-                    <th>Restkäufe Jahr</th>
+                    <th>Restkäufe aktuelles Jahr</th>
 
                 </tr>
 
             </thead>
 
             <tbody id="sparplanBody"></tbody>
+
+        </table>
+
+    <h1 class="section-title">
+        Geplante Käufe
+    </h1>
+
+        <table>
+
+            <thead>
+
+                <tr>
+
+                    <th>Zeitpunkt</th>
+                    <th>Aktie</th>
+                    <th>Anzahl Anteile</th>
+                    <th>Kaufpreis</th>
+                    <th>Wert</th>
+                    <th>Kommentar</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody id="geplanteKaeufeBody"></tbody>
 
         </table>
 
@@ -1458,7 +1487,7 @@ id="restkaeufeJahrGesamt">
 </div>
 
     <h1 class="section-title">
-        Entwicklung
+        Entwicklung Altersvorsorge
     </h1>
 
 
@@ -1516,7 +1545,7 @@ id="restkaeufeJahrGesamt">
     </table>
 
     <h1 class="section-title">
-        Prognose
+        Prognose Altersvorsorge
     </h1>
 
 
@@ -2101,11 +2130,15 @@ document.getElementById("vorsorgeBody");
 const performance =
 document.getElementById("performanceBody");
 
+const geplanteKaeufe =
+document.getElementById("geplanteKaeufeBody");
+
 tbody.innerHTML="";
 history.innerHTML="";
 sparplan.innerHTML="";
 vorsorge.innerHTML="";
 performance.innerHTML="";
+geplanteKaeufe.innerHTML="";
 
 let gesamtwert=0;
 const chartLabels = [];
@@ -2461,6 +2494,109 @@ ${err.message}
 
 }
 
+
+}
+
+const allianzKurs =
+kursDaten["DE0008404005"]
+? kursDaten["DE0008404005"].kurs
+: null;
+
+if (allianzKurs) {
+
+    const geplanteKaeufeZeilen = [];
+
+    // Gratisaktie Allianz 2026
+    {
+        const anzahl = 1;
+        const kaufpreis = 0;
+        const wert = allianzKurs * anzahl;
+
+        geplanteKaeufeZeilen.push({
+            zeitpunkt: "November 2026",
+            aktie: "Aktie Allianz",
+            anzahl: anzahl,
+            kaufpreis: kaufpreis,
+            wert: wert,
+            kommentar: "Gratisaktie Allianz 2026"
+        });
+    }
+
+    // ESPP Allianz 2026
+    {
+        const kaufpreis = 6712.00;
+        const wert = kaufpreis / 3 * 4;
+        const anzahl = wert / allianzKurs;
+
+        geplanteKaeufeZeilen.push({
+            zeitpunkt: "November 2026",
+            aktie: "Aktie Allianz",
+            anzahl: anzahl,
+            kaufpreis: kaufpreis,
+            wert: wert,
+            kommentar: "ESPP Allianz 2026"
+        });
+    }
+
+    // ESPP Reinvestition Dividende Allianz 2027
+    {
+        const kaufpreis = 0;
+        const wert = 1420.28;
+        const anzahl = wert / allianzKurs;
+
+        geplanteKaeufeZeilen.push({
+            zeitpunkt: "Mai 2027",
+            aktie: "Aktie Allianz",
+            anzahl: anzahl,
+            kaufpreis: kaufpreis,
+            wert: wert,
+            kommentar: "ESPP Reinvestition Dividende Allianz 2027"
+        });
+    }
+
+    geplanteKaeufeZeilen.forEach(zeile => {
+
+        geplanteKaeufe.innerHTML += `
+
+<tr>
+
+<td>${zeile.zeitpunkt}</td>
+
+<td>${zeile.aktie}</td>
+
+<td class="kurs">
+${formatZahl(zeile.anzahl,6,true)}
+</td>
+
+<td class="kurs">
+${formatZahl(zeile.kaufpreis,2,true)} €
+</td>
+
+<td class="kurs">
+${formatZahl(zeile.wert,2,true)} €
+</td>
+
+<td>${zeile.kommentar}</td>
+
+</tr>
+
+`;
+
+    });
+
+} else {
+
+    geplanteKaeufe.innerHTML = `
+
+<tr>
+
+<td colspan="6">
+Aktueller Kurs Aktie Allianz nicht verfügbar
+</td>
+
+</tr>
+
+`;
 
 }
 
