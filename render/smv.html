@@ -1183,7 +1183,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 1.13 (04.09.2026)<br>
+        Version: 1.14 (04.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -3403,7 +3403,7 @@ const renderChart = () => {
 };
 
 setTimeout(() => {
-    window.wertChartInstance.resize();
+    window.wertChartInstance?.resize();
 }, 0);
 
 requestAnimationFrame(() => {
