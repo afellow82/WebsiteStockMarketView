@@ -219,6 +219,10 @@ to {
     font-size:40px;
 }
 
+#summeAltersvorsorge {
+    font-size:36px;
+}
+
 
 .label {
 
@@ -681,24 +685,79 @@ table {
 
 }
 
-.zielwert-input {
+.zielwert-anzeige {
 
-    padding:10px 14px;
+    font-size:16px;
 
-    border-radius:12px;
+    font-weight:700;
 
-    border:1px solid #e5e7eb;
+    color:#111827;
 
-    background:white;
-
-    font-size:14px;
-
-    width:110px;
+    min-width:110px;
 
     text-align:right;
 
-    box-shadow:
-    0 4px 12px rgba(15,23,42,.08);
+}
+
+.zielwert-slider {
+
+    flex:1 1 auto;
+
+    max-width:260px;
+
+    -webkit-appearance:none;
+
+    appearance:none;
+
+    height:6px;
+
+    border-radius:999px;
+
+    background:#cbd5e1;
+
+    outline:none;
+
+}
+
+.zielwert-slider::-webkit-slider-thumb {
+
+    -webkit-appearance:none;
+
+    width:16px;
+
+    height:16px;
+
+    border-radius:50%;
+
+    background:#94a3b8;
+
+    cursor:pointer;
+
+}
+
+.zielwert-slider::-moz-range-thumb {
+
+    width:16px;
+
+    height:16px;
+
+    border-radius:50%;
+
+    background:#94a3b8;
+
+    border:none;
+
+    cursor:pointer;
+
+}
+
+.zielwert-slider::-moz-range-track {
+
+    height:6px;
+
+    border-radius:999px;
+
+    background:#cbd5e1;
 
 }
 
@@ -1124,7 +1183,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 1.12 (04.09.2026)<br>
+        Version: 1.14 (04.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -1548,11 +1607,17 @@ id="restkaeufeJahrGesamt">
         </div>
 
 
- <input 
-type="text"
+ <span
+id="zielwertAnzeige"
+class="zielwert-anzeige">150.000,00 €</span>
+
+ <input
+type="range"
 id="zielwert"
-class="zielwert-input"
-value="150000,00">
+class="zielwert-slider"
+step="10000"
+value="150000"
+autocomplete="off">
 
     </div>
 
@@ -3078,6 +3143,26 @@ vorsorgeWerteNeu.forEach(zelle => {
 
 document.getElementById("summeAltersvorsorge").innerHTML =
     formatZahl(vorsorgeGesamtWert, 2, true) + " €";
+
+// Zielwert-Regler: Minimum = aktuelle Summe aufgerundet auf die
+// naechsten vollen 10.000, Maximum = aktuelle Summe aufgerundet auf
+// die uebernaechsten vollen 100.000 (d.h. naechste volle 100.000 + 100.000)
+const zielwertSlider = document.getElementById("zielwert");
+const zielwertAnzeige = document.getElementById("zielwertAnzeige");
+
+const zielwertMin = Math.ceil(vorsorgeGesamtWert / 10000) * 10000;
+const zielwertNaechste100k = Math.ceil(vorsorgeGesamtWert / 100000) * 100000;
+const zielwertMax = zielwertNaechste100k + 100000;
+
+zielwertSlider.min = zielwertMin;
+zielwertSlider.max = zielwertMax;
+
+let zielwertStandard =
+    Number(zielwertSlider.getAttribute("value")) || zielwertMin;
+zielwertStandard = Math.min(Math.max(zielwertStandard, zielwertMin), zielwertMax);
+zielwertSlider.value = zielwertStandard;
+
+zielwertAnzeige.textContent = formatZahl(zielwertStandard, 2, true) + " €";
     
 historischeSummen.forEach((zelle, index) => {
 
@@ -3318,7 +3403,7 @@ const renderChart = () => {
 };
 
 setTimeout(() => {
-    window.wertChartInstance.resize();
+    window.wertChartInstance?.resize();
 }, 0);
 
 requestAnimationFrame(() => {
@@ -3472,6 +3557,11 @@ document.getElementById("jahresTabButton").textContent =
 ladeAlleKurse();
 
 document.getElementById("zielwert").addEventListener("input", () => {
+
+    const zielwertSliderEl = document.getElementById("zielwert");
+
+    document.getElementById("zielwertAnzeige").textContent =
+        formatZahl(Number(zielwertSliderEl.value), 2, true) + " €";
 
     const vorsorgeGesamtWert = Number(
         document.getElementById("summeAltersvorsorge")
