@@ -942,6 +942,11 @@ table {
     font-weight: 400;
 }
 
+.vorausschau-table td:nth-child(2),
+.vorausschau-table td:nth-child(3) {
+    text-align: right;
+}
+
 #kurse table tbody tr {
     height: 56px;        /* stabiler Wert – ggf. anpassen */
 }
@@ -3195,7 +3200,7 @@ document.querySelectorAll("#vorsorgeBody tr")
 .forEach(row => {
 
     vorsorgeLabels.push(
-        row.children[0].innerText
+        row.children[0].innerText.trim()
     );
 
     vorsorgeValues.push(
