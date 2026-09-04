@@ -1616,7 +1616,8 @@ type="range"
 id="zielwert"
 class="zielwert-slider"
 step="10000"
-value="150000">
+value="150000"
+autocomplete="off">
 
     </div>
 
@@ -3156,7 +3157,8 @@ const zielwertMax = zielwertNaechste100k + 100000;
 zielwertSlider.min = zielwertMin;
 zielwertSlider.max = zielwertMax;
 
-let zielwertStandard = Number(zielwertSlider.value) || zielwertMin;
+let zielwertStandard =
+    Number(zielwertSlider.getAttribute("value")) || zielwertMin;
 zielwertStandard = Math.min(Math.max(zielwertStandard, zielwertMin), zielwertMax);
 zielwertSlider.value = zielwertStandard;
 
