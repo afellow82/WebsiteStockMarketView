@@ -1249,9 +1249,7 @@ id="restkaeufeJahrGesamt">
 
     </table>
 
-<div class="footer" id="performanceUpdateInfo">
-    Stand Investitionen: 02.09.2026
-</div>
+<div class="footer" id="performanceUpdateInfo"></div>
 
 </div>
 
@@ -1557,7 +1555,8 @@ value="150000,00">
 
 <script>
 
-const STANDDATUM = "02.09.2026";
+const STANDDATUM_ANTEILE = "02.09.2026";
+const STANDDATUM_INVESTITIONEN = "02.09.2026";
 
 const isins = [
 
@@ -2954,7 +2953,7 @@ new Date().toLocaleString("de-DE", {
 
 updateInfoEl.innerHTML =
 "<span id='standAnteileText'>Stand Anteile: " +
-STANDDATUM +
+STANDDATUM_ANTEILE +
 "</span>" +
 startDatumText;
 
@@ -2968,7 +2967,7 @@ function parseDEDate(str) {
     return new Date(`${y}-${m}-${d}`);
 }
 
-const standDate = parseDEDate(STANDDATUM);
+const standDate = parseDEDate(STANDDATUM_ANTEILE);
 const now = new Date();
 
 const diffDays =
@@ -2984,19 +2983,15 @@ if (diffDays >= 31) {
 
 const performanceFooter = document.getElementById("performanceUpdateInfo");
 
-const match = performanceFooter.innerText.match(
-    /(\d{2}\.\d{2}\.\d{4})/
-);
+performanceFooter.textContent = "Stand Investitionen: " + STANDDATUM_INVESTITIONEN;
 
-if (match) {
-    const perfDate = parseDEDate(match[1]);
+const perfDate = parseDEDate(STANDDATUM_INVESTITIONEN);
 
-    const diffDaysPerf =
-        Math.floor((now - perfDate) / (1000 * 60 * 60 * 24));
+const diffDaysPerf =
+    Math.floor((now - perfDate) / (1000 * 60 * 60 * 24));
 
-    if (diffDaysPerf >= 31) {
-        performanceFooter.classList.add("stand-datum-alt");
-    }
+if (diffDaysPerf >= 31) {
+    performanceFooter.classList.add("stand-datum-alt");
 }
 
 document.getElementById("summeJahresanfang").innerHTML =
@@ -3038,6 +3033,21 @@ const renderChart = () => {
                         },
                         legend: {
                             display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    const wert = context.raw;
+                                    const gesamt = context.dataset.data
+                                        .reduce((a, b) => a + b, 0);
+                                    return (
+                                        formatZahl(wert, 2, true)
+                                        + " € (" +
+                                        formatZahl(wert / gesamt * 100, 2)
+                                        + " %)"
+                                    );
+                                }
+                            }
                         }
                     }
                 }
