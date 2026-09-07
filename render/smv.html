@@ -1099,6 +1099,161 @@ table {
     transform: translateY(0);
 }
 
+
+/* =====================================================
+   Mobile-Ansicht (iPhone, ohne Tabs)
+   Zeigt nur: Gesamtwert-Kasten, Entwicklung-Kasten,
+   Tabelle "Aktuelle Kurse" (ohne ISIN, Kurs Tagesanfang,
+   Zeitpunkt), Stand-Anteile/Tagesanfangskurs-Zeile und
+   das Kreisdiagramm. Kein horizontales Scrollen.
+   ===================================================== */
+
+@media (max-width:480px){
+
+html, body {
+    overflow-x:hidden;
+}
+
+body {
+    padding:14px;
+}
+
+/* Tabs ausblenden, nur "Aktuelle Kurse" fest anzeigen */
+
+.tab-buttons {
+    display:none;
+}
+
+.tab-content,
+.tab-content.active {
+    display:none;
+}
+
+#kurse {
+    display:block !important;
+}
+
+/* Fixe 350px-Spalte des Grids entfernen (verursacht
+   sonst horizontales Scrollen) */
+
+.kurse-layout {
+    display:block;
+}
+
+/* Zusammenfassungs-Kacheln (Gesamtwert / Entwicklung) */
+
+.zusammenfassung {
+    grid-template-columns:1fr;
+    gap:14px;
+    margin-bottom:18px;
+}
+
+.card {
+    padding:16px;
+}
+
+.label {
+    font-size:10.5px;
+}
+
+.metric {
+    font-size:24px;
+    margin-bottom:12px;
+}
+
+.metric.small {
+    font-size:16px;
+}
+
+#tagesentwicklung {
+    font-size:20px;
+}
+
+.info-tooltip {
+    min-width:0;
+    width:220px;
+    right:-8px;
+    font-size:11px;
+    white-space:normal;
+}
+
+/* Tabelle "Aktuelle Kurse": nur relevante Spalten,
+   feste, kleinere Breiten statt horizontalem Scrollen */
+
+#kurse table {
+    display:table;
+    width:100%;
+    table-layout:fixed;
+    overflow-x:visible;
+}
+
+#kurse th,
+#kurse td {
+    padding:6px 4px;
+    font-size:10.5px;
+    white-space:normal;
+    overflow-wrap:break-word;
+}
+
+#kurse th {
+    font-size:8.5px;
+    letter-spacing:.1px;
+    overflow-wrap:break-word;
+    line-height:1.3;
+}
+
+/* ISIN, Kurs Tagesanfang, Zeitpunkt ausblenden */
+
+#kurse table th:nth-child(2),
+#kurse table td:nth-child(2),
+#kurse table th:nth-child(6),
+#kurse table td:nth-child(6),
+#kurse table th:nth-child(8),
+#kurse table td:nth-child(8) {
+    display:none;
+}
+
+/* Breiten der verbleibenden Spalten:
+   Anlage, Anteile, Kurs, Wert, Tageswertentwicklung */
+
+#kurse table th:nth-child(1),
+#kurse table td:nth-child(1) { width:26%; }
+
+#kurse table th:nth-child(3),
+#kurse table td:nth-child(3) { width:17%; }
+
+#kurse table th:nth-child(4),
+#kurse table td:nth-child(4) { width:16%; }
+
+#kurse table th:nth-child(5),
+#kurse table td:nth-child(5) { width:18%; }
+
+#kurse table th:nth-child(7),
+#kurse table td:nth-child(7) { width:23%; }
+
+#kurse .tages-badge {
+    white-space:normal;
+    font-size:10px;
+    padding:3px 5px;
+    line-height:1.35;
+}
+
+#kurse .footer {
+    font-size:11px;
+    word-break:break-word;
+}
+
+/* Kreisdiagramm */
+
+#kurse .chart-card {
+    width:100%;
+    height:280px;
+    padding:14px;
+    margin-top:16px;
+}
+
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1256,7 +1411,7 @@ id="restkaeufeJahrGesamt">
                     <th>Kurs</th>
                     <th>Wert</th>
                     <th>Kurs Tagesanfang</th>
-                    <th>Tageswertentwicklung</th>
+                    <th>Tageswert<wbr>entwicklung</th>
                     <th>Zeitpunkt</th>
                     <th class="hidden-column">ConsorsID</th>
 
