@@ -1304,13 +1304,17 @@ body {
    Anlage, Wert, Tageswertentwicklung */
 
 #kurse table th:nth-child(1),
-#kurse table td:nth-child(1) { width:42%; }
+#kurse table td:nth-child(1) { width:36%; }
 
 #kurse table th:nth-child(5),
-#kurse table td:nth-child(5) { width:20%; }
+#kurse table td:nth-child(5) { width:28%; }
 
 #kurse table th:nth-child(7),
-#kurse table td:nth-child(7) { width:38%; }
+#kurse table td:nth-child(7) { width:36%; }
+
+#kurse table td:nth-child(5) {
+    white-space:nowrap;
+}
 
 #kurse .tages-badge {
     white-space:normal;
@@ -1466,7 +1470,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.00 (07.09.2026)<br>
+        Version: 2.01 (07.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -1539,7 +1543,7 @@ id="restkaeufeJahrGesamt">
                     <th>Kurs</th>
                     <th>Wert</th>
                     <th>Kurs Tagesanfang</th>
-                    <th>Tageswert<wbr>entwicklung</th>
+                    <th>Tageswert&shy;entwicklung</th>
                     <th>Zeitpunkt</th>
                     <th class="hidden-column">ConsorsID</th>
 
