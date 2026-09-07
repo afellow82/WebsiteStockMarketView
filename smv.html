@@ -8,6 +8,10 @@
 
 <title>Stock Market View</title>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet">
+
 
 <style>
 
@@ -212,6 +216,18 @@ to {
 .metric.small {
 
     font-size:28px;
+
+}
+
+/* Werte in den oberen beiden Kaesten (Gesamtwert /
+   Entwicklung) nur auf Desktop weniger fett darstellen */
+@media(min-width:901px){
+
+.zusammenfassung .metric {
+
+    font-weight:500;
+
+}
 
 }
 
@@ -506,6 +522,12 @@ table {
 
 }
 
+.zusammenfassung .metric {
+
+    font-weight:500;
+
+}
+
 
 
 }
@@ -620,6 +642,16 @@ table {
 
 .prognose-kacheln .card {
     padding:12px 16px;
+}
+
+/* Werte in den untersten Kaesten (Prognose) im Tab
+   "Altersvorsorge" nur auf Desktop weniger fett darstellen */
+@media(min-width:901px){
+
+.prognose-kacheln .metric {
+    font-weight:500;
+}
+
 }
 
 @media(max-width:900px){
@@ -987,6 +1019,19 @@ table {
     letter-spacing: 0.3px;
 }
 
+/* Summe-Zeile im Tab "Jahr" nur auf Desktop weniger fett darstellen */
+@media(min-width:901px){
+
+.summe-zeile {
+    font-weight: 500;
+}
+
+.summe-zeile td strong {
+    font-weight: 500;
+}
+
+}
+
 .stand-datum-alt {
     color: #b91c1c;
     font-weight: 700;
@@ -1008,12 +1053,41 @@ table {
     text-align: right;
 }
 
+/* Vorausschau-Tabelle nutzt <strong> (Browser-Standard 700),
+   waehrend die Meilensteine-Tabelle darueber die Klasse "kurs"
+   mit font-weight:650 nutzt - hier auf Desktop angleichen */
+@media(min-width:901px){
+
+.vorausschau-table td strong {
+    font-weight:650;
+}
+
+}
+
 #kurse table tbody tr {
     height: 56px;        /* stabiler Wert – ggf. anpassen */
 }
 
 #kurse table td {
     vertical-align: middle;
+}
+
+/* Zeilenhoehe der oberen Tabelle (Kurse) nur auf Mobile reduzieren */
+@media(max-width:900px){
+
+#kurse table tbody tr {
+    height: 40px;
+}
+
+#kurse table td.status {
+    height: 40px;
+}
+
+#kurse table td,
+#kurse table th {
+    padding: 8px 10px;
+}
+
 }
 
 .info-icon {
@@ -1170,7 +1244,7 @@ body {
 
 #gesamtwert {
     font-size:40px;
-    font-weight:800;
+    font-weight:500;
 }
 
 .metric.small {
@@ -1180,7 +1254,13 @@ body {
 
 #tagesentwicklung {
     font-size:26px;
-    font-weight:800;
+    font-weight:500;
+}
+
+/* Werte in den oberen beiden Kaesten (Gesamtwert / Entwicklung)
+   auch auf der Mobilseite weniger fett darstellen */
+.zusammenfassung .metric.small {
+    font-weight:500;
 }
 
 .info-tooltip {
@@ -1235,13 +1315,17 @@ body {
    Anlage, Wert, Tageswertentwicklung */
 
 #kurse table th:nth-child(1),
-#kurse table td:nth-child(1) { width:42%; }
+#kurse table td:nth-child(1) { width:34%; }
 
 #kurse table th:nth-child(5),
-#kurse table td:nth-child(5) { width:20%; }
+#kurse table td:nth-child(5) { width:28%; }
 
 #kurse table th:nth-child(7),
 #kurse table td:nth-child(7) { width:38%; }
+
+#kurse table td:nth-child(5) {
+    white-space:nowrap;
+}
 
 #kurse .tages-badge {
     white-space:normal;
@@ -1253,6 +1337,26 @@ body {
 #kurse .footer {
     font-size:11px;
     word-break:break-word;
+}
+
+/* Safari/WebKit rundet auf Mobile den <table>-Rahmen mit
+   overflow:hidden nicht zuverlaessig ab (der th-Hintergrund
+   ueberdeckt die obere Rundung) - deshalb Rundung zusaetzlich
+   direkt auf den sichtbaren Eckzellen setzen */
+#kurse table thead th:first-child {
+    border-top-left-radius:18px;
+}
+
+#kurse table thead th:nth-child(7) {
+    border-top-right-radius:18px;
+}
+
+#kurse table tbody tr:last-child td:first-child {
+    border-bottom-left-radius:18px;
+}
+
+#kurse table tbody tr:last-child td:nth-child(7) {
+    border-bottom-right-radius:18px;
 }
 
 /* Kreisdiagramm */
@@ -1310,6 +1414,23 @@ body {
 
 #prognose .vorausschau-table th:nth-child(3),
 #prognose .vorausschau-table td:nth-child(3) { width:44%; }
+
+/* Gleicher Safari-Fix wie bei der Kurse-Tabelle */
+#prognose .vorausschau-table thead th:first-child {
+    border-top-left-radius:18px;
+}
+
+#prognose .vorausschau-table thead th:last-child {
+    border-top-right-radius:18px;
+}
+
+#prognose .vorausschau-table tbody tr:last-child td:first-child {
+    border-bottom-left-radius:18px;
+}
+
+#prognose .vorausschau-table tbody tr:last-child td:last-child {
+    border-bottom-right-radius:18px;
+}
 
 }
 
@@ -1397,7 +1518,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.00 (07.09.2026)<br>
+        Version: 2.01 (07.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -1470,7 +1591,7 @@ id="restkaeufeJahrGesamt">
                     <th>Kurs</th>
                     <th>Wert</th>
                     <th>Kurs Tagesanfang</th>
-                    <th>Tageswert<wbr>entwicklung</th>
+                    <th>Tageswert&shy;entwicklung</th>
                     <th>Zeitpunkt</th>
                     <th class="hidden-column">ConsorsID</th>
 
