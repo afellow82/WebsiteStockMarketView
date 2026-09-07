@@ -522,6 +522,12 @@ table {
 
 }
 
+.zusammenfassung .metric {
+
+    font-weight:500;
+
+}
+
 
 
 }
@@ -1186,7 +1192,7 @@ body {
 
 #gesamtwert {
     font-size:40px;
-    font-weight:800;
+    font-weight:500;
 }
 
 .metric.small {
@@ -1196,7 +1202,13 @@ body {
 
 #tagesentwicklung {
     font-size:26px;
-    font-weight:800;
+    font-weight:500;
+}
+
+/* Werte in den oberen beiden Kaesten (Gesamtwert / Entwicklung)
+   auch auf der Mobilseite weniger fett darstellen */
+.zusammenfassung .metric.small {
+    font-weight:500;
 }
 
 .info-tooltip {
@@ -1413,7 +1425,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.00 (07.09.2026)<br>
+        Version: 2.01 (07.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
