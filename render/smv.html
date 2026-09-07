@@ -1053,6 +1053,17 @@ table {
     text-align: right;
 }
 
+/* Vorausschau-Tabelle nutzt <strong> (Browser-Standard 700),
+   waehrend die Meilensteine-Tabelle darueber die Klasse "kurs"
+   mit font-weight:650 nutzt - hier auf Desktop angleichen */
+@media(min-width:901px){
+
+.vorausschau-table td strong {
+    font-weight:650;
+}
+
+}
+
 #kurse table tbody tr {
     height: 56px;        /* stabiler Wert – ggf. anpassen */
 }
@@ -1507,7 +1518,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.00 (07.09.2026)<br>
+        Version: 2.01 (07.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
