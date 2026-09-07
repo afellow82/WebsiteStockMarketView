@@ -1099,6 +1099,220 @@ table {
     transform: translateY(0);
 }
 
+.info-tooltip.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+
+/* =====================================================
+   Mobile-Ansicht (iPhone, ohne Tabs)
+   Zeigt nur: Gesamtwert-Kasten, Entwicklung-Kasten,
+   Tabelle "Aktuelle Kurse" (ohne ISIN, Kurs Tagesanfang,
+   Zeitpunkt), Stand-Anteile/Tagesanfangskurs-Zeile und
+   das Kreisdiagramm. Kein horizontales Scrollen.
+   ===================================================== */
+
+@media (max-width:480px){
+
+html, body {
+    overflow-x:hidden;
+}
+
+body {
+    padding:14px;
+}
+
+/* Tabs ausblenden, nur "Aktuelle Kurse" fest anzeigen */
+
+.tab-buttons {
+    display:none;
+}
+
+.tab-content,
+.tab-content.active {
+    display:none;
+}
+
+#kurse {
+    display:block !important;
+}
+
+/* Fixe 350px-Spalte des Grids entfernen (verursacht
+   sonst horizontales Scrollen) */
+
+.kurse-layout {
+    display:block;
+}
+
+/* Zusammenfassungs-Kacheln (Gesamtwert / Entwicklung) */
+
+.zusammenfassung {
+    grid-template-columns:1fr;
+    gap:14px;
+    margin-bottom:18px;
+}
+
+.card {
+    padding:16px;
+}
+
+.label {
+    font-size:10.5px;
+}
+
+.metric {
+    font-size:30px;
+    font-weight:800;
+    margin-bottom:12px;
+}
+
+#gesamtwert {
+    font-size:40px;
+    font-weight:800;
+}
+
+.metric.small {
+    font-size:22px;
+    font-weight:800;
+}
+
+#tagesentwicklung {
+    font-size:26px;
+    font-weight:800;
+}
+
+.info-tooltip {
+    min-width:0;
+    width:290px;
+    right:-8px;
+    font-size:11px;
+    white-space:normal;
+}
+
+/* Tabelle "Aktuelle Kurse": nur relevante Spalten,
+   feste, kleinere Breiten statt horizontalem Scrollen */
+
+#kurse table {
+    display:table;
+    width:100%;
+    table-layout:fixed;
+    overflow-x:visible;
+}
+
+#kurse th,
+#kurse td {
+    padding:6px 4px;
+    font-size:10.5px;
+    white-space:normal;
+    overflow-wrap:break-word;
+}
+
+#kurse th {
+    font-size:8.5px;
+    letter-spacing:.1px;
+    overflow-wrap:break-word;
+    line-height:1.3;
+}
+
+/* ISIN, Anteile, Kurs, Kurs Tagesanfang, Zeitpunkt ausblenden */
+
+#kurse table th:nth-child(2),
+#kurse table td:nth-child(2),
+#kurse table th:nth-child(3),
+#kurse table td:nth-child(3),
+#kurse table th:nth-child(4),
+#kurse table td:nth-child(4),
+#kurse table th:nth-child(6),
+#kurse table td:nth-child(6),
+#kurse table th:nth-child(8),
+#kurse table td:nth-child(8) {
+    display:none;
+}
+
+/* Breiten der verbleibenden Spalten:
+   Anlage, Wert, Tageswertentwicklung */
+
+#kurse table th:nth-child(1),
+#kurse table td:nth-child(1) { width:42%; }
+
+#kurse table th:nth-child(5),
+#kurse table td:nth-child(5) { width:20%; }
+
+#kurse table th:nth-child(7),
+#kurse table td:nth-child(7) { width:38%; }
+
+#kurse .tages-badge {
+    white-space:normal;
+    font-size:10px;
+    padding:3px 5px;
+    line-height:1.35;
+}
+
+#kurse .footer {
+    font-size:11px;
+    word-break:break-word;
+}
+
+/* Kreisdiagramm */
+
+#kurse .chart-card {
+    width:100%;
+    height:280px;
+    padding:14px;
+    margin-top:16px;
+}
+
+/* Vorausschau-Tabelle aus dem Tab "Prognose" zusätzlich
+   anzeigen (direkt unter dem Kreisdiagramm), Rest des
+   Tabs bleibt ausgeblendet */
+
+#prognose {
+    display:block !important;
+}
+
+#prognose h1.section-title:nth-of-type(1),
+#prognose table.prognose-table {
+    display:none;
+}
+
+#prognose h1.section-title {
+    margin-top:22px;
+}
+
+#prognose .vorausschau-table {
+    display:table;
+    width:100%;
+    table-layout:fixed;
+    overflow-x:visible;
+}
+
+#prognose .vorausschau-table th,
+#prognose .vorausschau-table td {
+    padding:6px 4px;
+    font-size:10.5px;
+    white-space:normal;
+    overflow-wrap:break-word;
+}
+
+#prognose .vorausschau-table th {
+    font-size:8.5px;
+    letter-spacing:.1px;
+    line-height:1.3;
+}
+
+#prognose .vorausschau-table th:nth-child(1),
+#prognose .vorausschau-table td:nth-child(1) { width:32%; }
+
+#prognose .vorausschau-table th:nth-child(2),
+#prognose .vorausschau-table td:nth-child(2) { width:24%; }
+
+#prognose .vorausschau-table th:nth-child(3),
+#prognose .vorausschau-table td:nth-child(3) { width:44%; }
+
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1183,7 +1397,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 1.17 (07.09.2026)<br>
+        Version: 2.00 (07.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -1256,7 +1470,7 @@ id="restkaeufeJahrGesamt">
                     <th>Kurs</th>
                     <th>Wert</th>
                     <th>Kurs Tagesanfang</th>
-                    <th>Tageswertentwicklung</th>
+                    <th>Tageswert<wbr>entwicklung</th>
                     <th>Zeitpunkt</th>
                     <th class="hidden-column">ConsorsID</th>
 
@@ -3514,6 +3728,27 @@ wert/gesamt*100,
 
 
 }
+
+document.querySelectorAll(".info-icon").forEach(icon => {
+
+    icon.addEventListener("click", (e) => {
+
+        e.stopPropagation();
+
+        const tooltip = icon.querySelector(".info-tooltip");
+
+        tooltip.classList.toggle("show");
+
+    });
+
+});
+
+document.addEventListener("click", () => {
+
+    document.querySelectorAll(".info-tooltip.show")
+        .forEach(t => t.classList.remove("show"));
+
+});
 
 document.querySelectorAll(".tab-button").forEach(button => {
 
