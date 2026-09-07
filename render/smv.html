@@ -644,6 +644,16 @@ table {
     padding:12px 16px;
 }
 
+/* Werte in den untersten Kaesten (Prognose) im Tab
+   "Altersvorsorge" nur auf Desktop weniger fett darstellen */
+@media(min-width:901px){
+
+.prognose-kacheln .metric {
+    font-weight:500;
+}
+
+}
+
 @media(max-width:900px){
 
     .prognose-kacheln {
@@ -1009,6 +1019,19 @@ table {
     letter-spacing: 0.3px;
 }
 
+/* Summe-Zeile im Tab "Jahr" nur auf Desktop weniger fett darstellen */
+@media(min-width:901px){
+
+.summe-zeile {
+    font-weight: 500;
+}
+
+.summe-zeile td strong {
+    font-weight: 500;
+}
+
+}
+
 .stand-datum-alt {
     color: #b91c1c;
     font-weight: 700;
@@ -1036,6 +1059,24 @@ table {
 
 #kurse table td {
     vertical-align: middle;
+}
+
+/* Zeilenhoehe der oberen Tabelle (Kurse) nur auf Mobile reduzieren */
+@media(max-width:900px){
+
+#kurse table tbody tr {
+    height: 40px;
+}
+
+#kurse table td.status {
+    height: 40px;
+}
+
+#kurse table td,
+#kurse table th {
+    padding: 8px 10px;
+}
+
 }
 
 .info-icon {
@@ -1425,7 +1466,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.01 (07.09.2026)<br>
+        Version: 2.00 (07.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
