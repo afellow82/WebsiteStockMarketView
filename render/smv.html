@@ -1099,6 +1099,12 @@ table {
     transform: translateY(0);
 }
 
+.info-tooltip.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
 
 /* =====================================================
    Mobile-Ansicht (iPhone, ohne Tabs)
@@ -1161,6 +1167,10 @@ body {
     margin-bottom:12px;
 }
 
+#gesamtwert {
+    font-size:34px;
+}
+
 .metric.small {
     font-size:16px;
 }
@@ -1202,10 +1212,14 @@ body {
     line-height:1.3;
 }
 
-/* ISIN, Kurs Tagesanfang, Zeitpunkt ausblenden */
+/* ISIN, Anteile, Kurs, Kurs Tagesanfang, Zeitpunkt ausblenden */
 
 #kurse table th:nth-child(2),
 #kurse table td:nth-child(2),
+#kurse table th:nth-child(3),
+#kurse table td:nth-child(3),
+#kurse table th:nth-child(4),
+#kurse table td:nth-child(4),
 #kurse table th:nth-child(6),
 #kurse table td:nth-child(6),
 #kurse table th:nth-child(8),
@@ -1214,22 +1228,16 @@ body {
 }
 
 /* Breiten der verbleibenden Spalten:
-   Anlage, Anteile, Kurs, Wert, Tageswertentwicklung */
+   Anlage, Wert, Tageswertentwicklung */
 
 #kurse table th:nth-child(1),
-#kurse table td:nth-child(1) { width:26%; }
-
-#kurse table th:nth-child(3),
-#kurse table td:nth-child(3) { width:17%; }
-
-#kurse table th:nth-child(4),
-#kurse table td:nth-child(4) { width:16%; }
+#kurse table td:nth-child(1) { width:32%; }
 
 #kurse table th:nth-child(5),
-#kurse table td:nth-child(5) { width:18%; }
+#kurse table td:nth-child(5) { width:26%; }
 
 #kurse table th:nth-child(7),
-#kurse table td:nth-child(7) { width:23%; }
+#kurse table td:nth-child(7) { width:42%; }
 
 #kurse .tages-badge {
     white-space:normal;
@@ -3669,6 +3677,27 @@ wert/gesamt*100,
 
 
 }
+
+document.querySelectorAll(".info-icon").forEach(icon => {
+
+    icon.addEventListener("click", (e) => {
+
+        e.stopPropagation();
+
+        const tooltip = icon.querySelector(".info-tooltip");
+
+        tooltip.classList.toggle("show");
+
+    });
+
+});
+
+document.addEventListener("click", () => {
+
+    document.querySelectorAll(".info-tooltip.show")
+        .forEach(t => t.classList.remove("show"));
+
+});
 
 document.querySelectorAll(".tab-button").forEach(button => {
 
