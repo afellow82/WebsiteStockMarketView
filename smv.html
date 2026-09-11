@@ -697,7 +697,9 @@ table {
 
 .zielwert-zeile {
 
-    display:flex;
+    display:grid;
+
+    grid-template-columns:260px 110px minmax(180px,260px);
 
     align-items:center;
 
@@ -729,17 +731,13 @@ table {
 
     color:#111827;
 
-    min-width:110px;
-
     text-align:right;
 
 }
 
 .zielwert-slider {
 
-    flex:1 1 auto;
-
-    max-width:260px;
+    width:100%;
 
     -webkit-appearance:none;
 
@@ -1522,7 +1520,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.03 (11.09.2026)<br>
+        Version: 2.04 (11.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -1935,7 +1933,7 @@ id="restkaeufeJahrGesamt">
     </table>
 
     <h1 class="section-title">
-        Prognose Altersvorsorge
+        Prognose Zielwerterreichung Altersvorsorge
     </h1>
 
 
@@ -2003,6 +2001,79 @@ autocomplete="off">
 
 
 </div>
+
+    <h1 class="section-title">
+        Prognose Kapital Altersvorsorge bis Rentenbeginn
+    </h1>
+
+
+<div class="zielwert-zeile">
+
+  <div class="label zielwert-label">
+            Angenommene Kurssteigerung (% p.a.):
+        </div>
+
+
+ <span
+id="kurssteigerungAnzeige"
+class="zielwert-anzeige">4,00 %</span>
+
+ <input
+type="range"
+id="kurssteigerung"
+class="zielwert-slider"
+min="0"
+max="8"
+step="1"
+value="4"
+autocomplete="off">
+
+    </div>
+
+
+<div class="zielwert-zeile" style="margin-bottom:24px;">
+
+  <div class="label zielwert-label">
+            Monatliche Einzahlungen (€):
+        </div>
+
+
+ <span
+id="einzahlungAnzeige"
+class="zielwert-anzeige">800,00 €</span>
+
+ <input
+type="range"
+id="einzahlung"
+class="zielwert-slider"
+min="500"
+max="1500"
+step="100"
+value="800"
+autocomplete="off">
+
+    </div>
+
+    <table>
+
+        <thead>
+
+            <tr>
+                <th>Jahr</th>
+                <th>Kapital Periodenbeginn</th>
+                <th>Steigerung durch Kurs</th>
+                <th>Steigerung durch Einzahlungen</th>
+                <th>Kapital Periodenende</th>
+                <th>Differenz zum Vorjahr</th>
+            </tr>
+
+        </thead>
+
+        <tbody id="kapitalPrognoseBody">
+
+        </tbody>
+
+    </table>
 
 </div>
 </div> <!-- Ende Altersvorsorge Tab -->
@@ -2491,6 +2562,124 @@ const wert = Number(
         "</span>";
 
 });
+
+}
+
+// Prognose Kapital Altersvorsorge bis Rentenbeginn 2049
+function aktualisiereKapitalTabelle(){
+
+    const kapitalBody =
+    document.getElementById("kapitalPrognoseBody");
+
+    if(!kapitalBody){
+        return;
+    }
+
+    const vorsorgeGesamtWertAktuell = Number(
+        document.getElementById("summeAltersvorsorge")
+            .innerText
+            .replace(/\./g,"")
+            .replace(",",".")
+            .replace(" €","")
+    );
+
+    // Entwicklung pro Tag des aktuellen Jahres (letzte Zeile der
+    // Tabelle "Entwicklung Altersvorsorge")
+    const entwicklungProTagZellenVorsorge =
+    document.querySelectorAll("#altersvorsorge .entwicklung-pro-tag");
+
+    let entwicklungProTagAktuellesJahr = 0;
+
+    if(entwicklungProTagZellenVorsorge.length > 0){
+
+        entwicklungProTagAktuellesJahr = Number(
+            entwicklungProTagZellenVorsorge[entwicklungProTagZellenVorsorge.length - 1]
+                .innerText
+                .replace(/\./g,"")
+                .replace(",",".")
+                .replace(/[^\d.-]/g,"")
+        );
+
+    }
+
+    // Resttage bis zum Jahresende ab heute
+    const heuteDatum = new Date();
+
+    const jahresEndeAktuell = new Date(
+        heuteDatum.getFullYear(),
+        11,
+        31
+    );
+
+    const restTageBisJahresende = Math.round(
+        (jahresEndeAktuell - heuteDatum) / (1000 * 60 * 60 * 24)
+    );
+
+    // Reglerwerte
+    const kurssteigerungProzent =
+    Number(document.getElementById("kurssteigerung").value) / 100;
+
+    const monatlicheEinzahlung =
+    Number(document.getElementById("einzahlung").value);
+
+    const steigerungDurchEinzahlungen =
+    12 * monatlicheEinzahlung;
+
+    const startJahr = heuteDatum.getFullYear() + 1;
+    const endJahr = 2049;
+
+    let kapitalPeriodenendeVorjahr = null;
+    kapitalBody.innerHTML = "";
+
+    for(let jahr = startJahr; jahr <= endJahr; jahr++){
+
+        let kapitalPeriodenbeginn;
+
+        if(jahr === startJahr){
+
+            kapitalPeriodenbeginn =
+            vorsorgeGesamtWertAktuell +
+            (restTageBisJahresende * entwicklungProTagAktuellesJahr);
+
+        }
+        else {
+
+            kapitalPeriodenbeginn = kapitalPeriodenendeVorjahr;
+
+        }
+
+        const steigerungDurchKurs =
+        kapitalPeriodenbeginn * kurssteigerungProzent;
+
+        const kapitalPeriodenende =
+        kapitalPeriodenbeginn +
+        steigerungDurchKurs +
+        steigerungDurchEinzahlungen;
+
+        const differenzZumVorjahr =
+        kapitalPeriodenendeVorjahr === null
+        ? null
+        : kapitalPeriodenende - kapitalPeriodenendeVorjahr;
+
+        kapitalBody.innerHTML += `
+        <tr>
+            <td>${jahr}</td>
+            <td class="kurs" style="font-weight:400;">${formatZahl(kapitalPeriodenbeginn,2,true)} €</td>
+            <td class="kurs" style="font-weight:400;">${formatZahl(steigerungDurchKurs,2,true)} €</td>
+            <td class="kurs" style="font-weight:400;">${formatZahl(steigerungDurchEinzahlungen,2,true)} €</td>
+            <td class="kurs">${formatZahl(kapitalPeriodenende,2,true)} €</td>
+            <td class="kurs">${
+                differenzZumVorjahr === null
+                ? "-"
+                : (differenzZumVorjahr >= 0 ? "+ " : "") +
+                  formatZahl(differenzZumVorjahr,2,true) + " €"
+            }</td>
+        </tr>
+        `;
+
+        kapitalPeriodenendeVorjahr = kapitalPeriodenende;
+
+    }
 
 }
 
@@ -3622,6 +3811,7 @@ formatZahl(proTag, 2, true) +
 
 setTimeout(() => {
     aktualisierePrognosen(vorsorgeGesamtWert);
+    aktualisiereKapitalTabelle();
 }, 100);
 
 // Update Info
@@ -3933,6 +4123,28 @@ document.getElementById("zielwert").addEventListener("input", () => {
     );
 
     aktualisierePrognosen(vorsorgeGesamtWert);
+
+});
+
+document.getElementById("kurssteigerung").addEventListener("input", () => {
+
+    const kurssteigerungSliderEl = document.getElementById("kurssteigerung");
+
+    document.getElementById("kurssteigerungAnzeige").textContent =
+        formatZahl(Number(kurssteigerungSliderEl.value), 2, false) + " %";
+
+    aktualisiereKapitalTabelle();
+
+});
+
+document.getElementById("einzahlung").addEventListener("input", () => {
+
+    const einzahlungSliderEl = document.getElementById("einzahlung");
+
+    document.getElementById("einzahlungAnzeige").textContent =
+        formatZahl(Number(einzahlungSliderEl.value), 2, true) + " €";
+
+    aktualisiereKapitalTabelle();
 
 });
 
