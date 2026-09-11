@@ -1520,7 +1520,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.03 (11.09.2026)<br>
+        Version: 2.04 (11.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -2003,7 +2003,7 @@ autocomplete="off">
 </div>
 
     <h1 class="section-title">
-        Prognose Kapital Altersvorsorge bis Rentenbeginn 2049
+        Prognose Kapital Altersvorsorge bis Rentenbeginn
     </h1>
 
 
@@ -2664,9 +2664,9 @@ function aktualisiereKapitalTabelle(){
         kapitalBody.innerHTML += `
         <tr>
             <td>${jahr}</td>
-            <td class="kurs">${formatZahl(kapitalPeriodenbeginn,2,true)} €</td>
-            <td class="kurs">${formatZahl(steigerungDurchKurs,2,true)} €</td>
-            <td class="kurs">${formatZahl(steigerungDurchEinzahlungen,2,true)} €</td>
+            <td class="kurs" style="font-weight:400;">${formatZahl(kapitalPeriodenbeginn,2,true)} €</td>
+            <td class="kurs" style="font-weight:400;">${formatZahl(steigerungDurchKurs,2,true)} €</td>
+            <td class="kurs" style="font-weight:400;">${formatZahl(steigerungDurchEinzahlungen,2,true)} €</td>
             <td class="kurs">${formatZahl(kapitalPeriodenende,2,true)} €</td>
             <td class="kurs">${
                 differenzZumVorjahr === null
