@@ -22,6 +22,8 @@
 
 html {
     scrollbar-gutter: stable;
+    min-height:100%;
+    background:#e5eaf2;
 }
 
 body {
@@ -34,6 +36,7 @@ body {
 
     margin:0;
     padding:30px;
+    min-height:100vh;
 
     background:
     radial-gradient(
@@ -42,6 +45,7 @@ body {
         #eef2f7 45%,
         #e5eaf2
     );
+    background-attachment: fixed;
 
     color:#222;
     overflow-y: scroll;
@@ -1518,7 +1522,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.02 (07.09.2026)<br>
+        Version: 2.03 (11.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -1951,7 +1955,6 @@ type="range"
 id="zielwert"
 class="zielwert-slider"
 step="10000"
-value="150000"
 autocomplete="off">
 
     </div>
@@ -3492,8 +3495,10 @@ const zielwertMax = zielwertNaechste100k + 100000;
 zielwertSlider.min = zielwertMin;
 zielwertSlider.max = zielwertMax;
 
-let zielwertStandard =
-    Number(zielwertSlider.getAttribute("value")) || zielwertMin;
+// Standardwert: ausgehend von der aktuellen Summe Altersvorsorge
+// auf den uebernaechsten vollen 10.000er gesetzt (naechster 10.000er
+// = zielwertMin, uebernaechster = zielwertMin + 10.000)
+let zielwertStandard = zielwertMin + 10000;
 zielwertStandard = Math.min(Math.max(zielwertStandard, zielwertMin), zielwertMax);
 zielwertSlider.value = zielwertStandard;
 
