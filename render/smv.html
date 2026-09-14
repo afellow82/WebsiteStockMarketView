@@ -2120,7 +2120,7 @@ type="range"
 id="entnahme"
 class="zielwert-slider"
 min="500"
-max="1500"
+max="2000"
 step="100"
 value="800"
 autocomplete="off">
@@ -2835,7 +2835,11 @@ function aktualisiereKapitalTabelleRente(){
             <td class="kurs" style="font-weight:400;">${formatZahl(kapitalPeriodenbeginn,2,true)} €</td>
             <td class="kurs" style="font-weight:400;">${formatZahl(steigerungDurchKurs,2,true)} €</td>
             <td class="kurs" style="font-weight:400;">${formatZahl(jaehrlicheEntnahmen,2,true)} €</td>
-            <td class="kurs">${formatZahl(kapitalPeriodenende,2,true)} €</td>
+            <td class="kurs"${
+                kapitalPeriodenende < 0
+                ? ' style="color:#b91c1c;font-weight:700;"'
+                : ""
+            }>${formatZahl(kapitalPeriodenende,2,true)} €</td>
             <td class="kurs">${
                 differenzZumVorjahr === null
                 ? "-"
