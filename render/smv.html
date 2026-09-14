@@ -699,7 +699,7 @@ table {
 
     display:grid;
 
-    grid-template-columns:260px 110px minmax(180px,260px);
+    grid-template-columns:300px 110px minmax(180px,260px);
 
     align-items:center;
 
@@ -2605,6 +2605,14 @@ function aktualisiereKapitalTabelle(){
     // Resttage bis zum Jahresende ab heute
     const heuteDatum = new Date();
 
+    // Uhrzeit-Anteil entfernen, damit die Berechnung nicht davon
+    // abhaengt, ob es Vormittag oder Nachmittag ist
+    const heuteDatumOhneZeit = new Date(
+        heuteDatum.getFullYear(),
+        heuteDatum.getMonth(),
+        heuteDatum.getDate()
+    );
+
     const jahresEndeAktuell = new Date(
         heuteDatum.getFullYear(),
         11,
@@ -2612,7 +2620,7 @@ function aktualisiereKapitalTabelle(){
     );
 
     const restTageBisJahresende = Math.round(
-        (jahresEndeAktuell - heuteDatum) / (1000 * 60 * 60 * 24)
+        (jahresEndeAktuell - heuteDatumOhneZeit) / (1000 * 60 * 60 * 24)
     );
 
     // Reglerwerte
