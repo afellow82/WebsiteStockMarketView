@@ -1520,7 +1520,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.05 (14.09.2026)<br>
+        Version: 2.06 (14.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -2070,6 +2070,79 @@ autocomplete="off">
         </thead>
 
         <tbody id="kapitalPrognoseBody">
+
+        </tbody>
+
+    </table>
+
+    <h1 class="section-title">
+        Prognose Kapital Altersvorsorge ab Rentenbeginn
+    </h1>
+
+
+<div class="zielwert-zeile">
+
+  <div class="label zielwert-label">
+            Angenommene Kurssteigerung (% p.a.):
+        </div>
+
+
+ <span
+id="kurssteigerungRenteAnzeige"
+class="zielwert-anzeige">4,00 %</span>
+
+ <input
+type="range"
+id="kurssteigerungRente"
+class="zielwert-slider"
+min="0"
+max="8"
+step="1"
+value="4"
+autocomplete="off">
+
+    </div>
+
+
+<div class="zielwert-zeile" style="margin-bottom:24px;">
+
+  <div class="label zielwert-label">
+            Angenommene monatliche Entnahme (€):
+        </div>
+
+
+ <span
+id="entnahmeAnzeige"
+class="zielwert-anzeige">800,00 €</span>
+
+ <input
+type="range"
+id="entnahme"
+class="zielwert-slider"
+min="0"
+max="2000"
+step="100"
+value="800"
+autocomplete="off">
+
+    </div>
+
+    <table>
+
+        <thead>
+
+            <tr>
+                <th>Jahr</th>
+                <th>Kapital Periodenbeginn</th>
+                <th>Steigerung durch Kurs</th>
+                <th>Jährliche Entnahmen</th>
+                <th>Kapital Periodenende</th>
+                <th>Differenz zum Vorjahr</th>
+            </tr>
+
+        </thead>
+
+        <tbody id="kapitalPrognoseRenteBody">
 
         </tbody>
 
@@ -2676,6 +2749,97 @@ function aktualisiereKapitalTabelle(){
             <td class="kurs" style="font-weight:400;">${formatZahl(steigerungDurchKurs,2,true)} €</td>
             <td class="kurs" style="font-weight:400;">${formatZahl(steigerungDurchEinzahlungen,2,true)} €</td>
             <td class="kurs">${formatZahl(kapitalPeriodenende,2,true)} €</td>
+            <td class="kurs">${
+                differenzZumVorjahr === null
+                ? "-"
+                : (differenzZumVorjahr >= 0 ? "+ " : "") +
+                  formatZahl(differenzZumVorjahr,2,true) + " €"
+            }</td>
+        </tr>
+        `;
+
+        kapitalPeriodenendeVorjahr = kapitalPeriodenende;
+
+    }
+
+    // Endkapital der Ansparphase, Ausgangswert fuer die
+    // Tabelle "Prognose Kapital Altersvorsorge ab Rentenbeginn"
+    kapitalPeriodenendeBisRentenbeginn = kapitalPeriodenendeVorjahr;
+
+}
+
+// Prognose Kapital Altersvorsorge ab Rentenbeginn
+let kapitalPeriodenendeBisRentenbeginn = null;
+
+function aktualisiereKapitalTabelleRente(){
+
+    const kapitalBody =
+    document.getElementById("kapitalPrognoseRenteBody");
+
+    if(!kapitalBody){
+        return;
+    }
+
+    if(kapitalPeriodenendeBisRentenbeginn === null){
+        return;
+    }
+
+    // Reglerwerte
+    const kurssteigerungProzent =
+    Number(document.getElementById("kurssteigerungRente").value) / 100;
+
+    const monatlicheEntnahme =
+    Number(document.getElementById("entnahme").value);
+
+    const jaehrlicheEntnahmen =
+    12 * monatlicheEntnahme;
+
+    const startJahr = 2050;
+    const endJahr = 2082;
+
+    let kapitalPeriodenendeVorjahr = null;
+    kapitalBody.innerHTML = "";
+
+    for(let jahr = startJahr; jahr <= endJahr; jahr++){
+
+        let kapitalPeriodenbeginn;
+
+        if(jahr === startJahr){
+
+            kapitalPeriodenbeginn =
+            kapitalPeriodenendeBisRentenbeginn;
+
+        }
+        else {
+
+            kapitalPeriodenbeginn = kapitalPeriodenendeVorjahr;
+
+        }
+
+        const steigerungDurchKurs =
+        kapitalPeriodenbeginn * kurssteigerungProzent;
+
+        const kapitalPeriodenende =
+        kapitalPeriodenbeginn +
+        steigerungDurchKurs -
+        jaehrlicheEntnahmen;
+
+        const differenzZumVorjahr =
+        kapitalPeriodenendeVorjahr === null
+        ? null
+        : kapitalPeriodenende - kapitalPeriodenendeVorjahr;
+
+        kapitalBody.innerHTML += `
+        <tr>
+            <td>${jahr}</td>
+            <td class="kurs" style="font-weight:400;">${formatZahl(kapitalPeriodenbeginn,2,true)} €</td>
+            <td class="kurs" style="font-weight:400;">${formatZahl(steigerungDurchKurs,2,true)} €</td>
+            <td class="kurs" style="font-weight:400;">${formatZahl(jaehrlicheEntnahmen,2,true)} €</td>
+            <td class="kurs"${
+                kapitalPeriodenende < 0
+                ? ' style="color:#b91c1c;font-weight:700;"'
+                : ""
+            }>${formatZahl(kapitalPeriodenende,2,true)} €</td>
             <td class="kurs">${
                 differenzZumVorjahr === null
                 ? "-"
@@ -3820,6 +3984,7 @@ formatZahl(proTag, 2, true) +
 setTimeout(() => {
     aktualisierePrognosen(vorsorgeGesamtWert);
     aktualisiereKapitalTabelle();
+    aktualisiereKapitalTabelleRente();
 }, 100);
 
 // Update Info
@@ -4142,6 +4307,7 @@ document.getElementById("kurssteigerung").addEventListener("input", () => {
         formatZahl(Number(kurssteigerungSliderEl.value), 2, false) + " %";
 
     aktualisiereKapitalTabelle();
+    aktualisiereKapitalTabelleRente();
 
 });
 
@@ -4153,6 +4319,29 @@ document.getElementById("einzahlung").addEventListener("input", () => {
         formatZahl(Number(einzahlungSliderEl.value), 2, true) + " €";
 
     aktualisiereKapitalTabelle();
+    aktualisiereKapitalTabelleRente();
+
+});
+
+document.getElementById("kurssteigerungRente").addEventListener("input", () => {
+
+    const kurssteigerungRenteSliderEl = document.getElementById("kurssteigerungRente");
+
+    document.getElementById("kurssteigerungRenteAnzeige").textContent =
+        formatZahl(Number(kurssteigerungRenteSliderEl.value), 2, false) + " %";
+
+    aktualisiereKapitalTabelleRente();
+
+});
+
+document.getElementById("entnahme").addEventListener("input", () => {
+
+    const entnahmeSliderEl = document.getElementById("entnahme");
+
+    document.getElementById("entnahmeAnzeige").textContent =
+        formatZahl(Number(entnahmeSliderEl.value), 2, true) + " €";
+
+    aktualisiereKapitalTabelleRente();
 
 });
 
