@@ -1520,7 +1520,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.05 (14.09.2026)<br>
+        Version: 2.04 (11.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -2074,6 +2074,58 @@ autocomplete="off">
         </tbody>
 
     </table>
+
+    <h1 class="section-title">
+        Prognose Kapital Altersvorsorge ab Rentenbeginn
+    </h1>
+
+
+<div class="zielwert-zeile">
+
+  <div class="label zielwert-label">
+            Angenommene Kurssteigerung (% p.a.):
+        </div>
+
+
+ <span
+id="kurssteigerungRenteAnzeige"
+class="zielwert-anzeige">4,00 %</span>
+
+ <input
+type="range"
+id="kurssteigerungRente"
+class="zielwert-slider"
+min="0"
+max="8"
+step="1"
+value="4"
+autocomplete="off">
+
+    </div>
+
+
+<div class="zielwert-zeile" style="margin-bottom:24px;">
+
+  <div class="label zielwert-label">
+            Angenommene monatliche Entnahme (€):
+        </div>
+
+
+ <span
+id="entnahmeAnzeige"
+class="zielwert-anzeige">800,00 €</span>
+
+ <input
+type="range"
+id="entnahme"
+class="zielwert-slider"
+min="500"
+max="1500"
+step="100"
+value="800"
+autocomplete="off">
+
+    </div>
 
 </div>
 </div> <!-- Ende Altersvorsorge Tab -->
@@ -4153,6 +4205,24 @@ document.getElementById("einzahlung").addEventListener("input", () => {
         formatZahl(Number(einzahlungSliderEl.value), 2, true) + " €";
 
     aktualisiereKapitalTabelle();
+
+});
+
+document.getElementById("kurssteigerungRente").addEventListener("input", () => {
+
+    const kurssteigerungRenteSliderEl = document.getElementById("kurssteigerungRente");
+
+    document.getElementById("kurssteigerungRenteAnzeige").textContent =
+        formatZahl(Number(kurssteigerungRenteSliderEl.value), 2, false) + " %";
+
+});
+
+document.getElementById("entnahme").addEventListener("input", () => {
+
+    const entnahmeSliderEl = document.getElementById("entnahme");
+
+    document.getElementById("entnahmeAnzeige").textContent =
+        formatZahl(Number(entnahmeSliderEl.value), 2, true) + " €";
 
 });
 
