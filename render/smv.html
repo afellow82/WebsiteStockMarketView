@@ -421,6 +421,19 @@ td.kurs {
 
 }
 
+td.kurs-normal {
+    font-weight:400;
+}
+
+td.kurs-normal .tagesanfang-link {
+    font-weight:400;
+}
+
+td.historische-summe,
+td.entwicklung {
+    font-weight:400;
+}
+
 
 
 td.zeit {
@@ -1298,7 +1311,7 @@ body {
     line-height:1.3;
 }
 
-/* ISIN, Anteile, Kurs, Kurs Tagesanfang, Zeitpunkt ausblenden */
+/* ISIN, Anteile, Kurs Tagesanfang, Kurs, Zeitpunkt ausblenden */
 
 #kurse table th:nth-child(2),
 #kurse table td:nth-child(2),
@@ -1306,8 +1319,8 @@ body {
 #kurse table td:nth-child(3),
 #kurse table th:nth-child(4),
 #kurse table td:nth-child(4),
-#kurse table th:nth-child(6),
-#kurse table td:nth-child(6),
+#kurse table th:nth-child(5),
+#kurse table td:nth-child(5),
 #kurse table th:nth-child(8),
 #kurse table td:nth-child(8) {
     display:none;
@@ -1319,13 +1332,13 @@ body {
 #kurse table th:nth-child(1),
 #kurse table td:nth-child(1) { width:34%; }
 
-#kurse table th:nth-child(5),
-#kurse table td:nth-child(5) { width:28%; }
+#kurse table th:nth-child(6),
+#kurse table td:nth-child(6) { width:28%; }
 
 #kurse table th:nth-child(7),
 #kurse table td:nth-child(7) { width:38%; }
 
-#kurse table td:nth-child(5) {
+#kurse table td:nth-child(6) {
     white-space:nowrap;
 }
 
@@ -1520,7 +1533,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.07 (14.09.2026)<br>
+        Version: 2.08 (16.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -1590,9 +1603,9 @@ id="restkaeufeJahrGesamt">
                     <th>Anlage</th>
                     <th>ISIN</th>
                     <th>Anteile</th>
+                    <th>Kurs Tagesanfang</th>
                     <th>Kurs</th>
                     <th>Wert</th>
-                    <th>Kurs Tagesanfang</th>
                     <th>Tageswert&shy;entwicklung</th>
                     <th>Zeitpunkt</th>
                     <th class="hidden-column">ConsorsID</th>
@@ -2040,7 +2053,7 @@ autocomplete="off">
 
  <span
 id="einzahlungAnzeige"
-class="zielwert-anzeige">800,00 €</span>
+class="zielwert-anzeige">850,00 €</span>
 
  <input
 type="range"
@@ -2048,8 +2061,8 @@ id="einzahlung"
 class="zielwert-slider"
 min="500"
 max="1500"
-step="100"
-value="800"
+step="50"
+value="850"
 autocomplete="off">
 
     </div>
@@ -2165,7 +2178,7 @@ link:"https://www.onvista.de/etf/iShares-MSCI-World-SRI-EUR-ACC-ETF-IE00BYX2JD69
 anzahl:4744.283394,
 anzahlJA:3792.520514,
 kursJA:12.19,
-sparplanBetrag:400.00,
+sparplanBetrag:450.00,
 sparplanRhytmus:"monatlich",
 sparplanTag:2,
 investition:54464.37
@@ -3000,15 +3013,15 @@ history.innerHTML += `
 
 <td>${item.alias}</td>
 
-<td class="kurs">
+<td class="kurs kurs-normal">
 ${formatZahl(item.anzahlJA,6,true)}
 </td>
 
-<td class="kurs">
+<td class="kurs kurs-normal">
 ${formatZahl(item.kursJA,3)} €
 </td>
 
-<td class="kurs">
+<td class="kurs kurs-normal">
 ${aktuellerKurs}
 </td>
 
@@ -3118,20 +3131,11 @@ ${item.alias}
     </a>
 </td>
 
-<td class="kurs">
+<td class="kurs kurs-normal">
 ${formatZahl(item.anzahl,6,true)}
 </td>
 
-<td class="kurs">
-${formatZahl(etf.kurs,3)} €
-</td>
-
-<td class="kurs">
-${formatZahl(wert,2,true)} €
-</td>
-
-
-<td class="kurs">
+<td class="kurs kurs-normal">
 
 ${
 etf.tagesanfang!==null
@@ -3147,6 +3151,14 @@ etf.tagesanfang!==null
 "-"
 }
 
+</td>
+
+<td class="kurs">
+${formatZahl(etf.kurs,3)} €
+</td>
+
+<td class="kurs">
+${formatZahl(wert,2,true)} €
 </td>
 
 
