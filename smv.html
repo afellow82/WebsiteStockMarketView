@@ -1533,7 +1533,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.08 (16.09.2026)<br>
+        Version: 2.09 (22.09.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -3319,6 +3319,22 @@ if (allianzKurs) {
             kaufpreis: kaufpreis,
             wert: wert,
             kommentar: "ESPP Allianz Reinvestition Dividende 2027"
+        });
+    }
+
+    // ESPP Allianz 2027
+    {
+        const kaufpreis = 6934.00;
+        const wert = kaufpreis / 3 * 4;
+        const anzahl = wert / allianzKurs;
+
+        geplanteKaeufeZeilen.push({
+            zeitpunkt: "November 2027",
+            aktie: "Aktie Allianz",
+            anzahl: anzahl,
+            kaufpreis: kaufpreis,
+            wert: wert,
+            kommentar: "ESPP Allianz 2027"
         });
     }
 
