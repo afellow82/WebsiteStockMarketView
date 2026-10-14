@@ -1533,7 +1533,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.10 (03.10.2026)<br>
+        Version: 2.11 (14.10.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -2211,7 +2211,7 @@ autocomplete="off">
 <div class="footer" id="fremdanlagenUpdateInfo"></div>
 
 <h1 class="section-title">
-    Prognose Fremdanlagen
+    Performance Fremdanlagen
 </h1>
 
 <table>
@@ -2242,7 +2242,7 @@ autocomplete="off">
 
 const STANDDATUM_ANTEILE = "03.10.2026";
 const STANDDATUM_INVESTITIONEN = "03.10.2026";
-const STANDDATUM_FREMDANLAGEN = "14.10.2026";
+const STANDDATUM_ANTEILE_FREMDANLAGEN = "14.10.2026";
 const STANDDATUM_INVESTITIONEN_FREMDANLAGEN = "14.10.2026";
 
 const isins = [
@@ -3141,7 +3141,7 @@ ${etf.consorsId}
 tbody.innerHTML = html;
 
 
-// Prognose Fremdanlagen (analog Tab Performance)
+// Performance Fremdanlagen (analog Tab Performance)
 
 const performanceBody =
 document.getElementById("fremdanlagenPerformanceBody");
@@ -3230,13 +3230,13 @@ if(ersteZeile && ersteZeile.tagesanfangDatum){
 
 footer.innerHTML =
 "<span id='standFremdanlagenText'>Stand Fremdanlagen: " +
-STANDDATUM_FREMDANLAGEN +
+STANDDATUM_ANTEILE_FREMDANLAGEN +
 "</span>" +
 tagesanfangText;
 
 // Standdatum rot markieren, wenn älter als 31 Tage
 
-const [d, m, y] = STANDDATUM_FREMDANLAGEN.split(".");
+const [d, m, y] = STANDDATUM_ANTEILE_FREMDANLAGEN.split(".");
 
 const diffTage =
 Math.floor(
