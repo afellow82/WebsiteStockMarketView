@@ -1533,7 +1533,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.11 (14.10.2026)<br>
+        Version: 2.12 (14.10.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -3191,7 +3191,7 @@ const performanceFooterFremd =
 document.getElementById("fremdanlagenPerformanceUpdateInfo");
 
 performanceFooterFremd.textContent =
-"Stand Investitionen Fremdverträge: " +
+"Stand Investitionen Fremdanlagen: " +
 STANDDATUM_INVESTITIONEN_FREMDANLAGEN;
 
 {
@@ -3223,7 +3223,7 @@ let tagesanfangText = "";
 if(ersteZeile && ersteZeile.tagesanfangDatum){
 
     tagesanfangText =
-    " | Tagesanfangskurs: " +
+    " | Tagesanfangskurs Fremdanlagen: " +
     formatDatum(ersteZeile.tagesanfangDatum);
 
 }
