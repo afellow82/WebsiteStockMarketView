@@ -1583,6 +1583,11 @@ id="restkaeufeJahrGesamt">
     Altersvorsorge
 </button>
 
+<button class="tab-button"
+        data-tab="fremdanlagen">
+    Fremdanlagen
+</button>
+
     </div>
 
 
@@ -2164,10 +2169,50 @@ autocomplete="off">
 </div>
 </div> <!-- Ende Altersvorsorge Tab -->
 
+<!-- Fremdanlagen -->
+
+<div class="tab-content" id="fremdanlagen">
+
+<table>
+
+    <thead>
+
+        <tr>
+
+            <th>Besitzer</th>
+            <th>Anlage</th>
+            <th>ISIN</th>
+            <th>Anteile</th>
+            <th>Kurs Tagesanfang</th>
+            <th>Kurs</th>
+            <th>Wert</th>
+            <th>Tageswert&shy;entwicklung</th>
+            <th>Zeitpunkt</th>
+            <th class="hidden-column">ConsorsID</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody id="fremdanlagenBody">
+
+        <tr>
+            <td colspan="10">Lade Daten...</td>
+        </tr>
+
+    </tbody>
+
+</table>
+
+<div class="footer" id="fremdanlagenUpdateInfo"></div>
+
+</div>
+
 <script>
 
 const STANDDATUM_ANTEILE = "03.10.2026";
 const STANDDATUM_INVESTITIONEN = "03.10.2026";
+const STANDDATUM_FREMDANLAGEN = "14.10.2026";
 
 const isins = [
 
@@ -2867,6 +2912,227 @@ function aktualisiereKapitalTabelleRente(){
     }
 
 }
+
+const fremdanlagen = [
+
+{
+besitzer:"Tom",
+alias:"ETF Vanguard ESG Global All Cap",
+isin:"IE00BNG8L278",
+link:"https://www.onvista.de/etf/Vanguard-ESG-Global-All-Cap-UCITS-ETF-USD-Acc-ETF-IE00BNG8L278",
+anzahl:944.269719
+},
+
+{
+besitzer:"Fiona",
+alias:"ETF Vanguard ESG Global All Cap",
+isin:"IE00BNG8L278",
+link:"https://www.onvista.de/etf/Vanguard-ESG-Global-All-Cap-UCITS-ETF-USD-Acc-ETF-IE00BNG8L278",
+anzahl:791.420304
+}
+
+];
+
+
+async function ladeFremdanlagen(){
+
+const tbody =
+document.getElementById("fremdanlagenBody");
+
+if(!tbody) return;
+
+// Jede ISIN nur einmal abrufen
+const kursDaten = {};
+
+for(const item of fremdanlagen){
+
+    if(item.isin in kursDaten) continue;
+
+    try{
+        kursDaten[item.isin] = await ladeETF(item.isin);
+    }
+    catch(err){
+        kursDaten[item.isin] = null;
+    }
+
+}
+
+let html = "";
+
+for(const item of fremdanlagen){
+
+    const etf = kursDaten[item.isin];
+
+    if(!etf){
+
+        html += `
+<tr>
+<td colspan="10">
+Fehler bei ${item.besitzer} / ${item.alias}: Kein Kurs verfügbar
+</td>
+</tr>
+`;
+        continue;
+    }
+
+    const wert = item.anzahl * etf.kurs;
+
+    const tagesDiff =
+        (etf.kurs - etf.tagesanfang) * item.anzahl;
+
+    html += `
+<tr>
+
+<td>${item.besitzer}</td>
+
+<td>
+<a href="${item.link}" target="_blank">
+${item.alias}
+</a>
+</td>
+
+<td>
+    <a
+        href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/stocks?id=${item.isin}&field=BasicV1&field=ExchangesV2" target="_blank">
+        ${item.isin}
+    </a>
+</td>
+
+<td class="kurs kurs-normal">
+${formatZahl(item.anzahl,6,true)}
+</td>
+
+<td class="kurs kurs-normal">
+
+${
+etf.tagesanfang!==null
+?
+`
+<a class="tagesanfang-link"
+   href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/securities?id=${etf.consorsId}&field=ChartHistoryV1&idTypeOffset=51&historySince=0&resolution=15m&pagesize=2000&sortorder=DATETIME_FIRST"
+   target="_blank">
+   ${formatZahl(etf.tagesanfang,3)} €
+</a>
+`
+:
+"-"
+}
+
+</td>
+
+<td class="kurs">
+${formatZahl(etf.kurs,3)} €
+</td>
+
+<td class="kurs">
+${formatZahl(wert,2,true)} €
+</td>
+
+<td class="kurs">
+
+${
+etf.tagesentwicklung===null ||
+Math.abs(etf.tagesentwicklung)<0.005
+?
+""
+:
+`
+<span class="tages-badge ${
+
+    etf.tagesentwicklung > 2
+    ? "darkgreen"
+
+    :
+
+    etf.tagesentwicklung > 0
+    ? "green"
+
+    :
+
+    etf.tagesentwicklung < -2
+    ? "red"
+
+    :
+
+    etf.tagesentwicklung < 0
+    ? "orange"
+
+    :
+
+    ""
+
+}">
+
+${etf.tagesentwicklung >= 0 ? "+" : ""}
+${formatZahl(etf.tagesentwicklung,2)} %
+
+(${tagesDiff >= 0 ? "+" : "-"}
+${formatZahl(Math.abs(tagesDiff),2,true)} €)
+
+</span>
+`
+}
+
+</td>
+
+<td class="zeit">
+${formatDatum(etf.zeit)}
+</td>
+
+<td class="hidden-column">
+${etf.consorsId}
+</td>
+
+</tr>
+`;
+
+}
+
+tbody.innerHTML = html;
+
+
+// Footer: Standdatum + Tagesanfangskurs (basiert auf der ersten Zeile)
+
+const footer =
+document.getElementById("fremdanlagenUpdateInfo");
+
+const ersteZeile =
+kursDaten[fremdanlagen[0].isin];
+
+let tagesanfangText = "";
+
+if(ersteZeile && ersteZeile.tagesanfangDatum){
+
+    tagesanfangText =
+    " | Tagesanfangskurs: " +
+    formatDatum(ersteZeile.tagesanfangDatum);
+
+}
+
+footer.innerHTML =
+"<span id='standFremdanlagenText'>Stand Fremdanlagen: " +
+STANDDATUM_FREMDANLAGEN +
+"</span>" +
+tagesanfangText;
+
+// Standdatum rot markieren, wenn älter als 31 Tage
+
+const [d, m, y] = STANDDATUM_FREMDANLAGEN.split(".");
+
+const diffTage =
+Math.floor(
+    (new Date() - new Date(`${y}-${m}-${d}`))
+    / (1000 * 60 * 60 * 24)
+);
+
+if(diffTage >= 31){
+    document
+        .getElementById("standFremdanlagenText")
+        .classList.add("stand-datum-alt");
+}
+
+}
+
 
 async function ladeAlleKurse(){
 
@@ -4307,6 +4573,7 @@ document.getElementById("jahresTabButton").textContent =
 
 
 ladeAlleKurse();
+ladeFremdanlagen();
 
 document.getElementById("zielwert").addEventListener("input", () => {
 
@@ -4375,6 +4642,11 @@ document.getElementById("entnahme").addEventListener("input", () => {
 
 setInterval(
 ladeAlleKurse,
+300000
+);
+
+setInterval(
+ladeFremdanlagen,
 300000
 );
 
