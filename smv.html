@@ -1195,6 +1195,16 @@ table {
 }
 
 
+/* Hinweis-Tooltip an Investitionswerten (Tab Performance) - Optik wie .info-icon */
+.inv-hint { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 10px; vertical-align: middle; border: 1.5px solid #D3D3D3; border-radius: 50%; font-size: 11px; font-weight: 700; color: #D3D3D3; cursor: pointer; user-select: none; outline: none; transition: all .2s ease; }
+.inv-hint:hover, .inv-hint:focus { color: #6b7280; border-color: #6b7280; background: #f3f4f6; }
+.inv-hint-text { position: absolute; bottom: calc(100% + 10px); right: 0; width: max-content; max-width: 260px; background: rgba(255,255,255,.97); color: #334155; font-size: 12px; font-weight: 400; line-height: 1.5; text-align: left; text-transform: none; letter-spacing: 0; padding: 10px 14px; border-radius: 10px; border: 1px solid #e5e7eb; box-shadow: 0 10px 25px rgba(15,23,42,.15); opacity: 0; visibility: hidden; transform: translateY(4px); transition: opacity .2s ease, transform .2s ease, visibility .2s ease; pointer-events: none; z-index: 30; }
+.inv-hint-text::after { content: ""; position: absolute; top: 100%; right: 8px; border: 6px solid transparent; border-top-color: rgba(255,255,255,.97); }
+.inv-hint:hover .inv-hint-text, .inv-hint:focus .inv-hint-text { opacity: 1; visibility: visible; transform: translateY(0); }
+#performanceBody tr:first-child .inv-hint-text { bottom: auto; top: calc(100% + 10px); transform: translateY(-4px); }
+#performanceBody tr:first-child .inv-hint-text::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: rgba(255,255,255,.97); }
+#performanceBody tr:first-child .inv-hint:hover .inv-hint-text, #performanceBody tr:first-child .inv-hint:focus .inv-hint-text { transform: translateY(0); }
+
 /* =====================================================
    Mobile-Ansicht (iPhone, ohne Tabs)
    Zeigt nur: Gesamtwert-Kasten, Entwicklung-Kasten,
@@ -1533,7 +1543,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.14 (14.10.2026)<br>
+        Version: 2.15 (14.10.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -2276,7 +2286,8 @@ kursJA:12.19,
 sparplanBetrag:500.00,
 sparplanRhytmus:"monatlich",
 sparplanTag:2,
-investition:54974.76
+investition:54974.76,
+investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
 {
@@ -2289,7 +2300,8 @@ kursJA:111.74,
 sparplanBetrag:400.00,
 sparplanRhytmus:"monatlich",
 sparplanTag:2,
-investition:37180.33
+investition:37180.33,
+investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
 {
@@ -2299,7 +2311,8 @@ link:"https://www.onvista.de/aktien/Allianz-Aktie-DE0008404005?notation=24449421
 anzahl:91.862,
 anzahlJA:91.862,
 kursJA:390.50,
-investition:19449.00
+investition:19449.00,
+investitionHinweis:"Reale Summe Anschaffungskosten ohne Zugaben der Allianz"
 },
 
 {
@@ -2309,7 +2322,8 @@ link:"https://www.onvista.de/etf/iShs-III-iShs-AI-Infrastr-ETF-Reg-Shs-USD-Acc-o
 anzahl:476.198976,
 anzahlJA:476.198976,
 kursJA:6.19,
-investition:3000.05
+investition:3000.05,
+investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
 {
@@ -2322,7 +2336,8 @@ kursJA:457.889,
 sparplanBetrag:40.00,
 sparplanRhytmus:"monatlich",
 sparplanTag:22,
-investition:2120
+investition:2120,
+investitionHinweis:"Reale Summe monatlicher Zahlungen"
 }
 
 ];
@@ -3483,6 +3498,7 @@ const prozent = investition !== 0
 
 performanceDaten.push({
     alias: item.alias,
+    hinweis: item.investitionHinweis,
     wert,
     investition,
     gewinnVerlust,
@@ -3821,7 +3837,7 @@ performanceDaten
     </td>
 
     <td class="kurs">
-        ${formatZahl(item.investition,2,true)} €
+        ${formatZahl(item.investition,2,true)} €${item.hinweis ? `<span class="inv-hint" tabindex="0" role="note" aria-label="${item.hinweis}">i<span class="inv-hint-text">${item.hinweis}</span></span>` : ""}
     </td>
 
     <td class="kurs"
