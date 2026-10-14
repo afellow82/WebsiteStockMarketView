@@ -2176,12 +2176,12 @@ autocomplete="off">
 <div class="prognose-kacheln fremd-kacheln">
 
     <div class="card">
-        <div class="label" id="fremdKachel1Label">Tom</div>
+        <div class="label" id="fremdKachel1Label" data-besitzer="Tom">Summe Tom</div>
         <div class="metric small" id="fremdKachel1Wert">0,00 €</div>
     </div>
 
     <div class="card">
-        <div class="label" id="fremdKachel2Label">Fiona</div>
+        <div class="label" id="fremdKachel2Label" data-besitzer="Fiona">Summe Fiona</div>
         <div class="metric small" id="fremdKachel2Wert">0,00 €</div>
     </div>
 
@@ -3172,7 +3172,7 @@ tbody.innerHTML = html;
     const labelEl = document.getElementById(labelId);
     const wertEl = document.getElementById(wertId);
     if(!labelEl || !wertEl) return;
-    const besitzer = labelEl.textContent.trim();
+    const besitzer = labelEl.dataset.besitzer;
     wertEl.textContent =
         formatZahl(summeProBesitzer[besitzer] || 0, 2, true) + " €";
 });
