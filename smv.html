@@ -1533,7 +1533,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.13 (14.10.2026)<br>
+        Version: 2.14 (14.10.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -2172,6 +2172,25 @@ autocomplete="off">
 <!-- Fremdanlagen -->
 
 <div class="tab-content" id="fremdanlagen">
+
+<div class="prognose-kacheln fremd-kacheln">
+
+    <div class="card">
+        <div class="label" id="fremdKachel1Label" data-besitzer="Tom">Summe Tom</div>
+        <div class="metric small" id="fremdKachel1Wert">0,00 €</div>
+    </div>
+
+    <div class="card">
+        <div class="label" id="fremdKachel2Label" data-besitzer="Fiona">Summe Fiona</div>
+        <div class="metric small" id="fremdKachel2Wert">0,00 €</div>
+    </div>
+
+    <div class="card">
+        <div class="label" id="fremdKachel3Label"></div>
+        <div class="metric small" id="fremdKachel3Wert"></div>
+    </div>
+
+</div>
 
 <h1 class="section-title">
     Aktuelle Kurse Fremdanlagen
@@ -2992,6 +3011,8 @@ for(const item of fremdanlagen){
 
 let html = "";
 
+const summeProBesitzer = {};
+
 const performanceDaten = [];
 
 for(const item of fremdanlagen){
@@ -3011,6 +3032,9 @@ Fehler bei ${item.besitzer} / ${item.alias}: Kein Kurs verfügbar
     }
 
     const wert = item.anzahl * etf.kurs;
+
+    summeProBesitzer[item.besitzer] =
+        (summeProBesitzer[item.besitzer] || 0) + wert;
 
     const investition = item.investition ?? 0;
     const gewinnVerlust = wert - investition;
@@ -3139,6 +3163,19 @@ ${etf.consorsId}
 }
 
 tbody.innerHTML = html;
+
+// Kacheln oben: Summe der Spalte "Wert" pro Besitzer
+[
+    ["fremdKachel1Label","fremdKachel1Wert"],
+    ["fremdKachel2Label","fremdKachel2Wert"]
+].forEach(([labelId,wertId])=>{
+    const labelEl = document.getElementById(labelId);
+    const wertEl = document.getElementById(wertId);
+    if(!labelEl || !wertEl) return;
+    const besitzer = labelEl.dataset.besitzer;
+    wertEl.textContent =
+        formatZahl(summeProBesitzer[besitzer] || 0, 2, true) + " €";
+});
 
 
 // Performance Fremdanlagen (analog Tab Performance)
