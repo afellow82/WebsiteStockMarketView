@@ -1195,6 +1195,13 @@ table {
 }
 
 
+/* Hinweis-Tooltip an Investitionswerten (Tab Performance) */
+.inv-hint { position: relative; display: inline-flex; align-items: center; margin-right: 8px; vertical-align: middle; cursor: help; outline: none; }
+.inv-hint-icon { width: 16px; height: 16px; border-radius: 50%; border: 1px solid #94a3b8; color: #94a3b8; font-size: 10px; font-weight: 700; font-style: italic; font-family: Georgia, serif; line-height: 14px; text-align: center; transition: color .2s ease, border-color .2s ease, background .2s ease; }
+.inv-hint:hover .inv-hint-icon, .inv-hint:focus .inv-hint-icon { color: #fff; background: #475569; border-color: #475569; }
+.inv-hint-text { position: absolute; bottom: calc(100% + 8px); left: -8px; width: max-content; max-width: 240px; background: rgba(255,255,255,.98); color: #334155; font-size: 12px; font-weight: 400; font-style: normal; line-height: 1.45; text-align: left; text-transform: none; letter-spacing: 0; padding: 8px 12px; border-radius: 10px; border: 1px solid #e5e7eb; box-shadow: 0 10px 25px rgba(15,23,42,.15); opacity: 0; visibility: hidden; transform: translateY(4px); transition: opacity .2s ease, transform .2s ease, visibility .2s ease; pointer-events: none; z-index: 30; }
+.inv-hint:hover .inv-hint-text, .inv-hint:focus .inv-hint-text { opacity: 1; visibility: visible; transform: translateY(0); }
+
 /* =====================================================
    Mobile-Ansicht (iPhone, ohne Tabs)
    Zeigt nur: Gesamtwert-Kasten, Entwicklung-Kasten,
@@ -2276,7 +2283,8 @@ kursJA:12.19,
 sparplanBetrag:500.00,
 sparplanRhytmus:"monatlich",
 sparplanTag:2,
-investition:54974.76
+investition:54974.76,
+investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
 {
@@ -2289,7 +2297,8 @@ kursJA:111.74,
 sparplanBetrag:400.00,
 sparplanRhytmus:"monatlich",
 sparplanTag:2,
-investition:37180.33
+investition:37180.33,
+investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
 {
@@ -2299,7 +2308,8 @@ link:"https://www.onvista.de/aktien/Allianz-Aktie-DE0008404005?notation=24449421
 anzahl:91.862,
 anzahlJA:91.862,
 kursJA:390.50,
-investition:19449.00
+investition:19449.00,
+investitionHinweis:"Reale Summe Anschaffungskosten ohne Zugaben der Allianz"
 },
 
 {
@@ -2309,7 +2319,8 @@ link:"https://www.onvista.de/etf/iShs-III-iShs-AI-Infrastr-ETF-Reg-Shs-USD-Acc-o
 anzahl:476.198976,
 anzahlJA:476.198976,
 kursJA:6.19,
-investition:3000.05
+investition:3000.05,
+investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
 {
@@ -2322,7 +2333,8 @@ kursJA:457.889,
 sparplanBetrag:40.00,
 sparplanRhytmus:"monatlich",
 sparplanTag:22,
-investition:2120
+investition:2120,
+investitionHinweis:"Reale Summe monatlicher Zahlungen"
 }
 
 ];
@@ -3483,6 +3495,7 @@ const prozent = investition !== 0
 
 performanceDaten.push({
     alias: item.alias,
+    hinweis: item.investitionHinweis,
     wert,
     investition,
     gewinnVerlust,
@@ -3821,7 +3834,7 @@ performanceDaten
     </td>
 
     <td class="kurs">
-        ${formatZahl(item.investition,2,true)} €
+        ${item.hinweis ? `<span class="inv-hint" tabindex="0" role="note" aria-label="${item.hinweis}"><span class="inv-hint-icon">i</span><span class="inv-hint-text">${item.hinweis}</span></span>` : ""}${formatZahl(item.investition,2,true)} €
     </td>
 
     <td class="kurs"
