@@ -2173,6 +2173,10 @@ autocomplete="off">
 
 <div class="tab-content" id="fremdanlagen">
 
+<h1 class="section-title">
+    Aktuelle Kurse Fremdanlagen
+</h1>
+
 <table>
 
     <thead>
@@ -2206,6 +2210,32 @@ autocomplete="off">
 
 <div class="footer" id="fremdanlagenUpdateInfo"></div>
 
+<h1 class="section-title">
+    Prognose Fremdanlagen
+</h1>
+
+<table>
+
+    <thead>
+        <tr>
+            <th>Besitzer</th>
+            <th>Anlage</th>
+            <th>Wert</th>
+            <th>Investition</th>
+            <th>Gewinn / Verlust</th>
+        </tr>
+    </thead>
+
+    <tbody id="fremdanlagenPerformanceBody">
+        <tr>
+            <td colspan="5">Lade Daten...</td>
+        </tr>
+    </tbody>
+
+</table>
+
+<div class="footer" id="fremdanlagenPerformanceUpdateInfo"></div>
+
 </div>
 
 <script>
@@ -2213,6 +2243,7 @@ autocomplete="off">
 const STANDDATUM_ANTEILE = "03.10.2026";
 const STANDDATUM_INVESTITIONEN = "03.10.2026";
 const STANDDATUM_FREMDANLAGEN = "14.10.2026";
+const STANDDATUM_INVESTITIONEN_FREMDANLAGEN = "14.10.2026";
 
 const isins = [
 
@@ -2920,7 +2951,8 @@ besitzer:"Tom",
 alias:"ETF Vanguard ESG Global All Cap",
 isin:"IE00BNG8L278",
 link:"https://www.onvista.de/etf/Vanguard-ESG-Global-All-Cap-UCITS-ETF-USD-Acc-ETF-IE00BNG8L278",
-anzahl:944.269719
+anzahl:944.269719,
+investition:7506.94
 },
 
 {
@@ -2928,7 +2960,8 @@ besitzer:"Fiona",
 alias:"ETF Vanguard ESG Global All Cap",
 isin:"IE00BNG8L278",
 link:"https://www.onvista.de/etf/Vanguard-ESG-Global-All-Cap-UCITS-ETF-USD-Acc-ETF-IE00BNG8L278",
-anzahl:791.420304
+anzahl:791.420304,
+investition:6291.79
 }
 
 ];
@@ -2959,6 +2992,8 @@ for(const item of fremdanlagen){
 
 let html = "";
 
+const performanceDaten = [];
+
 for(const item of fremdanlagen){
 
     const etf = kursDaten[item.isin];
@@ -2976,6 +3011,21 @@ Fehler bei ${item.besitzer} / ${item.alias}: Kein Kurs verfügbar
     }
 
     const wert = item.anzahl * etf.kurs;
+
+    const investition = item.investition ?? 0;
+    const gewinnVerlust = wert - investition;
+    const prozent = investition !== 0
+        ? (gewinnVerlust / investition) * 100
+        : 0;
+
+    performanceDaten.push({
+        besitzer: item.besitzer,
+        alias: item.alias,
+        wert,
+        investition,
+        gewinnVerlust,
+        prozent
+    });
 
     const tagesDiff =
         (etf.kurs - etf.tagesanfang) * item.anzahl;
@@ -3089,6 +3139,75 @@ ${etf.consorsId}
 }
 
 tbody.innerHTML = html;
+
+
+// Prognose Fremdanlagen (analog Tab Performance)
+
+const performanceBody =
+document.getElementById("fremdanlagenPerformanceBody");
+
+let performanceHtml = "";
+
+performanceDaten
+    .sort((a, b) => b.gewinnVerlust - a.gewinnVerlust)
+    .forEach(item => {
+
+        performanceHtml += `
+
+<tr>
+
+    <td>${item.besitzer}</td>
+
+    <td>${item.alias}</td>
+
+    <td class="kurs">
+        ${formatZahl(item.wert,2,true)} €
+    </td>
+
+    <td class="kurs">
+        ${formatZahl(item.investition,2,true)} €
+    </td>
+
+    <td class="kurs"
+        style="color:${item.gewinnVerlust >= 0 ? "#15803d" : "#b91c1c"};font-weight:650;">
+
+${(item.gewinnVerlust >= 0 ? "+" : "")}
+${formatZahl(item.gewinnVerlust,2,true)} €
+(${item.prozent >= 0 ? "+ " : ""}${formatZahl(item.prozent,2)} %)
+
+    </td>
+
+</tr>
+
+`;
+
+    });
+
+performanceBody.innerHTML =
+performanceHtml ||
+`<tr><td colspan="5">Kein Kurs verfügbar</td></tr>`;
+
+const performanceFooterFremd =
+document.getElementById("fremdanlagenPerformanceUpdateInfo");
+
+performanceFooterFremd.textContent =
+"Stand Investitionen Fremdverträge: " +
+STANDDATUM_INVESTITIONEN_FREMDANLAGEN;
+
+{
+    const [d, m, y] =
+    STANDDATUM_INVESTITIONEN_FREMDANLAGEN.split(".");
+
+    const diff =
+    Math.floor(
+        (new Date() - new Date(`${y}-${m}-${d}`))
+        / (1000 * 60 * 60 * 24)
+    );
+
+    if(diff >= 31){
+        performanceFooterFremd.classList.add("stand-datum-alt");
+    }
+}
 
 
 // Footer: Standdatum + Tagesanfangskurs (basiert auf der ersten Zeile)
