@@ -1359,6 +1359,14 @@ body {
     line-height:1.35;
 }
 
+/* Mobil: Tageswertentwicklung zweizeilig - Prozent oben,
+   Euro-Betrag in Klammern darunter (Umbruch immer vor der Klammer) */
+#kurse .tages-badge .tages-pct,
+#kurse .tages-badge .tages-abs {
+    display:block;
+    white-space:nowrap;
+}
+
 #kurse .footer {
     font-size:11px;
     word-break:break-word;
@@ -1543,7 +1551,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.15 (14.10.2026)<br>
+        Version: 2.16 (14.10.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -3152,11 +3160,11 @@ Math.abs(etf.tagesentwicklung)<0.005
 
 }">
 
-${etf.tagesentwicklung >= 0 ? "+" : ""}
-${formatZahl(etf.tagesentwicklung,2)} %
+<span class="tages-pct">${etf.tagesentwicklung >= 0 ? "+" : ""}
+${formatZahl(etf.tagesentwicklung,2)} %</span>
 
-(${tagesDiff >= 0 ? "+" : "-"}
-${formatZahl(Math.abs(tagesDiff),2,true)} €)
+<span class="tages-abs">(${tagesDiff >= 0 ? "+" : "-"}
+${formatZahl(Math.abs(tagesDiff),2,true)} €)</span>
 
 </span>
 `
