@@ -1551,7 +1551,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.16 (14.10.2026)<br>
+        Version: 2.17 (15.10.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -2194,18 +2194,18 @@ autocomplete="off">
 <div class="prognose-kacheln fremd-kacheln">
 
     <div class="card">
-        <div class="label" id="fremdKachel1Label" data-besitzer="Tom">Summe Tom</div>
+        <div class="label" id="fremdKachel1Label" data-besitzer="E">Summe E</div>
         <div class="metric small" id="fremdKachel1Wert">0,00 €</div>
     </div>
 
     <div class="card">
-        <div class="label" id="fremdKachel2Label" data-besitzer="Fiona">Summe Fiona</div>
+        <div class="label" id="fremdKachel2Label" data-besitzer="T">Summe T</div>
         <div class="metric small" id="fremdKachel2Wert">0,00 €</div>
     </div>
 
     <div class="card">
-        <div class="label" id="fremdKachel3Label"></div>
-        <div class="metric small" id="fremdKachel3Wert"></div>
+        <div class="label" id="fremdKachel3Label" data-besitzer="F">Summe F</div>
+        <div class="metric small" id="fremdKachel3Wert">0,00 €</div>
     </div>
 
 </div>
@@ -2989,7 +2989,34 @@ function aktualisiereKapitalTabelleRente(){
 const fremdanlagen = [
 
 {
-besitzer:"Tom",
+besitzer:"E",
+alias:"ETF Amundi Core MSCI World",
+isin:"IE000BI8OT95",
+link:"https://www.onvista.de/suche/?searchValue=IE000BI8OT95",
+anzahl:354.921746,
+investition:48503.61
+},
+
+{
+besitzer:"E",
+alias:"ETF iShares MSCI EM",
+isin:"IE00B4L5YC18",
+link:"https://www.onvista.de/suche/?searchValue=IE00B4L5YC18",
+anzahl:604.147026,
+investition:22099.70
+},
+
+{
+besitzer:"E",
+alias:"Aktie Mercedes Benz",
+isin:"DE0007100000",
+link:"https://www.onvista.de/suche/?searchValue=DE0007100000",
+anzahl:244,
+investition:13068.84
+},
+
+{
+besitzer:"T",
 alias:"ETF Vanguard ESG Global All Cap",
 isin:"IE00BNG8L278",
 link:"https://www.onvista.de/etf/Vanguard-ESG-Global-All-Cap-UCITS-ETF-USD-Acc-ETF-IE00BNG8L278",
@@ -2998,7 +3025,7 @@ investition:7506.94
 },
 
 {
-besitzer:"Fiona",
+besitzer:"F",
 alias:"ETF Vanguard ESG Global All Cap",
 isin:"IE00BNG8L278",
 link:"https://www.onvista.de/etf/Vanguard-ESG-Global-All-Cap-UCITS-ETF-USD-Acc-ETF-IE00BNG8L278",
@@ -3190,7 +3217,8 @@ tbody.innerHTML = html;
 // Kacheln oben: Summe der Spalte "Wert" pro Besitzer
 [
     ["fremdKachel1Label","fremdKachel1Wert"],
-    ["fremdKachel2Label","fremdKachel2Wert"]
+    ["fremdKachel2Label","fremdKachel2Wert"],
+    ["fremdKachel3Label","fremdKachel3Wert"]
 ].forEach(([labelId,wertId])=>{
     const labelEl = document.getElementById(labelId);
     const wertEl = document.getElementById(wertId);
