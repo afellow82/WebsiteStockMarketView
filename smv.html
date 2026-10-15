@@ -1201,9 +1201,9 @@ table {
 .inv-hint-text { position: absolute; bottom: calc(100% + 10px); right: 0; width: max-content; max-width: 260px; background: rgba(255,255,255,.97); color: #334155; font-size: 12px; font-weight: 400; line-height: 1.5; text-align: left; text-transform: none; letter-spacing: 0; padding: 10px 14px; border-radius: 10px; border: 1px solid #e5e7eb; box-shadow: 0 10px 25px rgba(15,23,42,.15); opacity: 0; visibility: hidden; transform: translateY(4px); transition: opacity .2s ease, transform .2s ease, visibility .2s ease; pointer-events: none; z-index: 30; }
 .inv-hint-text::after { content: ""; position: absolute; top: 100%; right: 8px; border: 6px solid transparent; border-top-color: rgba(255,255,255,.97); }
 .inv-hint:hover .inv-hint-text, .inv-hint:focus .inv-hint-text { opacity: 1; visibility: visible; transform: translateY(0); }
-#performanceBody tr:first-child .inv-hint-text { bottom: auto; top: calc(100% + 10px); transform: translateY(-4px); }
-#performanceBody tr:first-child .inv-hint-text::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: rgba(255,255,255,.97); }
-#performanceBody tr:first-child .inv-hint:hover .inv-hint-text, #performanceBody tr:first-child .inv-hint:focus .inv-hint-text { transform: translateY(0); }
+#performanceBody tr:first-child .inv-hint-text, #fremdanlagenPerformanceBody tr:first-child .inv-hint-text { bottom: auto; top: calc(100% + 10px); transform: translateY(-4px); }
+#performanceBody tr:first-child .inv-hint-text::after, #fremdanlagenPerformanceBody tr:first-child .inv-hint-text::after { top: auto; bottom: 100%; border-top-color: transparent; border-bottom-color: rgba(255,255,255,.97); }
+#performanceBody tr:first-child .inv-hint:hover .inv-hint-text, #performanceBody tr:first-child .inv-hint:focus .inv-hint-text, #fremdanlagenPerformanceBody tr:first-child .inv-hint:hover .inv-hint-text, #fremdanlagenPerformanceBody tr:first-child .inv-hint:focus .inv-hint-text { transform: translateY(0); }
 
 /* =====================================================
    Mobile-Ansicht (iPhone, ohne Tabs)
@@ -1551,7 +1551,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.17 (15.10.2026)<br>
+        Version: 2.18 (15.10.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -2320,7 +2320,7 @@ anzahl:91.862,
 anzahlJA:91.862,
 kursJA:390.50,
 investition:19449.00,
-investitionHinweis:"Reale Summe Anschaffungskosten ohne Zugaben der Allianz"
+investitionHinweis:"Reale Summe Anschaffungskosten ohne Ermäßigungen"
 },
 
 {
@@ -2994,7 +2994,8 @@ alias:"ETF Amundi Core MSCI World",
 isin:"IE000BI8OT95",
 link:"https://www.onvista.de/suche/?searchValue=IE000BI8OT95",
 anzahl:354.921746,
-investition:48503.61
+investition:48503.61,
+investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
 {
@@ -3003,16 +3004,18 @@ alias:"ETF iShares MSCI EM",
 isin:"IE00B4L5YC18",
 link:"https://www.onvista.de/suche/?searchValue=IE00B4L5YC18",
 anzahl:604.147026,
-investition:22099.70
+investition:22099.70,
+investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
 {
 besitzer:"E",
-alias:"Aktie Mercedes Benz",
+alias:"Aktie Mercedes-Benz",
 isin:"DE0007100000",
 link:"https://www.onvista.de/suche/?searchValue=DE0007100000",
 anzahl:244,
-investition:14601.58
+investition:11781,
+investitionHinweis:"Reale Summe Anschaffungskosten ohne Ermäßigungen"
 },
 
 {
@@ -3021,7 +3024,8 @@ alias:"ETF Vanguard ESG Global All Cap",
 isin:"IE00BNG8L278",
 link:"https://www.onvista.de/etf/Vanguard-ESG-Global-All-Cap-UCITS-ETF-USD-Acc-ETF-IE00BNG8L278",
 anzahl:944.269719,
-investition:7506.94
+investition:7506.94,
+investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
 {
@@ -3030,7 +3034,8 @@ alias:"ETF Vanguard ESG Global All Cap",
 isin:"IE00BNG8L278",
 link:"https://www.onvista.de/etf/Vanguard-ESG-Global-All-Cap-UCITS-ETF-USD-Acc-ETF-IE00BNG8L278",
 anzahl:791.420304,
-investition:6291.79
+investition:6291.79,
+investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 }
 
 ];
@@ -3095,6 +3100,7 @@ Fehler bei ${item.besitzer} / ${item.alias}: Kein Kurs verfügbar
     performanceDaten.push({
         besitzer: item.besitzer,
         alias: item.alias,
+        hinweis: item.investitionHinweis,
         wert,
         investition,
         gewinnVerlust,
@@ -3253,7 +3259,7 @@ performanceDaten
     </td>
 
     <td class="kurs">
-        ${formatZahl(item.investition,2,true)} €
+        ${formatZahl(item.investition,2,true)} €${item.hinweis ? `<span class="inv-hint" tabindex="0" role="note" aria-label="${item.hinweis}">i<span class="inv-hint-text">${item.hinweis}</span></span>` : ""}
     </td>
 
     <td class="kurs"
