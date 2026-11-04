@@ -687,6 +687,7 @@ table {
 /* Summenkacheln im Tab "Fremdanlagen" groesser darstellen */
 .fremd-kacheln .metric.small {
     font-size:36px;
+    font-weight:700;
 }
 
 #altersvorsorge .card {
@@ -1556,7 +1557,7 @@ id="restkaeufeJahrGesamt">
     i
     <div class="info-tooltip" id="infoTooltip">
         <strong>Stock Market Viewer</strong><br>
-        Version: 2.19 (28.10.2026)<br>
+        Version: 2.20 (04.11.2026)<br>
         <br>
         <span id="infoTooltipUpdate"></span><br>
         (automatische Datenaktualisierung alle 5 min)
@@ -2282,10 +2283,10 @@ autocomplete="off">
 
 <script>
 
-const STANDDATUM_ANTEILE = "22.10.2026";
-const STANDDATUM_INVESTITIONEN = "22.10.2026";
-const STANDDATUM_ANTEILE_FREMDANLAGEN = "30.10.2026";
-const STANDDATUM_INVESTITIONEN_FREMDANLAGEN = "30.10.2026";
+const STANDDATUM_ANTEILE = "04.11.2026";
+const STANDDATUM_INVESTITIONEN = "04.11.2026";
+const STANDDATUM_ANTEILE_FREMDANLAGEN = "02.11.2026";
+const STANDDATUM_INVESTITIONEN_FREMDANLAGEN = "02.11.2026";
 
 const isins = [
 
@@ -2293,13 +2294,13 @@ const isins = [
 alias:"ETF MSCI World SRI",
 isin:"IE00BYX2JD69",
 link:"https://www.onvista.de/etf/iShares-MSCI-World-SRI-EUR-ACC-ETF-IE00BYX2JD69?notation=289979926",
-anzahl:4780.413602,
+anzahl:5055.017439,
 anzahlJA:3792.520514,
 kursJA:12.19,
 sparplanBetrag:500.00,
 sparplanRhytmus:"monatlich",
 sparplanTag:2,
-investition:54974.76,
+investition:58890.95,
 investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
@@ -2307,13 +2308,13 @@ investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 alias:"ETF Core MSCI World",
 isin:"IE00B4L5Y983",
 link:"https://www.onvista.de/etf/iShares-Core-MSCI-World-ETF-IE00B4L5Y983?notation=244540011",
-anzahl:526.111885,
+anzahl:557.122293,
 anzahlJA:500.084082,
 kursJA:111.74,
 sparplanBetrag:400.00,
 sparplanRhytmus:"monatlich",
 sparplanTag:2,
-investition:37180.33,
+investition:41210.34,
 investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
@@ -2321,21 +2322,21 @@ investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 alias:"Aktie Allianz",
 isin:"DE0008404005",
 link:"https://www.onvista.de/aktien/Allianz-Aktie-DE0008404005?notation=244494211",
-anzahl:91.862,
+anzahl:76.765,
 anzahlJA:91.862,
 kursJA:390.50,
-investition:19449.00,
-investitionHinweis:"Reale Summe Anschaffungskosten ohne Ermäßigungen"
+investition:19630,
+investitionHinweis:"Reale Summe Anschaffungskosten inkl. Steuer geldwerter Vorteil ohne Ermäßigungen"
 },
 
 {
 alias:"ETF AI Infrastructure",
 isin:"IE000X59ZHE2",
 link:"https://www.onvista.de/etf/iShs-III-iShs-AI-Infrastr-ETF-Reg-Shs-USD-Acc-oN-ETF-IE000X59ZHE2?notation=486568018",
-anzahl:476.198976,
+anzahl:805.615908,
 anzahlJA:476.198976,
 kursJA:6.19,
-investition:3000.05,
+investition:6001.84,
 investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
@@ -3028,8 +3029,8 @@ besitzer:"T",
 alias:"ETF Vanguard ESG Global All Cap",
 isin:"IE00BNG8L278",
 link:"https://www.onvista.de/etf/Vanguard-ESG-Global-All-Cap-UCITS-ETF-USD-Acc-ETF-IE00BNG8L278",
-anzahl:965.089581,
-investition:7672.46,
+anzahl:971.676918,
+investition:7715.11,
 investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 },
 
@@ -3038,8 +3039,8 @@ besitzer:"F",
 alias:"ETF Vanguard ESG Global All Cap",
 isin:"IE00BNG8L278",
 link:"https://www.onvista.de/etf/Vanguard-ESG-Global-All-Cap-UCITS-ETF-USD-Acc-ETF-IE00BNG8L278",
-anzahl:791.420304,
-investition:6291.79,
+anzahl:797.98822,
+investition:6344.01,
 investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 }
 
@@ -3758,38 +3759,6 @@ kursDaten["DE0008404005"]
 if (allianzKurs) {
 
     const geplanteKaeufeZeilen = [];
-
-    // Gratisaktie Allianz 2026
-    {
-        const anzahl = 1;
-        const kaufpreis = 0;
-        const wert = allianzKurs * anzahl;
-
-        geplanteKaeufeZeilen.push({
-            zeitpunkt: "November 2026",
-            aktie: "Aktie Allianz",
-            anzahl: anzahl,
-            kaufpreis: kaufpreis,
-            wert: wert,
-            kommentar: "Gratisaktie Allianz 2026"
-        });
-    }
-
-    // ESPP Allianz 2026
-    {
-        const kaufpreis = 6712.00;
-        const wert = kaufpreis / 3 * 4;
-        const anzahl = wert / allianzKurs;
-
-        geplanteKaeufeZeilen.push({
-            zeitpunkt: "November 2026",
-            aktie: "Aktie Allianz",
-            anzahl: anzahl,
-            kaufpreis: kaufpreis,
-            wert: wert,
-            kommentar: "ESPP Allianz 2026"
-        });
-    }
 
     // ESPP Reinvestition Dividende Allianz 2027
     {
