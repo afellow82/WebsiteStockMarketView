@@ -117,6 +117,17 @@ def index():
         "index.html"
     )
 
+# ============================================
+# Stock Market View – Datenbank-Testversion
+# ============================================
+
+@app.route("/index_db.html")
+def index_db():
+
+    return send_from_directory(
+        BASE_PATH,
+        "index_db.html"
+    )
 
 
 
