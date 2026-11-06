@@ -26,6 +26,13 @@ def get_db_connection():
     return psycopg.connect(**get_db_config())
 
 
+def db_text(wert):
+    """SQL_ASCII-Textwerte aus PostgreSQL als UTF-8-Text zurückgeben."""
+    if isinstance(wert, bytes):
+        return wert.decode("utf-8")
+    return wert
+
+
 # ============================================
 # Consors API Proxy
 # ============================================
@@ -101,6 +108,216 @@ def api_chart(consors_id):
 @app.route("/index_db.html")
 def index_db():
     return send_from_directory(BASE_PATH, "index_db.html")
+
+
+# ============================================
+# Besitzer: GET
+# ============================================
+
+@app.route("/api/besitzer", methods=["GET"])
+def besitzer_lesen():
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT
+                        besitzer_id,
+                        kuerzel,
+                        ist_eigen,
+                        kachel_reihenfolge
+                    FROM public.besitzer
+                    ORDER BY
+                        ist_eigen DESC,
+                        kachel_reihenfolge ASC NULLS LAST,
+                        besitzer_id ASC
+                """)
+
+                daten = [
+                    {
+                        "id": zeile[0],
+                        "kuerzel": db_text(zeile[1]),
+                        "ist_eigen": zeile[2],
+                        "kachel_reihenfolge": zeile[3]
+                    }
+                    for zeile in cur.fetchall()
+                ]
+
+        response = jsonify(daten)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Lesen der Besitzer")
+        return jsonify({"fehler": "Datenbankfehler beim Lesen der Besitzer."}), 500
+
+
+# ============================================
+# Besitzer: Kachelreihenfolge speichern
+# ============================================
+
+@app.route("/api/besitzer/kachel-reihenfolge", methods=["PUT"])
+def besitzer_kachel_reihenfolge_speichern():
+    daten = request.get_json(silent=True)
+
+    if not isinstance(daten, dict) or not isinstance(daten.get("reihenfolge"), list):
+        return jsonify({"fehler": "Ungültige JSON-Eingabe."}), 400
+
+    auswahl = daten["reihenfolge"]
+
+    if len(auswahl) != 3:
+        return jsonify({
+            "fehler": "Es müssen genau drei Fremdbesitzer angegeben werden."
+        }), 400
+
+    ids = []
+    positionen = []
+    updates = []
+
+    for eintrag in auswahl:
+        if not isinstance(eintrag, dict):
+            return jsonify({"fehler": "Ungültiger Eintrag in der Reihenfolge."}), 400
+
+        besitzer_id = eintrag.get("id")
+        position = eintrag.get("kachel_reihenfolge")
+
+        if (
+            isinstance(besitzer_id, bool)
+            or not isinstance(besitzer_id, int)
+            or besitzer_id <= 0
+        ):
+            return jsonify({"fehler": "Ungültige Besitzer-ID."}), 400
+
+        if (
+            isinstance(position, bool)
+            or not isinstance(position, int)
+            or position not in (1, 2, 3)
+        ):
+            return jsonify({
+                "fehler": "Jeder Fremdbesitzer muss eine Kachelposition von 1 bis 3 erhalten."
+            }), 400
+
+        ids.append(besitzer_id)
+        positionen.append(position)
+        updates.append((position, besitzer_id))
+
+    if len(set(ids)) != 3:
+        return jsonify({"fehler": "Ein Besitzer wurde mehrfach angegeben."}), 400
+
+    if set(positionen) != {1, 2, 3}:
+        return jsonify({
+            "fehler": "Die Kachelpositionen 1, 2 und 3 müssen jeweils genau einmal vergeben werden."
+        }), 400
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT besitzer_id
+                    FROM public.besitzer
+                    WHERE ist_eigen = false
+                    ORDER BY besitzer_id
+                """)
+                vorhandene_ids = {zeile[0] for zeile in cur.fetchall()}
+
+                if len(vorhandene_ids) != 3 or set(ids) != vorhandene_ids:
+                    return jsonify({
+                        "fehler": "Die Besitzerliste hat sich geändert. Bitte das Fenster neu öffnen."
+                    }), 409
+
+                cur.executemany("""
+                    UPDATE public.besitzer
+                    SET kachel_reihenfolge = %s
+                    WHERE besitzer_id = %s
+                      AND ist_eigen = false
+                """, updates)
+
+                cur.execute("""
+                    SELECT
+                        besitzer_id,
+                        kuerzel,
+                        ist_eigen,
+                        kachel_reihenfolge
+                    FROM public.besitzer
+                    ORDER BY
+                        ist_eigen DESC,
+                        kachel_reihenfolge ASC NULLS LAST,
+                        besitzer_id ASC
+                """)
+
+                gespeicherte_daten = [
+                    {
+                        "id": zeile[0],
+                        "kuerzel": db_text(zeile[1]),
+                        "ist_eigen": zeile[2],
+                        "kachel_reihenfolge": zeile[3]
+                    }
+                    for zeile in cur.fetchall()
+                ]
+
+        response = jsonify({
+            "ok": True,
+            "besitzer": gespeicherte_daten
+        })
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Speichern der Kachelreihenfolge")
+        return jsonify({
+            "fehler": "Datenbankfehler beim Speichern der Kachelreihenfolge."
+        }), 500
+
+
+# ============================================
+# Fremdanlagen-Positionen: GET
+# ============================================
+
+@app.route("/api/fremdanlagen", methods=["GET"])
+def fremdanlagen_lesen():
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT
+                        b.kuerzel,
+                        w.isin,
+                        w.bezeichnung,
+                        w.link_url,
+                        p.anzahl,
+                        p.investition,
+                        p.investition_hinweis
+                    FROM public.position AS p
+                    JOIN public.besitzer AS b
+                      ON b.besitzer_id = p.besitzer_id
+                    JOIN public.wertpapier AS w
+                      ON w.wertpapier_id = p.wertpapier_id
+                    WHERE b.ist_eigen = false
+                    ORDER BY
+                        b.kachel_reihenfolge ASC NULLS LAST,
+                        b.besitzer_id ASC,
+                        w.bezeichnung ASC
+                """)
+
+                daten = [
+                    {
+                        "besitzer": db_text(zeile[0]),
+                        "isin": db_text(zeile[1]).strip(),
+                        "bezeichnung": db_text(zeile[2]),
+                        "link": db_text(zeile[3]),
+                        "anzahl": format(zeile[4], "f"),
+                        "investition": format(zeile[5], "f"),
+                        "investitionHinweis": db_text(zeile[6])
+                    }
+                    for zeile in cur.fetchall()
+                ]
+
+        response = jsonify(daten)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Lesen der Fremdanlagen")
+        return jsonify({"fehler": "Datenbankfehler beim Lesen der Fremdanlagen."}), 500
 
 
 # ============================================

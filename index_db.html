@@ -1934,7 +1934,7 @@ id="restkaeufeJahrGesamt">
 
   </div>
 
-  <!-- MOCKUP: Pflegefenster (noch ohne Datenbank) -->
+  <!-- Pflegefenster: Besitzer sind an PostgreSQL angebunden; weitere Pflegefunktionen folgen spaeter. -->
   <dialog id="pflegeDialog" class="av-dialog pf-dialog">
       <h2 id="pflegeTitel"></h2>
 
@@ -2551,17 +2551,17 @@ autocomplete="off">
 
 <div class="prognose-kacheln fremd-kacheln">
 
-    <div class="card">
+    <div class="card" data-besitzer="E">
         <div class="label" id="fremdKachel1Label" data-besitzer="E">Summe E</div>
         <div class="metric small" id="fremdKachel1Wert">0,00 €</div>
     </div>
 
-    <div class="card">
+    <div class="card" data-besitzer="T">
         <div class="label" id="fremdKachel2Label" data-besitzer="T">Summe T</div>
         <div class="metric small" id="fremdKachel2Wert">0,00 €</div>
     </div>
 
-    <div class="card">
+    <div class="card" data-besitzer="F">
         <div class="label" id="fremdKachel3Label" data-besitzer="F">Summe F</div>
         <div class="metric small" id="fremdKachel3Wert">0,00 €</div>
     </div>
@@ -3344,7 +3344,7 @@ function aktualisiereKapitalTabelleRente(){
 
 }
 
-const fremdanlagen = [
+let fremdanlagen = [
 
 {
 besitzer:"E",
@@ -3399,12 +3399,139 @@ investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
 ];
 
 
+// Daten aus der PostgreSQL-Datenbank laden (ohne Browser-Cache)
+async function ladeApiJson(url) {
+    const antwort = await fetch(url, {
+        method: "GET",
+        cache: "no-store"
+    });
+
+    const daten = await antwort.json().catch(() => null);
+
+    if (!antwort.ok) {
+        throw new Error(daten?.fehler || "API-Fehler " + antwort.status);
+    }
+
+    return daten;
+}
+
+
+// Besitzer aus PostgreSQL lesen und die drei Fremdbesitzer validieren
+async function ladeBesitzerAusDb() {
+    const daten = await ladeApiJson("/api/besitzer");
+
+    if (!Array.isArray(daten)) {
+        throw new Error("Die Besitzer-API hat ungültige Daten geliefert.");
+    }
+
+    const fremd = daten.filter(b => b && b.ist_eigen === false);
+    const positionen = fremd.map(b => b.kachel_reihenfolge);
+
+    if (
+        fremd.length !== 3 ||
+        fremd.some(b => !Number.isInteger(b.id) || !b.kuerzel) ||
+        positionen.some(p => !Number.isInteger(p) || p < 1 || p > 3) ||
+        new Set(positionen).size !== 3
+    ) {
+        throw new Error("Die drei Fremdbesitzer müssen eindeutig den Kachelpositionen 1, 2 und 3 zugeordnet sein.");
+    }
+
+    return daten;
+}
+
+
+// Kacheln nach der in PostgreSQL gespeicherten Reihenfolge von links nach rechts sortieren
+function ordneFremdKacheln(besitzerDaten) {
+    const container = document.querySelector(".fremd-kacheln");
+    if (!container) return;
+
+    const karten = new Map(
+        Array.from(container.querySelectorAll(".card"))
+            .map(karte => [karte.querySelector(".label")?.dataset.besitzer, karte])
+    );
+
+    const sortiert = besitzerDaten
+        .filter(b => !b.ist_eigen)
+        .sort((a, b) => a.kachel_reihenfolge - b.kachel_reihenfolge);
+
+    sortiert.forEach(b => {
+        const karte = karten.get(b.kuerzel);
+        if (!karte) {
+            throw new Error("Für den Besitzer " + b.kuerzel + " wurde keine Summenkachel gefunden.");
+        }
+
+        const label = karte.querySelector(".label");
+        if (label) {
+            label.dataset.besitzer = b.kuerzel;
+            label.textContent = "Summe " + b.kuerzel;
+        }
+
+        container.appendChild(karte);
+    });
+}
+
+
 async function ladeFremdanlagen(){
 
 const tbody =
 document.getElementById("fremdanlagenBody");
 
 if(!tbody) return;
+
+// Besitzer und Depotpositionen aktuell aus PostgreSQL laden.
+// Damit stammen sowohl die Summen als auch ihre Reihenfolge aus der Datenbank.
+try {
+    const [besitzerDaten, positionsDaten] = await Promise.all([
+        ladeBesitzerAusDb(),
+        ladeApiJson("/api/fremdanlagen")
+    ]);
+
+    if (!Array.isArray(positionsDaten)) {
+        throw new Error("Die Fremdanlagen-API hat ungültige Daten geliefert.");
+    }
+
+    ordneFremdKacheln(besitzerDaten);
+
+    const erlaubteBesitzer = new Set(
+        besitzerDaten.filter(b => !b.ist_eigen).map(b => b.kuerzel)
+    );
+
+    fremdanlagen = positionsDaten.map(p => {
+        const anzahl = Number(p.anzahl);
+        const investition = Number(p.investition);
+
+        if (
+            !p ||
+            !erlaubteBesitzer.has(p.besitzer) ||
+            typeof p.isin !== "string" ||
+            typeof p.bezeichnung !== "string" ||
+            !Number.isFinite(anzahl) ||
+            !Number.isFinite(investition)
+        ) {
+            throw new Error("Eine Depotposition aus der Datenbank ist ungültig.");
+        }
+
+        return {
+            besitzer: p.besitzer,
+            bezeichnung: p.bezeichnung,
+            isin: p.isin,
+            link: p.link || "",
+            anzahl,
+            investition,
+            investitionHinweis: p.investitionHinweis || ""
+        };
+    });
+
+} catch (err) {
+    console.error("Fremdanlagen konnten nicht aus PostgreSQL geladen werden:", err);
+    tbody.innerHTML =
+        '<tr><td colspan="10">Depotpositionen konnten nicht aus der Datenbank geladen werden.</td></tr>';
+    document.getElementById("fremdanlagenUpdateInfo").textContent =
+        "Fehler beim Laden der Fremdanlagen-Daten.";
+    document.getElementById("fremdanlagenPerformanceBody").innerHTML =
+        '<tr><td colspan="5">Depotpositionen konnten nicht geladen werden.</td></tr>';
+    return;
+}
 
 // Jede ISIN nur einmal abrufen
 const kursDaten = {};
@@ -5332,11 +5459,9 @@ document.querySelectorAll(".tab-button").forEach(button => {
 })();
 
 // ---------------------------------------------------------------
-// MOCKUP: Drei-Punkte-Menue mit Pflegefenstern "Besitzer" und
-// "Wertpapiere". Die Daten liegen nur im Arbeitsspeicher und gehen
-// beim Neuladen verloren. Spaeter ersetzen REST-Aufrufe
-// (GET/POST/PUT/DELETE /api/besitzer bzw. /api/wertpapier) die
-// Funktionen in "speicher".
+// Besitzer und Fremdanlagen werden live aus PostgreSQL geladen.
+// Die Pflegefenster fuer Wertpapiere und Positionen bleiben bis zu
+// ihrer spaeteren Anbindung separate Mockups im Arbeitsspeicher.
 // ---------------------------------------------------------------
 (function () {
 
@@ -5604,50 +5729,119 @@ document.querySelectorAll(".tab-button").forEach(button => {
         });
     }
 
-    // ---- Besitzer: nur Fremd-Besitzer, nur Kachel-Reihenfolge aenderbar ----
+    // ---- Besitzer: Fremdbesitzer und Kachelreihenfolge aus PostgreSQL ----
     const besitzerForm = document.getElementById("besitzerForm");
     const besitzerListe = document.getElementById("besitzerListe");
     const besitzerFehler = document.getElementById("besitzerFehler");
+    const besitzerSpeichernButton = besitzerForm.querySelector('button[type="submit"]');
 
-    function zeigeBesitzer() {
-        besitzerListe.textContent = "";
-        besitzerFehler.textContent = "";
-        speicher.besitzer.filter(b => !b.ist_eigen).forEach(b => {
-            const zeile = document.createElement("div");
-            zeile.className = "bs-zeile";
+    function uebernehmeBesitzerInSpeicher(daten) {
+        const umgewandelt = daten.map(b => ({
+            id: b.id,
+            kuerzel: b.kuerzel,
+            ist_eigen: b.ist_eigen,
+            kachel_reihenfolge: b.kachel_reihenfolge
+        }));
 
-            const name = document.createElement("span");
-            name.textContent = b.kuerzel;
-
-            const sel = document.createElement("select");
-            sel.dataset.id = b.id;
-            sel.add(new Option("keine Kachel", ""));
-            [1, 2, 3].forEach(n => sel.add(new Option("Position " + n, String(n))));
-            sel.value = b.kachel_reihenfolge ? String(b.kachel_reihenfolge) : "";
-
-            zeile.append(name, sel);
-            besitzerListe.appendChild(zeile);
-        });
+        speicher.besitzer.splice(0, speicher.besitzer.length, ...umgewandelt);
     }
 
-    besitzerForm.addEventListener("submit", (e) => {
+    async function zeigeBesitzer() {
+        besitzerListe.textContent = "";
+        besitzerFehler.textContent = "";
+
+        try {
+            const daten = await ladeBesitzerAusDb();
+            uebernehmeBesitzerInSpeicher(daten);
+
+            daten
+                .filter(b => !b.ist_eigen)
+                .sort((a, b) => a.kachel_reihenfolge - b.kachel_reihenfolge)
+                .forEach(b => {
+                    const zeile = document.createElement("div");
+                    zeile.className = "bs-zeile";
+
+                    const name = document.createElement("span");
+                    name.textContent = b.kuerzel;
+
+                    const sel = document.createElement("select");
+                    sel.dataset.id = String(b.id);
+
+                    [1, 2, 3].forEach(n => {
+                        sel.add(new Option("Position " + n, String(n)));
+                    });
+                    sel.value = String(b.kachel_reihenfolge);
+
+                    zeile.append(name, sel);
+                    besitzerListe.appendChild(zeile);
+                });
+
+        } catch (err) {
+            console.error("Besitzer konnten nicht geladen werden:", err);
+            besitzerFehler.textContent =
+                err.message || "Besitzer konnten nicht aus der Datenbank geladen werden.";
+        }
+    }
+
+    besitzerForm.addEventListener("submit", async (e) => {
         e.preventDefault();
+        besitzerFehler.textContent = "";
+
         const auswahl = Array.from(besitzerListe.querySelectorAll("select"))
-            .map(s => ({ id: Number(s.dataset.id), pos: s.value ? Number(s.value) : null }));
-        const belegt = auswahl.map(a => a.pos).filter(p => p !== null);
-        if (new Set(belegt).size !== belegt.length) {
-            besitzerFehler.textContent = "Jede Kachel-Position darf nur einmal vergeben werden.";
+            .map(s => ({
+                id: Number(s.dataset.id),
+                kachel_reihenfolge: Number(s.value)
+            }));
+
+        const belegt = auswahl.map(a => a.kachel_reihenfolge);
+
+        if (
+            auswahl.length !== 3 ||
+            new Set(belegt).size !== 3 ||
+            ![1, 2, 3].every(n => belegt.includes(n))
+        ) {
+            besitzerFehler.textContent =
+                "Bitte die Positionen 1, 2 und 3 jeweils genau einmal vergeben.";
             return;
         }
-        auswahl.forEach(a => {
-            speicher.besitzer.find(b => b.id === a.id).kachel_reihenfolge = a.pos;
-        });
-        dialog.close();
+
+        besitzerSpeichernButton.disabled = true;
+
+        try {
+            const antwort = await fetch("/api/besitzer/kachel-reihenfolge", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                cache: "no-store",
+                body: JSON.stringify({ reihenfolge: auswahl })
+            });
+
+            const ergebnis = await antwort.json().catch(() => null);
+
+            if (!antwort.ok) {
+                throw new Error(ergebnis?.fehler || "Speichern fehlgeschlagen (HTTP " + antwort.status + ").");
+            }
+
+            if (!ergebnis || !Array.isArray(ergebnis.besitzer)) {
+                throw new Error("Die API hat nach dem Speichern keine gültige Besitzerliste geliefert.");
+            }
+
+            uebernehmeBesitzerInSpeicher(ergebnis.besitzer);
+            ordneFremdKacheln(ergebnis.besitzer);
+            dialog.close();
+
+        } catch (err) {
+            console.error("Kachelreihenfolge konnte nicht gespeichert werden:", err);
+            besitzerFehler.textContent =
+                err.message || "Kachelreihenfolge konnte nicht gespeichert werden.";
+
+        } finally {
+            besitzerSpeichernButton.disabled = false;
+        }
     });
 
     document.getElementById("besitzerSchliessen").addEventListener("click", () => dialog.close());
 
-    function oeffne(art) {
+    async function oeffne(art) {
         aktuell = art;
         const istBesitzer = art === "besitzer";
         dialog.classList.toggle("schmal", istBesitzer);
@@ -5657,18 +5851,22 @@ document.querySelectorAll(".tab-button").forEach(button => {
 
         if (istBesitzer) {
             titelEl.textContent = "Besitzer pflegen";
-            zeigeBesitzer();
         } else {
             titelEl.textContent = konfig[art].titel;
             baueFormular();
             fuelleFormular(null);
         }
+
         menueSchliessen();
         dialog.showModal();
+
+        if (istBesitzer) {
+            await zeigeBesitzer();
+        }
     }
 
     menuPopup.querySelectorAll(".menu-eintrag").forEach(b => {
-        b.addEventListener("click", () => oeffne(b.dataset.aktion));
+        b.addEventListener("click", () => { void oeffne(b.dataset.aktion); });
     });
 
     document.getElementById("pflegeNeu").addEventListener("click", () => fuelleFormular(null));
