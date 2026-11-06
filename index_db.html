@@ -5459,9 +5459,8 @@ document.querySelectorAll(".tab-button").forEach(button => {
 })();
 
 // ---------------------------------------------------------------
-// Besitzer und Fremdanlagen werden live aus PostgreSQL geladen.
-// Die Pflegefenster fuer Wertpapiere und Positionen bleiben bis zu
-// ihrer spaeteren Anbindung separate Mockups im Arbeitsspeicher.
+// Besitzer, Fremdanlagen und Wertpapiere werden aus PostgreSQL geladen.
+// Die Positionspflege bleibt bis zu ihrer spaeteren Anbindung ein Mockup.
 // ---------------------------------------------------------------
 (function () {
 
@@ -5527,6 +5526,11 @@ document.querySelectorAll(".tab-button").forEach(button => {
         });
     }
 
+    // Echte Wertpapierdaten aus PostgreSQL. Die Mock-Wertpapiere in
+    // "speicher" bleiben vorerst getrennt, damit die noch nicht angebundene
+    // Positionspflege unveraendert funktioniert.
+    let wertpapierDaten = [];
+
     function besitzerOptionen() {
         return speicher.besitzer.map(b => ({ wert: String(b.id), text: b.kuerzel }));
     }
@@ -5575,19 +5579,21 @@ document.querySelectorAll(".tab-button").forEach(button => {
                 { name: "art", label: "Art", typ: "select", optionen: ["ETF", "Aktie", "Fonds"], pflicht: true },
                 { name: "link_url", label: "Link (onvista)", typ: "text" }
             ],
-            spalten: ["Bezeichnung", "ISIN", "Art", "Link"],
-            zeile: (d) => [d.bezeichnung, d.isin, d.art, d.link_url || ""],
+            spalten: ["Bezeichnung", "ISIN", "Art", "Link", "Positionen"],
+            gitter: "minmax(180px, 2fr) 125px 70px minmax(180px, 3fr) 90px",
+            zeile: (d) => [d.bezeichnung, d.isin, d.art, d.link_url || "",
+                           Number(d.verwendungsanzahl || 0) > 0 ? String(d.verwendungsanzahl) + " (gesperrt)" : "0"],
             pruefe(d, id) {
                 if (!/^[A-Z]{2}[A-Z0-9]{9}[0-9]$/.test(d.isin))
                     return "Bitte eine gültige ISIN mit 12 Zeichen eingeben (z. B. IE00B4L5Y983).";
-                if (speicher.wertpapiere.some(w => w.id !== id && w.isin === d.isin))
+                if (wertpapierDaten.some(w => w.id !== id && w.isin === d.isin))
                     return "Diese ISIN existiert bereits.";
                 if (d.link_url && !/^https?:\/\//i.test(d.link_url))
                     return "Der Link muss mit http:// oder https:// beginnen.";
                 return "";
             },
-            loeschHinweis: "",
-            verwendet: (id) => speicher.positionen.some(p => p.wertpapier_id === id),
+            loeschHinweis: "Das Wertpapier wird endgültig aus der Datenbank gelöscht.",
+            verwendet: (d) => Number(d.verwendungsanzahl || 0) > 0,
             verwendetHinweis: "Löschen nicht möglich: Das Wertpapier wird in mindestens einer Position verwendet."
         }
     };
@@ -5654,8 +5660,9 @@ document.querySelectorAll(".tab-button").forEach(button => {
 
     function zeichneListe() {
         const k = konfig[aktuell];
+        const datenListe = aktuell === "wertpapiere" ? wertpapierDaten : speicher[aktuell];
         listeEl.textContent = "";
-        if (!speicher[aktuell].length) {
+        if (!datenListe.length) {
             const leer = document.createElement("div");
             leer.className = "pf-leer";
             leer.textContent = "Noch keine Einträge vorhanden.";
@@ -5681,12 +5688,12 @@ document.querySelectorAll(".tab-button").forEach(button => {
         // Wertpapiere alphabetisch nach Bezeichnung sortieren
         const vgl = (a, b) => a.localeCompare(b, "de", { sensitivity: "base", numeric: true });
         const sortiert = aktuell === "wertpapiere"
-            ? speicher[aktuell].slice().sort((a, b) => vgl(a.bezeichnung, b.bezeichnung))
+            ? datenListe.slice().sort((a, b) => vgl(a.bezeichnung, b.bezeichnung))
             : aktuell === "positionen"
-            ? speicher[aktuell].slice().sort((a, b) =>
+            ? datenListe.slice().sort((a, b) =>
                 vgl(besitzerKuerzel(a.besitzer_id), besitzerKuerzel(b.besitzer_id)) ||
                 vgl(wertpapierBez(a.wertpapier_id), wertpapierBez(b.wertpapier_id)))
-            : speicher[aktuell];
+            : datenListe;
 
         sortiert.forEach(d => {
             const zeile = document.createElement("div");
@@ -5714,12 +5721,52 @@ document.querySelectorAll(".tab-button").forEach(button => {
             loesch.type = "button";
             loesch.className = "pf-klein loeschen";
             loesch.textContent = "Löschen";
-            loesch.addEventListener("click", () => {
+            loesch.addEventListener("click", async () => {
                 if (!confirm("„" + haupt + "“ wirklich löschen?\n" + k.loeschHinweis)) return;
+
+                loesch.disabled = true;
+                fehlerEl.textContent = "";
+
+                if (aktuell === "wertpapiere") {
+                    try {
+                        const antwort = await fetch("/api/wertpapiere/" + encodeURIComponent(d.id), {
+                            method: "DELETE",
+                            headers: { "Accept": "application/json" },
+                            cache: "no-store"
+                        });
+                        const ergebnis = await antwort.json().catch(() => null);
+                        if (!antwort.ok) {
+                            throw new Error(ergebnis?.fehler || "Löschen fehlgeschlagen (HTTP " + antwort.status + ").");
+                        }
+                        wertpapierDaten = wertpapierDaten.filter(x => x.id !== d.id);
+                        fuelleFormular(null);
+                    } catch (err) {
+                        console.error("Wertpapier konnte nicht gelöscht werden:", err);
+                        const meldung = err.message || "Wertpapier konnte nicht gelöscht werden.";
+                        // Bei einem zwischenzeitlich neu angelegten Positionsbezug
+                        // die aktuelle Verwendungsanzahl erneut aus der DB lesen.
+                        try {
+                            const aktuelleDaten = await ladeApiJson("/api/wertpapiere");
+                            if (Array.isArray(aktuelleDaten)) {
+                                wertpapierDaten = aktuelleDaten.map(w => ({
+                                    ...w,
+                                    link_url: w.link_url || null,
+                                    verwendungsanzahl: Number(w.verwendungsanzahl || 0)
+                                }));
+                            }
+                        } catch (ladeFehler) {
+                            console.error("Wertpapierliste konnte nicht aktualisiert werden:", ladeFehler);
+                        }
+                        zeichneListe();
+                        fehlerEl.textContent = meldung;
+                    }
+                    return;
+                }
+
                 speicher[aktuell] = speicher[aktuell].filter(x => x.id !== d.id);
                 fuelleFormular(null);
             });
-            if (k.verwendet && k.verwendet(d.id)) {
+            if (k.verwendet && k.verwendet(d)) {
                 loesch.disabled = true;
                 loesch.title = k.verwendetHinweis;
             }
@@ -5841,6 +5888,43 @@ document.querySelectorAll(".tab-button").forEach(button => {
 
     document.getElementById("besitzerSchliessen").addEventListener("click", () => dialog.close());
 
+    async function ladeWertpapiere() {
+        wertpapierDaten = [];
+        listeEl.textContent = "";
+        const ladeHinweis = document.createElement("div");
+        ladeHinweis.className = "pf-leer";
+        ladeHinweis.textContent = "Wertpapiere werden aus der Datenbank geladen …";
+        listeEl.appendChild(ladeHinweis);
+        fehlerEl.textContent = "";
+        document.getElementById("pflegeSpeichern").disabled = true;
+
+        try {
+            const daten = await ladeApiJson("/api/wertpapiere");
+            if (!Array.isArray(daten) || daten.some(w =>
+                !w || !Number.isInteger(w.id) || typeof w.isin !== "string" ||
+                typeof w.bezeichnung !== "string" || typeof w.art !== "string" ||
+                !Number.isInteger(Number(w.verwendungsanzahl))
+            )) {
+                throw new Error("Die Wertpapier-API hat ungültige Daten geliefert.");
+            }
+            wertpapierDaten = daten.map(w => ({
+                ...w,
+                link_url: w.link_url || null,
+                verwendungsanzahl: Number(w.verwendungsanzahl)
+            }));
+            fuelleFormular(null);
+            document.getElementById("pflegeSpeichern").disabled = false;
+        } catch (err) {
+            console.error("Wertpapiere konnten nicht geladen werden:", err);
+            listeEl.textContent = "";
+            const fehler = document.createElement("div");
+            fehler.className = "pf-leer";
+            fehler.textContent = "Wertpapiere konnten nicht geladen werden. Bitte das Fenster schließen und erneut öffnen.";
+            listeEl.appendChild(fehler);
+            fehlerEl.textContent = err.message || "Fehler beim Laden der Wertpapiere.";
+        }
+    }
+
     async function oeffne(art) {
         aktuell = art;
         const istBesitzer = art === "besitzer";
@@ -5862,6 +5946,10 @@ document.querySelectorAll(".tab-button").forEach(button => {
 
         if (istBesitzer) {
             await zeigeBesitzer();
+        } else if (art === "wertpapiere") {
+            await ladeWertpapiere();
+        } else {
+            document.getElementById("pflegeSpeichern").disabled = false;
         }
     }
 
@@ -5872,7 +5960,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
     document.getElementById("pflegeNeu").addEventListener("click", () => fuelleFormular(null));
     document.getElementById("pflegeSchliessen").addEventListener("click", () => dialog.close());
 
-    formEl.addEventListener("submit", (e) => {
+    formEl.addEventListener("submit", async (e) => {
         e.preventDefault();
         const k = konfig[aktuell];
         const daten = {};
@@ -5903,12 +5991,55 @@ document.querySelectorAll(".tab-button").forEach(button => {
         const fehler = k.pruefe(daten, bearbeiteId);
         if (fehler) { fehlerEl.textContent = fehler; return; }
 
-        if (bearbeiteId === null) {
-            speicher[aktuell].push({ id: naechsteId++, ...daten });
-        } else {
-            Object.assign(speicher[aktuell].find(x => x.id === bearbeiteId), daten);
+        const speichernButton = document.getElementById("pflegeSpeichern");
+        speichernButton.disabled = true;
+        fehlerEl.textContent = "";
+
+        try {
+            if (aktuell === "wertpapiere") {
+                const istNeu = bearbeiteId === null;
+                const url = istNeu
+                    ? "/api/wertpapiere"
+                    : "/api/wertpapiere/" + encodeURIComponent(bearbeiteId);
+                const antwort = await fetch(url, {
+                    method: istNeu ? "POST" : "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    cache: "no-store",
+                    body: JSON.stringify(daten)
+                });
+                const ergebnis = await antwort.json().catch(() => null);
+                if (!antwort.ok) {
+                    throw new Error(ergebnis?.fehler || "Speichern fehlgeschlagen (HTTP " + antwort.status + ").");
+                }
+                if (!ergebnis || !Number.isInteger(ergebnis.id)) {
+                    throw new Error("Die API hat nach dem Speichern keinen gültigen Wertpapierdatensatz geliefert.");
+                }
+
+                if (istNeu) wertpapierDaten.push(ergebnis);
+                else {
+                    const index = wertpapierDaten.findIndex(w => w.id === bearbeiteId);
+                    if (index < 0) throw new Error("Das bearbeitete Wertpapier ist nicht mehr in der Liste vorhanden. Bitte neu laden.");
+                    wertpapierDaten[index] = ergebnis;
+                }
+                fuelleFormular(null);
+                return;
+            }
+
+            if (bearbeiteId === null) {
+                speicher[aktuell].push({ id: naechsteId++, ...daten });
+            } else {
+                Object.assign(speicher[aktuell].find(x => x.id === bearbeiteId), daten);
+            }
+            fuelleFormular(null);
+        } catch (err) {
+            console.error("Eintrag konnte nicht gespeichert werden:", err);
+            fehlerEl.textContent = err.message || "Der Eintrag konnte nicht gespeichert werden.";
+        } finally {
+            speichernButton.disabled = false;
         }
-        fuelleFormular(null);
     });
 
 })();

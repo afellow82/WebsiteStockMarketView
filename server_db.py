@@ -429,6 +429,237 @@ def altersvorsorge_historie_einfuegen():
         return jsonify({"fehler": "Datenbankfehler beim Speichern."}), 500
 
 
+
+
+# ============================================
+# Wertpapiere: gemeinsame Hilfsfunktionen
+# ============================================
+
+def wertpapier_eingabe_pruefen(daten):
+    """Eingabedaten fuer INSERT und UPDATE normalisieren und validieren."""
+    if not isinstance(daten, dict):
+        return None, "Ungültige JSON-Eingabe."
+
+    isin = daten.get("isin")
+    bezeichnung = daten.get("bezeichnung")
+    art = daten.get("art")
+    link_url = daten.get("link_url")
+
+    if not isinstance(isin, str):
+        return None, "Bitte eine gültige ISIN mit 12 Zeichen eingeben."
+    isin = isin.strip().upper()
+    if not re.fullmatch(r"[A-Z]{2}[A-Z0-9]{9}[0-9]", isin):
+        return None, "Bitte eine gültige ISIN mit 12 Zeichen eingeben (z. B. IE00B4L5Y983)."
+
+    if not isinstance(bezeichnung, str):
+        return None, "Bitte eine Bezeichnung eingeben."
+    bezeichnung = bezeichnung.strip()
+    if not bezeichnung or len(bezeichnung) > 150:
+        return None, "Die Bezeichnung muss zwischen 1 und 150 Zeichen lang sein."
+
+    if not isinstance(art, str) or art not in ("ETF", "Aktie", "Fonds"):
+        return None, "Bitte als Art ETF, Aktie oder Fonds auswählen."
+
+    if link_url is not None:
+        if not isinstance(link_url, str):
+            return None, "Der Link ist ungültig."
+        link_url = link_url.strip() or None
+        if link_url and not re.match(r"^https?://", link_url, flags=re.IGNORECASE):
+            return None, "Der Link muss mit http:// oder https:// beginnen."
+
+    return {
+        "isin": isin,
+        "bezeichnung": bezeichnung,
+        "art": art,
+        "link_url": link_url
+    }, None
+
+
+def wertpapier_select_sql():
+    return """
+        SELECT
+            w.wertpapier_id,
+            w.isin,
+            w.bezeichnung,
+            w.art,
+            w.link_url,
+            (
+                SELECT COUNT(*)
+                FROM public.position AS p
+                WHERE p.wertpapier_id = w.wertpapier_id
+            ) AS verwendungsanzahl
+        FROM public.wertpapier AS w
+    """
+
+
+def wertpapier_als_json(zeile):
+    return {
+        "id": zeile[0],
+        "isin": db_text(zeile[1]).strip(),
+        "bezeichnung": db_text(zeile[2]),
+        "art": db_text(zeile[3]),
+        "link_url": db_text(zeile[4]),
+        "verwendungsanzahl": int(zeile[5])
+    }
+
+
+# ============================================
+# Wertpapiere: GET
+# ============================================
+
+@app.route("/api/wertpapiere", methods=["GET"])
+def wertpapiere_lesen():
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(wertpapier_select_sql() + """
+                    ORDER BY w.bezeichnung ASC, w.wertpapier_id ASC
+                """)
+                daten = [wertpapier_als_json(zeile) for zeile in cur.fetchall()]
+
+        response = jsonify(daten)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Lesen der Wertpapiere")
+        return jsonify({"fehler": "Datenbankfehler beim Lesen der Wertpapiere."}), 500
+
+
+# ============================================
+# Wertpapiere: POST
+# ============================================
+
+@app.route("/api/wertpapiere", methods=["POST"])
+def wertpapier_anlegen():
+    daten, fehler = wertpapier_eingabe_pruefen(request.get_json(silent=True))
+    if fehler:
+        return jsonify({"fehler": fehler}), 400
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO public.wertpapier
+                        (isin, bezeichnung, art, link_url)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING wertpapier_id
+                """, (daten["isin"], daten["bezeichnung"], daten["art"], daten["link_url"]))
+                wertpapier_id = cur.fetchone()[0]
+
+                cur.execute(wertpapier_select_sql() + """
+                    WHERE w.wertpapier_id = %s
+                """, (wertpapier_id,))
+                gespeichertes_wertpapier = wertpapier_als_json(cur.fetchone())
+
+        response = jsonify(gespeichertes_wertpapier)
+        response.headers["Cache-Control"] = "no-store"
+        return response, 201
+
+    except psycopg.errors.UniqueViolation:
+        return jsonify({"fehler": "Diese ISIN existiert bereits."}), 409
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Anlegen eines Wertpapiers")
+        return jsonify({"fehler": "Datenbankfehler beim Anlegen des Wertpapiers."}), 500
+
+
+# ============================================
+# Wertpapiere: PUT
+# ============================================
+
+@app.route("/api/wertpapiere/<int:wertpapier_id>", methods=["PUT"])
+def wertpapier_aendern(wertpapier_id):
+    daten, fehler = wertpapier_eingabe_pruefen(request.get_json(silent=True))
+    if fehler:
+        return jsonify({"fehler": fehler}), 400
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    UPDATE public.wertpapier
+                    SET
+                        isin = %s,
+                        bezeichnung = %s,
+                        art = %s,
+                        link_url = %s
+                    WHERE wertpapier_id = %s
+                """, (
+                    daten["isin"], daten["bezeichnung"], daten["art"],
+                    daten["link_url"], wertpapier_id
+                ))
+
+                if cur.rowcount == 0:
+                    return jsonify({"fehler": "Das Wertpapier wurde nicht gefunden."}), 404
+
+                cur.execute(wertpapier_select_sql() + """
+                    WHERE w.wertpapier_id = %s
+                """, (wertpapier_id,))
+                gespeichertes_wertpapier = wertpapier_als_json(cur.fetchone())
+
+        response = jsonify(gespeichertes_wertpapier)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.errors.UniqueViolation:
+        return jsonify({"fehler": "Diese ISIN existiert bereits."}), 409
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Ändern eines Wertpapiers")
+        return jsonify({"fehler": "Datenbankfehler beim Ändern des Wertpapiers."}), 500
+
+
+# ============================================
+# Wertpapiere: DELETE
+# ============================================
+
+@app.route("/api/wertpapiere/<int:wertpapier_id>", methods=["DELETE"])
+def wertpapier_loeschen(wertpapier_id):
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                # FOR UPDATE sperrt den Wertpapier-Datensatz bis zum Ende
+                # der Transaktion. So kann waehrend der anschliessenden
+                # Verwendungspruefung keine neue FK-Position dazwischenkommen.
+                cur.execute("""
+                    SELECT wertpapier_id
+                    FROM public.wertpapier
+                    WHERE wertpapier_id = %s
+                    FOR UPDATE
+                """, (wertpapier_id,))
+
+                if cur.fetchone() is None:
+                    return jsonify({"fehler": "Das Wertpapier wurde nicht gefunden."}), 404
+
+                cur.execute("""
+                    SELECT COUNT(*)
+                    FROM public.position
+                    WHERE wertpapier_id = %s
+                """, (wertpapier_id,))
+                verwendungsanzahl = int(cur.fetchone()[0])
+
+                if verwendungsanzahl > 0:
+                    return jsonify({
+                        "fehler": "Löschen nicht möglich: Das Wertpapier wird in "
+                                  f"{verwendungsanzahl} Position(en) verwendet.",
+                        "verwendungsanzahl": verwendungsanzahl
+                    }), 409
+
+                cur.execute("""
+                    DELETE FROM public.wertpapier
+                    WHERE wertpapier_id = %s
+                """, (wertpapier_id,))
+
+        response = jsonify({"ok": True, "id": wertpapier_id})
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Löschen eines Wertpapiers")
+        return jsonify({"fehler": "Datenbankfehler beim Löschen des Wertpapiers."}), 500
+
+
 # ============================================
 # Lokaler Start
 # ============================================
