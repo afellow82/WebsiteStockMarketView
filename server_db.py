@@ -661,6 +661,292 @@ def wertpapier_loeschen(wertpapier_id):
 
 
 # ============================================
+# Positionen: gemeinsame Hilfsfunktionen
+# ============================================
+
+def position_eingabe_pruefen(daten):
+    """Eingabedaten fuer INSERT und UPDATE validieren."""
+    if not isinstance(daten, dict):
+        return None, "Ungültige JSON-Eingabe."
+
+    besitzer_id = daten.get("besitzer_id")
+    wertpapier_id = daten.get("wertpapier_id")
+
+    for feldname, feldwert, bezeichnung in (
+        ("besitzer_id", besitzer_id, "Besitzer"),
+        ("wertpapier_id", wertpapier_id, "Wertpapier")
+    ):
+        if (
+            isinstance(feldwert, bool)
+            or not isinstance(feldwert, int)
+            or feldwert <= 0
+        ):
+            return None, f"Bitte einen gültigen {bezeichnung} auswählen."
+
+    def dezimal_pruefen(rohwert, stellen, maximum, feldname):
+        if isinstance(rohwert, bool) or rohwert is None:
+            raise ValueError(f"{feldname} fehlt oder ist ungültig.")
+        try:
+            wert = Decimal(str(rohwert))
+        except (InvalidOperation, ValueError):
+            raise ValueError(f"{feldname} ist keine gültige Zahl.")
+        if not wert.is_finite() or wert < 0:
+            raise ValueError(f"{feldname} muss eine nicht-negative Zahl sein.")
+        schritt = Decimal("1").scaleb(-stellen)
+        try:
+            gerundet = wert.quantize(schritt)
+        except InvalidOperation:
+            raise ValueError(f"{feldname} liegt außerhalb des zulässigen Wertebereichs.")
+        if wert != gerundet:
+            raise ValueError(f"{feldname} darf höchstens {stellen} Nachkommastellen haben.")
+        if gerundet > maximum:
+            raise ValueError(f"{feldname} überschreitet den zulässigen Höchstwert.")
+        return gerundet
+
+    try:
+        anzahl = dezimal_pruefen(
+            daten.get("anzahl"), 6, Decimal("999999999999.999999"), "Anzahl"
+        )
+        investition = dezimal_pruefen(
+            daten.get("investition"), 2, Decimal("999999999999.99"), "Investition"
+        )
+    except ValueError as exc:
+        return None, str(exc)
+
+    hinweis = daten.get("investition_hinweis")
+    if hinweis is not None and not isinstance(hinweis, str):
+        return None, "Der Hinweis zur Investition ist ungültig."
+    hinweis = hinweis.strip() or None if isinstance(hinweis, str) else None
+
+    ist_altersvorsorge = daten.get("ist_altersvorsorge")
+    if not isinstance(ist_altersvorsorge, bool):
+        return None, "Die Angabe zur Altersvorsorge muss Ja oder Nein sein."
+
+    return {
+        "besitzer_id": besitzer_id,
+        "wertpapier_id": wertpapier_id,
+        "anzahl": anzahl,
+        "investition": investition,
+        "investition_hinweis": hinweis,
+        "ist_altersvorsorge": ist_altersvorsorge
+    }, None
+
+
+def position_select_sql():
+    return """
+        SELECT
+            p.position_id,
+            p.besitzer_id,
+            b.kuerzel,
+            b.ist_eigen,
+            p.wertpapier_id,
+            w.isin,
+            w.bezeichnung,
+            w.art,
+            w.link_url,
+            p.anzahl,
+            p.investition,
+            p.investition_hinweis,
+            p.ist_altersvorsorge
+        FROM public.position AS p
+        JOIN public.besitzer AS b
+          ON b.besitzer_id = p.besitzer_id
+        JOIN public.wertpapier AS w
+          ON w.wertpapier_id = p.wertpapier_id
+    """
+
+
+def position_als_json(zeile):
+    return {
+        "id": int(zeile[0]),
+        "besitzer_id": int(zeile[1]),
+        "besitzer": db_text(zeile[2]),
+        "ist_eigen": bool(zeile[3]),
+        "wertpapier_id": int(zeile[4]),
+        "isin": db_text(zeile[5]).strip(),
+        "bezeichnung": db_text(zeile[6]),
+        "art": db_text(zeile[7]),
+        "link_url": db_text(zeile[8]),
+        "anzahl": format(zeile[9], ".6f"),
+        "investition": format(zeile[10], ".2f"),
+        "investition_hinweis": db_text(zeile[11]),
+        "ist_altersvorsorge": bool(zeile[12])
+    }
+
+
+# ============================================
+# Positionen: GET
+# ============================================
+
+@app.route("/api/positionen", methods=["GET"])
+def positionen_lesen():
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(position_select_sql() + """
+                    ORDER BY
+                        b.ist_eigen DESC,
+                        b.kachel_reihenfolge ASC NULLS LAST,
+                        b.besitzer_id ASC,
+                        w.bezeichnung ASC,
+                        p.position_id ASC
+                """)
+                daten = [position_als_json(zeile) for zeile in cur.fetchall()]
+
+        response = jsonify(daten)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Lesen der Positionen")
+        return jsonify({"fehler": "Datenbankfehler beim Lesen der Positionen."}), 500
+
+
+# ============================================
+# Positionen: POST
+# ============================================
+
+@app.route("/api/positionen", methods=["POST"])
+def position_anlegen():
+    daten, fehler = position_eingabe_pruefen(request.get_json(silent=True))
+    if fehler:
+        return jsonify({"fehler": fehler}), 400
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO public.position (
+                        besitzer_id,
+                        wertpapier_id,
+                        anzahl,
+                        investition,
+                        investition_hinweis,
+                        ist_altersvorsorge
+                    )
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                    RETURNING position_id
+                """, (
+                    daten["besitzer_id"],
+                    daten["wertpapier_id"],
+                    daten["anzahl"],
+                    daten["investition"],
+                    daten["investition_hinweis"],
+                    daten["ist_altersvorsorge"]
+                ))
+                position_id = cur.fetchone()[0]
+
+                cur.execute(position_select_sql() + """
+                    WHERE p.position_id = %s
+                """, (position_id,))
+                gespeicherte_position = position_als_json(cur.fetchone())
+
+        response = jsonify(gespeicherte_position)
+        response.headers["Cache-Control"] = "no-store"
+        return response, 201
+
+    except psycopg.errors.UniqueViolation:
+        return jsonify({
+            "fehler": "Für diesen Besitzer existiert dieses Wertpapier bereits als Position."
+        }), 409
+
+    except psycopg.errors.ForeignKeyViolation:
+        return jsonify({
+            "fehler": "Der ausgewählte Besitzer oder das Wertpapier existiert nicht mehr. Bitte die Liste neu laden."
+        }), 409
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Anlegen einer Position")
+        return jsonify({"fehler": "Datenbankfehler beim Anlegen der Position."}), 500
+
+
+# ============================================
+# Positionen: PUT
+# ============================================
+
+@app.route("/api/positionen/<int:position_id>", methods=["PUT"])
+def position_aendern(position_id):
+    daten, fehler = position_eingabe_pruefen(request.get_json(silent=True))
+    if fehler:
+        return jsonify({"fehler": fehler}), 400
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    UPDATE public.position
+                    SET
+                        besitzer_id = %s,
+                        wertpapier_id = %s,
+                        anzahl = %s,
+                        investition = %s,
+                        investition_hinweis = %s,
+                        ist_altersvorsorge = %s
+                    WHERE position_id = %s
+                """, (
+                    daten["besitzer_id"],
+                    daten["wertpapier_id"],
+                    daten["anzahl"],
+                    daten["investition"],
+                    daten["investition_hinweis"],
+                    daten["ist_altersvorsorge"],
+                    position_id
+                ))
+
+                if cur.rowcount == 0:
+                    return jsonify({"fehler": "Die Position wurde nicht gefunden."}), 404
+
+                cur.execute(position_select_sql() + """
+                    WHERE p.position_id = %s
+                """, (position_id,))
+                gespeicherte_position = position_als_json(cur.fetchone())
+
+        response = jsonify(gespeicherte_position)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.errors.UniqueViolation:
+        return jsonify({
+            "fehler": "Für diesen Besitzer existiert dieses Wertpapier bereits als Position."
+        }), 409
+
+    except psycopg.errors.ForeignKeyViolation:
+        return jsonify({
+            "fehler": "Der ausgewählte Besitzer oder das Wertpapier existiert nicht mehr. Bitte die Liste neu laden."
+        }), 409
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Ändern einer Position")
+        return jsonify({"fehler": "Datenbankfehler beim Ändern der Position."}), 500
+
+
+# ============================================
+# Positionen: DELETE
+# ============================================
+
+@app.route("/api/positionen/<int:position_id>", methods=["DELETE"])
+def position_loeschen(position_id):
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    DELETE FROM public.position
+                    WHERE position_id = %s
+                """, (position_id,))
+
+                if cur.rowcount == 0:
+                    return jsonify({"fehler": "Die Position wurde nicht gefunden."}), 404
+
+        response = jsonify({"ok": True, "id": position_id})
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Löschen einer Position")
+        return jsonify({"fehler": "Datenbankfehler beim Löschen der Position."}), 500
+
+
+# ============================================
 # Lokaler Start
 # ============================================
 

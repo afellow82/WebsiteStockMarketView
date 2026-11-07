@@ -1934,7 +1934,7 @@ id="restkaeufeJahrGesamt">
 
   </div>
 
-  <!-- Pflegefenster: Besitzer sind an PostgreSQL angebunden; weitere Pflegefunktionen folgen spaeter. -->
+  <!-- Pflegefenster: Besitzer, Wertpapiere und Positionen sind an PostgreSQL angebunden. -->
   <dialog id="pflegeDialog" class="av-dialog pf-dialog">
       <h2 id="pflegeTitel"></h2>
 
@@ -1952,7 +1952,7 @@ id="restkaeufeJahrGesamt">
           </div>
       </form>
 
-      <!-- Wertpapiere: ergaenzen, aendern, loeschen -->
+      <!-- Wertpapiere und Positionen: ergaenzen, aendern, loeschen -->
       <div class="pf-liste" id="pflegeListe"></div>
       <form id="pflegeForm" novalidate>
           <h3 id="pflegeFormTitel"></h3>
@@ -3834,18 +3834,73 @@ if(diffTage >= 31){
 
 async function ladeAlleKurse(){
 
-
-const tbody =
-document.getElementById("tableBody");
-
+const tbody = document.getElementById("tableBody");
 const kursDaten = {};
+let eigenePositionen = [];
 
-for (const item of isins) {
+// Aktuelle eigene Depotpositionen stammen ausschliesslich aus PostgreSQL.
+try {
+    const positionsDaten = await ladeApiJson("/api/positionen");
+
+    if (!Array.isArray(positionsDaten)) {
+        throw new Error("Die Positions-API hat keine gültige Liste geliefert.");
+    }
+
+    eigenePositionen = positionsDaten
+        .filter(p => p && p.ist_eigen === true)
+        .map(p => ({
+            id: p.id,
+            besitzer: p.besitzer,
+            bezeichnung: p.bezeichnung,
+            isin: p.isin,
+            link: p.link_url || "",
+            anzahl: Number(p.anzahl),
+            investition: Number(p.investition),
+            investitionHinweis: p.investition_hinweis || "",
+            ist_altersvorsorge: p.ist_altersvorsorge === true
+        }));
+
+    if (eigenePositionen.some(p =>
+        !Number.isInteger(p.id) ||
+        typeof p.bezeichnung !== "string" ||
+        typeof p.isin !== "string" ||
+        !Number.isFinite(p.anzahl) ||
+        !Number.isFinite(p.investition)
+    )) {
+        throw new Error("Mindestens eine eigene Position aus der Datenbank ist ungültig.");
+    }
+
+    // Vorhandene Reihenfolge der bisherigen Anlagen beibehalten;
+    // neu hinzugefuegte Anlagen werden danach alphabetisch einsortiert.
+    const bekannteReihenfolge = new Map(isins.map((p, i) => [p.isin, i]));
+    eigenePositionen.sort((a, b) => {
+        const ai = bekannteReihenfolge.has(a.isin) ? bekannteReihenfolge.get(a.isin) : Number.MAX_SAFE_INTEGER;
+        const bi = bekannteReihenfolge.has(b.isin) ? bekannteReihenfolge.get(b.isin) : Number.MAX_SAFE_INTEGER;
+        return ai - bi || a.bezeichnung.localeCompare(b.bezeichnung, "de", { sensitivity: "base", numeric: true });
+    });
+
+} catch (err) {
+    console.error("Eigene Positionen konnten nicht aus PostgreSQL geladen werden:", err);
+    tbody.innerHTML = '<tr><td colspan="10">Eigene Positionen konnten nicht aus der Datenbank geladen werden.</td></tr>';
+    document.getElementById("performanceBody").innerHTML = '<tr><td colspan="4">Positionen konnten nicht geladen werden.</td></tr>';
+    document.getElementById("vorsorgeBody").innerHTML = '<tr><td colspan="3">Altersvorsorge-Positionen konnten nicht geladen werden.</td></tr>';
+    document.getElementById("updateInfo").textContent = "Fehler beim Laden der Positionsdaten.";
+    document.getElementById("performanceUpdateInfo").textContent = "Fehler beim Laden der Positionsdaten.";
+    return;
+}
+
+// Kursdaten fuer die Jahres-/Sparplanansicht und alle eigenen Positionen laden.
+const abzufragendeIsins = [...new Set([
+    ...isins.map(p => p.isin),
+    ...eigenePositionen.map(p => p.isin)
+])];
+
+for (const isin of abzufragendeIsins) {
     try {
-        kursDaten[item.isin] = await ladeETF(item.isin);
+        kursDaten[isin] = await ladeETF(isin);
     }
     catch(err) {
-        kursDaten[item.isin] = null;
+        kursDaten[isin] = null;
     }
 }
 
@@ -3884,350 +3939,135 @@ let summeWertJahresanfang = 0;
 
 const performanceDaten = [];
 
-for(const item of isins){
+// Jahresanfangswerte und Sparplaene bleiben vorerst in den vorhandenen
+// Zusatzdaten. Sie werden spaeter durch eigene Datenbanktabellen ersetzt.
+for (const item of isins) {
 
+    const historischerGesamtwert = item.anzahlJA * item.kursJA;
+    jahresAnfang += historischerGesamtwert;
+    summeWertJahresanfang += historischerGesamtwert;
 
-const historischerGesamtwert =
-item.anzahlJA *
-item.kursJA;
-
-
-jahresAnfang +=
-historischerGesamtwert;
-
-summeWertJahresanfang += historischerGesamtwert;
-
-if ((item.sparplanBetrag ?? 0) > 0) {
-
-restkaeufeJahrGesamt += restKaeufeImJahr(
-    item.sparplanTag,
-    item.sparplanBetrag
-);
-
-sparplan.innerHTML += `
-
-<tr>
-
-<td>${item.bezeichnung}</td>
-
-<td class="kurs">
-${formatZahl(item.sparplanBetrag,2,true)} €
-</td>
-
-<td>
-${item.sparplanRhytmus ?? "-"}
-</td>
-
-<td class="kurs">
-${item.sparplanTag ? naechsteAusfuehrung(item.sparplanTag) : "-"}
-</td>
-
-<td class="status">
-${item.sparplanTag ? statusNaechsteAusfuehrung(item.sparplanTag) : "-"}
-</td>
-
-<td class="kurs">
-${
-    item.sparplanTag
-    ? formatZahl(
-        restKaeufeImJahr(
+    if ((item.sparplanBetrag ?? 0) > 0) {
+        restkaeufeJahrGesamt += restKaeufeImJahr(
             item.sparplanTag,
             item.sparplanBetrag
-        ),
-        2,
-        true
-      ) + " €"
-    : "-"
-}
-</td>
+        );
 
-</tr>
-
-`;
-}
-
-const etfHistory = kursDaten[item.isin];
-
-let aktuellerKurs = "-";
-let kursEntwicklung = "-";
-
-if (etfHistory) {
-
-    aktuellerKurs =
-        formatZahl(etfHistory.kurs,3) + " €";
-
-    const diff =
-        etfHistory.kurs - item.kursJA;
-
-    const prozent =
-        diff / item.kursJA * 100;
-
-kursEntwicklung = `
-    <span style="color:${diff >= 0 ? "#15803d" : "#b91c1c"};font-weight:650;">
-        ${prozent >= 0 ? "+ " : ""}${formatZahl(prozent,2)} %
-        (${diff >= 0 ? "+ " : ""}${formatZahl(diff,2)} €)
-    </span>
-`;
-
-}
-
-history.innerHTML += `
-
+        sparplan.innerHTML += `
 <tr>
-
 <td>${item.bezeichnung}</td>
-
-<td class="kurs kurs-normal">
-${formatZahl(item.anzahlJA,6,true)}
-</td>
-
-<td class="kurs kurs-normal">
-${formatZahl(item.kursJA,3)} €
-</td>
-
-<td class="kurs kurs-normal">
-${aktuellerKurs}
-</td>
-
-<td class="kurs">
-${kursEntwicklung}
-</td>
-
-<td class="kurs">
-${formatZahl(historischerGesamtwert,2,true)} €
-</td>
-
+<td class="kurs">${formatZahl(item.sparplanBetrag,2,true)} €</td>
+<td>${item.sparplanRhytmus ?? "-"}</td>
+<td class="kurs">${item.sparplanTag ? naechsteAusfuehrung(item.sparplanTag) : "-"}</td>
+<td class="status">${item.sparplanTag ? statusNaechsteAusfuehrung(item.sparplanTag) : "-"}</td>
+<td class="kurs">${item.sparplanTag ? formatZahl(restKaeufeImJahr(item.sparplanTag, item.sparplanBetrag), 2, true) + " €" : "-"}</td>
 </tr>
 `;
+    }
 
+    const etfHistory = kursDaten[item.isin];
+    let aktuellerKurs = "-";
+    let kursEntwicklung = "-";
 
-try{
-
-
-const etf =
-kursDaten[item.isin];
-
-if(!etf){
-    throw new Error("Kein Kurs verfügbar");
-}
-
-
-
-const wert =
-item.anzahl *
-etf.kurs;
-
-const investition = item.investition ?? 0;
-const gewinnVerlust = wert - investition;
-const prozent = investition !== 0
-    ? (gewinnVerlust / investition) * 100
-    : 0;
-
-performanceDaten.push({
-    bezeichnung: item.bezeichnung,
-    hinweis: item.investitionHinweis,
-    wert,
-    investition,
-    gewinnVerlust,
-    prozent
-});
-
-if (
-    item.bezeichnung === "ETF Core MSCI World" ||
-    item.bezeichnung === "ETF MSCI World SRI"
-) {
-
-vorsorge.innerHTML += `
-
-<tr>
-
-<td>
-${item.bezeichnung}
-</td>
-
-<td class="kurs">
-${formatZahl(etf.kurs,3)} €
-</td>
-
-<td class="kurs vorsorge-wert">
-${formatZahl(wert,2,true)} €
-</td>
-
-</tr>
-
-`;
-}
-gesamtwert += wert;
-
-chartLabels.push(item.bezeichnung);
-chartValues.push(wert);
-
-jahresAktuell +=
-item.anzahlJA *
-etf.kurs;
-
-
-
-if(etf.tagesanfang!==null){
-
-startwertHeute +=
-item.anzahl *
-etf.tagesanfang;
-
-}
-
-
-
-
-tbody.innerHTML+=`
-
-<tr>
-
-<td>
-<a href="${item.link}" target="_blank">
-${item.bezeichnung}
-</a>
-</td>
-
-<td>
-    <a 
-        href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/stocks?id=${item.isin}&field=BasicV1&field=ExchangesV2" target="_blank">
-        ${item.isin}
-    </a>
-</td>
-
-<td class="kurs kurs-normal">
-${formatZahl(item.anzahl,6,true)}
-</td>
-
-<td class="kurs kurs-normal">
-
-${
-etf.tagesanfang!==null
-?
-`
-<a class="tagesanfang-link"
-   href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/securities?id=${etf.consorsId}&field=ChartHistoryV1&idTypeOffset=51&historySince=0&resolution=15m&pagesize=2000&sortorder=DATETIME_FIRST"
-   target="_blank">
-   ${formatZahl(etf.tagesanfang,3)} €
-</a>
-`
-:
-"-"
-}
-
-</td>
-
-<td class="kurs">
-${formatZahl(etf.kurs,3)} €
-</td>
-
-<td class="kurs">
-${formatZahl(wert,2,true)} €
-</td>
-
-
-<td class="kurs">
-
-${
-etf.tagesentwicklung===null ||
-Math.abs(etf.tagesentwicklung)<0.005
-?
-""
-:
-`
-<span class="tages-badge ${
-    
-    etf.tagesentwicklung > 2
-    ? "darkgreen"
-
-    :
-
-    etf.tagesentwicklung > 0
-    ? "green"
-
-    :
-
-    etf.tagesentwicklung < -2
-    ? "red"
-
-    :
-
-    etf.tagesentwicklung < 0
-    ? "orange"
-
-    :
-
-    ""
-
-}">
-
-${etf.tagesentwicklung >= 0 ? "+" : ""}
-${formatZahl(etf.tagesentwicklung,2)} %
-
-(${
-(
-(etf.kurs - etf.tagesanfang) * item.anzahl
-) >= 0 ? "+" : "-"
-}
-${formatZahl(
-Math.abs(
-(etf.kurs - etf.tagesanfang) * item.anzahl
-),
-2,
-true
-)} €)
-
+    if (etfHistory) {
+        aktuellerKurs = formatZahl(etfHistory.kurs,3) + " €";
+        const diff = etfHistory.kurs - item.kursJA;
+        const prozent = diff / item.kursJA * 100;
+        kursEntwicklung = `
+<span style="color:${diff >= 0 ? "#15803d" : "#b91c1c"};font-weight:650;">
+    ${prozent >= 0 ? "+ " : ""}${formatZahl(prozent,2)} %
+    (${diff >= 0 ? "+ " : ""}${formatZahl(diff,2)} €)
 </span>
-`
-}
-
-</td>
-
-
-<td class="zeit">
-
-${formatDatum(etf.zeit)}
-
-</td>
-
-
-<td class="hidden-column">
-
-${etf.consorsId}
-
-</td>
-
-
-</tr>
-
 `;
+        jahresAktuell += item.anzahlJA * etfHistory.kurs;
+    }
 
-
-
-}
-
-catch(err){
-
-
-tbody.innerHTML+=`
-
+    history.innerHTML += `
 <tr>
-
-<td colspan="10">
-
-Fehler bei ${item.bezeichnung}:
-${err.message}
-
-</td>
-
+<td>${item.bezeichnung}</td>
+<td class="kurs kurs-normal">${formatZahl(item.anzahlJA,6,true)}</td>
+<td class="kurs kurs-normal">${formatZahl(item.kursJA,3)} €</td>
+<td class="kurs kurs-normal">${aktuellerKurs}</td>
+<td class="kurs">${kursEntwicklung}</td>
+<td class="kurs">${formatZahl(historischerGesamtwert,2,true)} €</td>
 </tr>
-
 `;
-
 }
 
+// Aktuelle Depotwerte, Performance und Altersvorsorge kommen aus public.position.
+for (const item of eigenePositionen) {
 
+    const etf = kursDaten[item.isin];
+
+    if (!etf) {
+        tbody.innerHTML += `
+<tr>
+<td colspan="10">Fehler bei ${item.bezeichnung}: Kein Kurs verfügbar</td>
+</tr>
+`;
+        continue;
+    }
+
+    const wert = item.anzahl * etf.kurs;
+    const investition = item.investition;
+    const gewinnVerlust = wert - investition;
+    const prozent = investition !== 0 ? (gewinnVerlust / investition) * 100 : 0;
+
+    performanceDaten.push({
+        bezeichnung: item.bezeichnung,
+        hinweis: item.investitionHinweis,
+        wert,
+        investition,
+        gewinnVerlust,
+        prozent
+    });
+
+    if (item.ist_altersvorsorge) {
+        vorsorge.innerHTML += `
+<tr>
+<td>${item.bezeichnung}</td>
+<td class="kurs">${formatZahl(etf.kurs,3)} €</td>
+<td class="kurs vorsorge-wert">${formatZahl(wert,2,true)} €</td>
+</tr>
+`;
+    }
+
+    gesamtwert += wert;
+    chartLabels.push(item.bezeichnung);
+    chartValues.push(wert);
+
+    if (etf.tagesanfang !== null) {
+        startwertHeute += item.anzahl * etf.tagesanfang;
+    }
+
+    const tagesDiff = (etf.kurs - etf.tagesanfang) * item.anzahl;
+
+    tbody.innerHTML += `
+<tr>
+<td><a href="${item.link}" target="_blank">${item.bezeichnung}</a></td>
+<td>
+    <a href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/stocks?id=${item.isin}&field=BasicV1&field=ExchangesV2" target="_blank">${item.isin}</a>
+</td>
+<td class="kurs kurs-normal">${formatZahl(item.anzahl,6,true)}</td>
+<td class="kurs kurs-normal">
+${etf.tagesanfang !== null ? `
+<a class="tagesanfang-link" href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/securities?id=${etf.consorsId}&field=ChartHistoryV1&idTypeOffset=51&historySince=0&resolution=15m&pagesize=2000&sortorder=DATETIME_FIRST" target="_blank">${formatZahl(etf.tagesanfang,3)} €</a>
+` : "-"}
+</td>
+<td class="kurs">${formatZahl(etf.kurs,3)} €</td>
+<td class="kurs">${formatZahl(wert,2,true)} €</td>
+<td class="kurs">
+${etf.tagesentwicklung === null || Math.abs(etf.tagesentwicklung) < 0.005 ? "" : `
+<span class="tages-badge ${etf.tagesentwicklung > 2 ? "darkgreen" : etf.tagesentwicklung > 0 ? "green" : etf.tagesentwicklung < -2 ? "red" : etf.tagesentwicklung < 0 ? "orange" : ""}">
+${etf.tagesentwicklung >= 0 ? "+" : ""}${formatZahl(etf.tagesentwicklung,2)} %
+(${tagesDiff >= 0 ? "+" : "-"}${formatZahl(Math.abs(tagesDiff),2,true)} €)
+</span>
+`}
+</td>
+<td class="zeit">${formatDatum(etf.zeit)}</td>
+<td class="hidden-column">${etf.consorsId}</td>
+</tr>
+`;
 }
 
 const allianzKurs =
@@ -5459,8 +5299,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
 })();
 
 // ---------------------------------------------------------------
-// Besitzer, Fremdanlagen und Wertpapiere werden aus PostgreSQL geladen.
-// Die Positionspflege bleibt bis zu ihrer spaeteren Anbindung ein Mockup.
+// Besitzer, Wertpapiere und Positionen werden aus PostgreSQL geladen.
 // ---------------------------------------------------------------
 (function () {
 
@@ -5482,65 +5321,26 @@ document.querySelectorAll(".tab-button").forEach(button => {
     document.addEventListener("click", menueSchliessen);
     document.addEventListener("keydown", (e) => { if (e.key === "Escape") menueSchliessen(); });
 
-    // ---- Beispieldaten (Stand der heutigen Konstanten) ----
-    let naechsteId = 100;
-    const speicher = {
-        besitzer: [
-            { id: 1, kuerzel: "EIGEN", ist_eigen: true,  kachel_reihenfolge: null },
-            { id: 2, kuerzel: "E",     ist_eigen: false, kachel_reihenfolge: 1 },
-            { id: 3, kuerzel: "T",     ist_eigen: false, kachel_reihenfolge: 2 },
-            { id: 4, kuerzel: "F",     ist_eigen: false, kachel_reihenfolge: 3 }
-        ],
-        wertpapiere: [],
-        positionen: []
-    };
-    isins.concat(fremdanlagen).forEach(p => {
-        if (speicher.wertpapiere.some(w => w.isin === p.isin)) return;
-        const bez = p.bezeichnung;
-        speicher.wertpapiere.push({
-            id: naechsteId++,
-            isin: p.isin,
-            bezeichnung: bez,
-            art: /^ETF/.test(bez) ? "ETF" : /^Aktie/.test(bez) ? "Aktie" : "Fonds",
-            link_url: p.link
-        });
-    });
-
-    // Positionen aus den heutigen Konstanten vorbelegen (eigen = Besitzer 1)
-    isins.forEach(p => addPosition(1, p, /^ETF (Core )?MSCI World/.test(p.bezeichnung)));
-    fremdanlagen.forEach(p => {
-        const b = speicher.besitzer.find(x => x.kuerzel === p.besitzer);
-        if (b) addPosition(b.id, p, false);
-    });
-    function addPosition(besitzerId, p, altersvorsorge) {
-        const w = speicher.wertpapiere.find(x => x.isin === p.isin);
-        if (!w) return;
-        speicher.positionen.push({
-            id: naechsteId++,
-            besitzer_id: besitzerId,
-            wertpapier_id: w.id,
-            anzahl: p.anzahl,
-            investition: p.investition,
-            investition_hinweis: p.investitionHinweis || null,
-            ist_altersvorsorge: altersvorsorge
-        });
-    }
-
-    // Echte Wertpapierdaten aus PostgreSQL. Die Mock-Wertpapiere in
-    // "speicher" bleiben vorerst getrennt, damit die noch nicht angebundene
-    // Positionspflege unveraendert funktioniert.
+    // Besitzer, Wertpapiere und Positionen werden fuer die Pflege
+    // ausschliesslich aus PostgreSQL geladen.
+    let besitzerDaten = [];
     let wertpapierDaten = [];
+    let positionDaten = [];
 
     function besitzerOptionen() {
-        return speicher.besitzer.map(b => ({ wert: String(b.id), text: b.kuerzel }));
+        return besitzerDaten
+            .slice()
+            .sort((a, b) => a.kuerzel.localeCompare(b.kuerzel, "de", { sensitivity: "base", numeric: true }))
+            .map(b => ({ wert: String(b.id), text: b.kuerzel }));
     }
     function wertpapierOptionen() {
-        return speicher.wertpapiere.slice()
+        return wertpapierDaten
+            .slice()
             .sort((a, b) => a.bezeichnung.localeCompare(b.bezeichnung, "de", { sensitivity: "base", numeric: true }))
             .map(w => ({ wert: String(w.id), text: w.bezeichnung }));
     }
-    const besitzerKuerzel = (id) => (speicher.besitzer.find(b => b.id === id) || {}).kuerzel || "?";
-    const wertpapierBez = (id) => (speicher.wertpapiere.find(w => w.id === id) || {}).bezeichnung || "?";
+    const besitzerKuerzel = (id) => (besitzerDaten.find(b => b.id === id) || {}).kuerzel || "?";
+    const wertpapierBez = (id) => (wertpapierDaten.find(w => w.id === id) || {}).bezeichnung || "?";
     const fmtZahl = (v, n) => v === null || v === undefined ? "" :
         Number(v).toLocaleString("de-DE", { minimumFractionDigits: n, maximumFractionDigits: n });
 
@@ -5562,7 +5362,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
                            fmtZahl(d.anzahl, 6), fmtZahl(d.investition, 2) + " €",
                            d.investition_hinweis || "", d.ist_altersvorsorge ? "Ja" : "Nein"],
             pruefe(d, id) {
-                if (speicher.positionen.some(p => p.id !== id &&
+                if (positionDaten.some(p => p.id !== id &&
                         p.besitzer_id === d.besitzer_id && p.wertpapier_id === d.wertpapier_id))
                     return "Für diesen Besitzer existiert dieses Wertpapier bereits als Position.";
                 if (d.anzahl < 0 || d.anzahl >= 1e12) return "Die Anzahl ist ungültig.";
@@ -5606,7 +5406,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
     const felderEl = document.getElementById("pflegeFelder");
     const fehlerEl = document.getElementById("pflegeFehler");
 
-    let aktuell = null;      // "besitzer" | "wertpapiere"
+    let aktuell = null;      // "besitzer" | "wertpapiere" | "positionen"
     let bearbeiteId = null;  // null = neuer Eintrag
 
     function baueFormular() {
@@ -5660,7 +5460,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
 
     function zeichneListe() {
         const k = konfig[aktuell];
-        const datenListe = aktuell === "wertpapiere" ? wertpapierDaten : speicher[aktuell];
+        const datenListe = aktuell === "wertpapiere" ? wertpapierDaten : positionDaten;
         listeEl.textContent = "";
         if (!datenListe.length) {
             const leer = document.createElement("div");
@@ -5685,7 +5485,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
         kopf.append(kopfText, platzhalter);
         listeEl.appendChild(kopf);
 
-        // Wertpapiere alphabetisch nach Bezeichnung sortieren
+        // Wertpapiere und Positionen fuer die Anzeige sortieren
         const vgl = (a, b) => a.localeCompare(b, "de", { sensitivity: "base", numeric: true });
         const sortiert = aktuell === "wertpapiere"
             ? datenListe.slice().sort((a, b) => vgl(a.bezeichnung, b.bezeichnung))
@@ -5763,8 +5563,28 @@ document.querySelectorAll(".tab-button").forEach(button => {
                     return;
                 }
 
-                speicher[aktuell] = speicher[aktuell].filter(x => x.id !== d.id);
-                fuelleFormular(null);
+                if (aktuell === "positionen") {
+                    try {
+                        const antwort = await fetch("/api/positionen/" + encodeURIComponent(d.id), {
+                            method: "DELETE",
+                            headers: { "Accept": "application/json" },
+                            cache: "no-store"
+                        });
+                        const ergebnis = await antwort.json().catch(() => null);
+                        if (!antwort.ok) {
+                            throw new Error(ergebnis?.fehler || "Löschen fehlgeschlagen (HTTP " + antwort.status + ").");
+                        }
+                        positionDaten = positionDaten.filter(x => x.id !== d.id);
+                        fuelleFormular(null);
+                        void ladeAlleKurse();
+                        void ladeFremdanlagen();
+                    } catch (err) {
+                        console.error("Position konnte nicht gelöscht werden:", err);
+                        fehlerEl.textContent = err.message || "Position konnte nicht gelöscht werden.";
+                        zeichneListe();
+                    }
+                    return;
+                }
             });
             if (k.verwendet && k.verwendet(d)) {
                 loesch.disabled = true;
@@ -5782,7 +5602,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
     const besitzerFehler = document.getElementById("besitzerFehler");
     const besitzerSpeichernButton = besitzerForm.querySelector('button[type="submit"]');
 
-    function uebernehmeBesitzerInSpeicher(daten) {
+    function uebernehmeBesitzerDaten(daten) {
         const umgewandelt = daten.map(b => ({
             id: b.id,
             kuerzel: b.kuerzel,
@@ -5790,7 +5610,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
             kachel_reihenfolge: b.kachel_reihenfolge
         }));
 
-        speicher.besitzer.splice(0, speicher.besitzer.length, ...umgewandelt);
+        besitzerDaten.splice(0, besitzerDaten.length, ...umgewandelt);
     }
 
     async function zeigeBesitzer() {
@@ -5799,7 +5619,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
 
         try {
             const daten = await ladeBesitzerAusDb();
-            uebernehmeBesitzerInSpeicher(daten);
+            uebernehmeBesitzerDaten(daten);
 
             daten
                 .filter(b => !b.ist_eigen)
@@ -5872,7 +5692,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
                 throw new Error("Die API hat nach dem Speichern keine gültige Besitzerliste geliefert.");
             }
 
-            uebernehmeBesitzerInSpeicher(ergebnis.besitzer);
+            uebernehmeBesitzerDaten(ergebnis.besitzer);
             ordneFremdKacheln(ergebnis.besitzer);
             dialog.close();
 
@@ -5887,6 +5707,78 @@ document.querySelectorAll(".tab-button").forEach(button => {
     });
 
     document.getElementById("besitzerSchliessen").addEventListener("click", () => dialog.close());
+
+    function positionNormalisieren(p) {
+        return {
+            ...p,
+            id: Number(p.id),
+            besitzer_id: Number(p.besitzer_id),
+            wertpapier_id: Number(p.wertpapier_id),
+            anzahl: Number(p.anzahl),
+            investition: Number(p.investition),
+            investition_hinweis: p.investition_hinweis || null,
+            ist_altersvorsorge: p.ist_altersvorsorge === true
+        };
+    }
+
+    async function ladePositionen() {
+        positionDaten = [];
+        listeEl.textContent = "";
+        const ladeHinweis = document.createElement("div");
+        ladeHinweis.className = "pf-leer";
+        ladeHinweis.textContent = "Besitzer, Wertpapiere und Positionen werden aus der Datenbank geladen …";
+        listeEl.appendChild(ladeHinweis);
+        fehlerEl.textContent = "";
+        document.getElementById("pflegeSpeichern").disabled = true;
+
+        try {
+            const [besitzer, wertpapiere, positionen] = await Promise.all([
+                ladeApiJson("/api/besitzer"),
+                ladeApiJson("/api/wertpapiere"),
+                ladeApiJson("/api/positionen")
+            ]);
+
+            if (!Array.isArray(besitzer) || besitzer.some(b =>
+                !b || !Number.isInteger(b.id) || typeof b.kuerzel !== "string" || typeof b.ist_eigen !== "boolean"
+            )) {
+                throw new Error("Die Besitzer-API hat ungültige Daten geliefert.");
+            }
+            if (!Array.isArray(wertpapiere) || wertpapiere.some(w =>
+                !w || !Number.isInteger(w.id) || typeof w.bezeichnung !== "string" || typeof w.isin !== "string"
+            )) {
+                throw new Error("Die Wertpapier-API hat ungültige Daten geliefert.");
+            }
+            if (!Array.isArray(positionen) || positionen.some(p =>
+                !p || !Number.isInteger(p.id) || !Number.isInteger(p.besitzer_id) ||
+                !Number.isInteger(p.wertpapier_id) || typeof p.bezeichnung !== "string" ||
+                typeof p.isin !== "string" || !Number.isFinite(Number(p.anzahl)) ||
+                !Number.isFinite(Number(p.investition)) || typeof p.ist_altersvorsorge !== "boolean"
+            )) {
+                throw new Error("Die Positions-API hat ungültige Daten geliefert.");
+            }
+
+            besitzerDaten = besitzer.map(b => ({ ...b }));
+            wertpapierDaten = wertpapiere.map(w => ({
+                ...w,
+                link_url: w.link_url || null,
+                verwendungsanzahl: Number(w.verwendungsanzahl || 0)
+            }));
+            positionDaten = positionen.map(positionNormalisieren);
+
+            baueFormular();
+            fuelleFormular(null);
+            document.getElementById("pflegeSpeichern").disabled = false;
+
+        } catch (err) {
+            console.error("Positionen konnten nicht geladen werden:", err);
+            listeEl.textContent = "";
+            const fehler = document.createElement("div");
+            fehler.className = "pf-leer";
+            fehler.textContent = "Positionen konnten nicht geladen werden. Bitte das Fenster schließen und erneut öffnen.";
+            listeEl.appendChild(fehler);
+            fehlerEl.textContent = err.message || "Fehler beim Laden der Positionen.";
+        }
+    }
 
     async function ladeWertpapiere() {
         wertpapierDaten = [];
@@ -5937,8 +5829,14 @@ document.querySelectorAll(".tab-button").forEach(button => {
             titelEl.textContent = "Besitzer pflegen";
         } else {
             titelEl.textContent = konfig[art].titel;
-            baueFormular();
-            fuelleFormular(null);
+            if (art === "positionen") {
+                listeEl.textContent = "Positionen werden aus der Datenbank geladen …";
+                felderEl.textContent = "";
+                document.getElementById("pflegeSpeichern").disabled = true;
+            } else {
+                baueFormular();
+                fuelleFormular(null);
+            }
         }
 
         menueSchliessen();
@@ -5948,6 +5846,8 @@ document.querySelectorAll(".tab-button").forEach(button => {
             await zeigeBesitzer();
         } else if (art === "wertpapiere") {
             await ladeWertpapiere();
+        } else if (art === "positionen") {
+            await ladePositionen();
         } else {
             document.getElementById("pflegeSpeichern").disabled = false;
         }
@@ -6028,12 +5928,44 @@ document.querySelectorAll(".tab-button").forEach(button => {
                 return;
             }
 
-            if (bearbeiteId === null) {
-                speicher[aktuell].push({ id: naechsteId++, ...daten });
-            } else {
-                Object.assign(speicher[aktuell].find(x => x.id === bearbeiteId), daten);
+            if (aktuell === "positionen") {
+                const istNeu = bearbeiteId === null;
+                const url = istNeu
+                    ? "/api/positionen"
+                    : "/api/positionen/" + encodeURIComponent(bearbeiteId);
+                const antwort = await fetch(url, {
+                    method: istNeu ? "POST" : "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Accept": "application/json"
+                    },
+                    cache: "no-store",
+                    body: JSON.stringify(daten)
+                });
+                const ergebnis = await antwort.json().catch(() => null);
+                if (!antwort.ok) {
+                    throw new Error(ergebnis?.fehler || "Speichern fehlgeschlagen (HTTP " + antwort.status + ").");
+                }
+                if (!ergebnis || !Number.isInteger(ergebnis.id)) {
+                    throw new Error("Die API hat nach dem Speichern keinen gültigen Positionsdatensatz geliefert.");
+                }
+
+                const gespeichertePosition = positionNormalisieren(ergebnis);
+                if (istNeu) {
+                    positionDaten.push(gespeichertePosition);
+                } else {
+                    const index = positionDaten.findIndex(p => p.id === bearbeiteId);
+                    if (index < 0) throw new Error("Die bearbeitete Position ist nicht mehr in der Liste vorhanden. Bitte neu laden.");
+                    positionDaten[index] = gespeichertePosition;
+                }
+
+                fuelleFormular(null);
+                void ladeAlleKurse();
+                void ladeFremdanlagen();
+                return;
             }
-            fuelleFormular(null);
+
+            throw new Error("Unbekannte Pflegefunktion.");
         } catch (err) {
             console.error("Eintrag konnte nicht gespeichert werden:", err);
             fehlerEl.textContent = err.message || "Der Eintrag konnte nicht gespeichert werden.";
