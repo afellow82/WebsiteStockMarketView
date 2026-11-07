@@ -1572,6 +1572,201 @@ def geplanter_kauf_loeschen(kauf_id):
         return jsonify({"fehler": "Datenbankfehler beim Löschen des geplanten Kaufs."}), 500
 
 
+
+# ============================================
+# Notizen: gemeinsame Hilfsfunktionen
+# ============================================
+
+NOTIZ_KATEGORIEN = ("Anforderung", "Fehler")
+
+
+def notiz_eingabe_pruefen(daten):
+    if not isinstance(daten, dict):
+        return None, "Ungültige JSON-Eingabe."
+
+    kategorie = daten.get("kategorie")
+    text = daten.get("text")
+
+    if not isinstance(kategorie, str):
+        return None, "Bitte eine Kategorie auswählen."
+
+    kategorie = kategorie.strip()
+
+    if kategorie not in NOTIZ_KATEGORIEN:
+        return None, "Zulässig sind nur Anforderung und Fehler."
+
+    if not isinstance(text, str):
+        return None, "Bitte einen Notiztext eingeben."
+
+    text = text.strip()
+
+    if not text:
+        return None, "Der Notiztext darf nicht leer sein."
+
+    return {
+        "kategorie": kategorie,
+        "text": text
+    }, None
+
+
+def notiz_als_json(zeile):
+    return {
+        "id": int(zeile[0]),
+        "zeitpunkt": zeile[1].isoformat(),
+        "kategorie": db_text(zeile[2]),
+        "text": db_text(zeile[3])
+    }
+
+
+# ============================================
+# Notizen: GET
+# ============================================
+
+@app.route("/api/notiz", methods=["GET"])
+def notizen_lesen():
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT id, zeitpunkt, kategorie, text
+                    FROM public.notiz
+                    ORDER BY zeitpunkt DESC, id DESC
+                """)
+
+                daten = [
+                    notiz_als_json(zeile)
+                    for zeile in cur.fetchall()
+                ]
+
+        response = jsonify(daten)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Lesen der Notizen")
+        return jsonify({
+            "fehler": "Datenbankfehler beim Lesen der Notizen."
+        }), 500
+
+
+# ============================================
+# Notizen: POST
+# ============================================
+
+@app.route("/api/notiz", methods=["POST"])
+def notiz_anlegen():
+    daten, fehler = notiz_eingabe_pruefen(
+        request.get_json(silent=True)
+    )
+
+    if fehler:
+        return jsonify({"fehler": fehler}), 400
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    INSERT INTO public.notiz (kategorie, text)
+                    VALUES (%s, %s)
+                    RETURNING id, zeitpunkt, kategorie, text
+                """, (daten["kategorie"], daten["text"]))
+
+                zeile = cur.fetchone()
+
+        response = jsonify(notiz_als_json(zeile))
+        response.headers["Cache-Control"] = "no-store"
+        return response, 201
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Anlegen einer Notiz")
+        return jsonify({
+            "fehler": "Datenbankfehler beim Anlegen der Notiz."
+        }), 500
+
+
+# ============================================
+# Notizen: PUT
+# ============================================
+
+@app.route("/api/notiz/<int:notiz_id>", methods=["PUT"])
+def notiz_aendern(notiz_id):
+    daten, fehler = notiz_eingabe_pruefen(
+        request.get_json(silent=True)
+    )
+
+    if fehler:
+        return jsonify({"fehler": fehler}), 400
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    UPDATE public.notiz
+                    SET
+                        kategorie = %s,
+                        text = %s
+                    WHERE id = %s
+                    RETURNING id, zeitpunkt, kategorie, text
+                """, (
+                    daten["kategorie"],
+                    daten["text"],
+                    notiz_id
+                ))
+
+                zeile = cur.fetchone()
+
+                if zeile is None:
+                    return jsonify({
+                        "fehler": "Die Notiz wurde nicht gefunden."
+                    }), 404
+
+        response = jsonify(notiz_als_json(zeile))
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Ändern einer Notiz")
+        return jsonify({
+            "fehler": "Datenbankfehler beim Ändern der Notiz."
+        }), 500
+
+
+# ============================================
+# Notizen: DELETE
+# ============================================
+
+@app.route("/api/notiz/<int:notiz_id>", methods=["DELETE"])
+def notiz_loeschen(notiz_id):
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    DELETE FROM public.notiz
+                    WHERE id = %s
+                    RETURNING id
+                """, (notiz_id,))
+
+                zeile = cur.fetchone()
+
+                if zeile is None:
+                    return jsonify({
+                        "fehler": "Die Notiz wurde nicht gefunden."
+                    }), 404
+
+        response = jsonify({
+            "ok": True,
+            "id": zeile[0]
+        })
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Löschen einer Notiz")
+        return jsonify({
+            "fehler": "Datenbankfehler beim Löschen der Notiz."
+        }), 500
+
+
 # ============================================
 # Lokaler Start
 # ============================================

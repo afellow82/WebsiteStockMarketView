@@ -1782,6 +1782,306 @@ body {
 
 }
 
+
+/* =====================================================
+   NOTIZEN
+   ===================================================== */
+
+.notizen-layout {
+    display: grid;
+    grid-template-columns: minmax(280px, .75fr) minmax(0, 1.6fr);
+    gap: 22px;
+    align-items: start;
+}
+
+.notiz-editor-card,
+.notiz-liste-card {
+    min-width: 0;
+}
+
+.notiz-card-titel {
+    font-size: 15px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 16px;
+}
+
+.notiz-form {
+    display: grid;
+    gap: 13px;
+}
+
+.notiz-kategorie-auswahl {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.notiz-kategorie-button {
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #475569;
+    padding: 9px 13px;
+    border-radius: 10px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 650;
+    transition: all .2s ease;
+}
+
+.notiz-kategorie-button:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+}
+
+.notiz-kategorie-button.aktiv {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.notiz-feld-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: 650;
+    color: #475569;
+}
+
+.notiz-form textarea,
+.notiz-dialog textarea {
+    display: block;
+    width: 100%;
+    min-height: 125px;
+    padding: 11px 13px;
+    border: 1px solid #cbd5e1;
+    border-radius: 11px;
+    background: rgba(255,255,255,.9);
+    color: #222;
+    font: inherit;
+    font-size: 14px;
+    line-height: 1.55;
+    resize: vertical;
+}
+
+.notiz-form textarea:focus,
+.notiz-dialog textarea:focus {
+    outline: 2px solid #2563eb;
+    border-color: transparent;
+}
+
+.notiz-form-fuss {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.notiz-meldung {
+    min-height: 18px;
+    font-size: 12.5px;
+    color: #dc2626;
+}
+
+.notiz-filter-zeile {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.notiz-filter-label {
+    font-size: 13px;
+    font-weight: 650;
+    color: #64748b;
+}
+
+.notiz-filter {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.notiz-filter-button {
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #475569;
+    padding: 7px 12px;
+    border-radius: 9px;
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 650;
+    transition: all .2s ease;
+}
+
+.notiz-filter-button:hover {
+    background: #dbeafe;
+}
+
+.notiz-filter-button.aktiv {
+    background: #2563eb;
+    color: white;
+    border-color: #2563eb;
+}
+
+.notiz-anzahl-hinweis {
+    color: #94a3b8;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
+.notiz-tabelle-wrap {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.notiz-tabelle {
+    table-layout: fixed;
+    min-width: 620px;
+}
+
+.notiz-tabelle th:nth-child(1) {
+    width: 125px;
+}
+
+.notiz-tabelle th:nth-child(2) {
+    width: 145px;
+}
+
+.notiz-tabelle th:nth-child(4) {
+    width: 145px;
+}
+
+.notiz-tabelle td {
+    vertical-align: top;
+}
+
+.notiz-tabelle td.notiz-datum {
+    white-space: nowrap;
+    color: #64748b;
+    font-size: 12px;
+}
+
+.notiz-tabelle td.notiz-kategorie {
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 650;
+}
+
+.notiz-tabelle td.notiz-text {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+    line-height: 1.55;
+    font-weight: 400;
+}
+
+.notiz-kategorie-tag {
+    display: inline-block;
+    padding: 5px 9px;
+    border-radius: 999px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.notiz-kategorie-tag.fehler {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.notiz-aktionen {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+    white-space: nowrap;
+}
+
+.notiz-aktionen button {
+    width: auto;
+    min-width: 62px;
+    padding: 6px 9px;
+}
+
+.notiz-leer {
+    padding: 25px 12px !important;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+}
+
+.notiz-tab-zaehler {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 19px;
+    height: 19px;
+    padding: 0 5px;
+    margin-left: 6px;
+    border-radius: 999px;
+    background: #dc2626;
+    color: white;
+    font-size: 11px;
+    font-weight: 750;
+    line-height: 1;
+    vertical-align: middle;
+}
+
+.notiz-tab-zaehler[hidden] {
+    display: none;
+}
+
+.notiz-dialog {
+    width: min(580px, 94vw);
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.notiz-dialog h2 {
+    margin: 0 0 16px;
+}
+
+.notiz-dialog .notiz-feld-label {
+    margin-top: 16px;
+}
+
+.notiz-dialog-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.notiz-dialog-fehler {
+    min-height: 18px;
+    margin-top: 10px;
+    font-size: 12.5px;
+    color: #dc2626;
+}
+
+@media(max-width:900px) {
+    .notizen-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media(max-width:480px) {
+    .notizen-layout {
+        gap: 14px;
+    }
+
+    .notiz-filter-zeile {
+        align-items: flex-start;
+        flex-direction: column;
+    }
+}
+
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -1910,6 +2210,12 @@ id="restkaeufeJahrGesamt">
 <button class="tab-button"
         data-tab="fremdanlagen">
     Fremdanlagen
+</button>
+
+<button class="tab-button"
+        data-tab="notizen"
+        id="notizenTabButton">
+    Notizen<span id="notizenZaehler" class="notiz-tab-zaehler" hidden></span>
 </button>
 
     </div>
@@ -2652,6 +2958,148 @@ autocomplete="off">
 </table>
 
 <div class="footer" id="fremdanlagenPerformanceUpdateInfo"></div>
+
+</div>
+
+
+<!-- Notizen -->
+
+<div class="tab-content" id="notizen">
+
+    <h1 class="section-title">
+        Notizen
+    </h1>
+
+    <div class="notizen-layout">
+
+        <div class="card notiz-editor-card">
+
+            <div class="notiz-card-titel">
+                Neue Notiz erfassen
+            </div>
+
+            <form class="notiz-form" id="notizForm" novalidate>
+
+                <div>
+                    <label class="notiz-feld-label">Kategorie</label>
+                    <div class="notiz-kategorie-auswahl" id="notizKategorieAuswahl"></div>
+                </div>
+
+                <div>
+                    <label class="notiz-feld-label" for="notizText">
+                        Notiztext
+                    </label>
+                    <textarea
+                        id="notizText"
+                        rows="5"
+                        maxlength="20000"
+                        placeholder="Neue Anforderung oder Fehler beschreiben …"
+                        aria-label="Neue Notiz"
+                    ></textarea>
+                </div>
+
+                <div class="notiz-form-fuss">
+                    <span id="notizMeldung" class="notiz-meldung" role="alert"></span>
+                    <button type="submit" class="av-button" id="notizHinzufuegen">
+                        + Hinzufügen
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+
+        <div class="card notiz-liste-card">
+
+            <div class="notiz-filter-zeile">
+
+                <div>
+                    <div class="notiz-card-titel" style="margin-bottom:0;">
+                        Erfasste Notizen
+                    </div>
+                    <div class="notiz-anzahl-hinweis" id="notizAnzahlHinweis">
+                        Notizen werden geladen …
+                    </div>
+                </div>
+
+                <div>
+                    <div class="notiz-filter-label" style="margin-bottom:7px;">
+                        Kategorie
+                    </div>
+                    <div class="notiz-filter" id="notizFilter">
+                        <button type="button" class="notiz-filter-button aktiv" data-filter="">Alle</button>
+                        <button type="button" class="notiz-filter-button" data-filter="Anforderung">📋 Anforderung</button>
+                        <button type="button" class="notiz-filter-button" data-filter="Fehler">❌ Fehler</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="notiz-tabelle-wrap">
+
+                <table class="notiz-tabelle">
+
+                    <thead>
+                        <tr>
+                            <th>Datum</th>
+                            <th>Kategorie</th>
+                            <th>Notiz</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="notizBody">
+                        <tr>
+                            <td colspan="4" class="notiz-leer">Notizen werden geladen …</td>
+                        </tr>
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<dialog id="notizDialog" class="av-dialog notiz-dialog">
+
+    <form id="notizEditForm" novalidate>
+
+        <h2>Notiz ändern</h2>
+
+        <label class="notiz-feld-label">Kategorie</label>
+        <div class="notiz-kategorie-auswahl" id="notizEditKategorie"></div>
+
+        <label class="notiz-feld-label" for="notizEditText">
+            Notiztext
+        </label>
+
+        <textarea
+            id="notizEditText"
+            rows="7"
+            maxlength="20000"
+            placeholder="Notiztext"
+            aria-label="Notiztext"
+        ></textarea>
+
+        <div class="notiz-dialog-fehler" id="notizEditFehler" role="alert"></div>
+
+        <div class="notiz-dialog-buttons">
+            <button type="button" class="av-abbrechen" id="notizEditAbbrechen">
+                Abbrechen
+            </button>
+            <button type="submit" class="av-button" id="notizEditSpeichern">
+                Speichern
+            </button>
+        </div>
+
+    </form>
+
+</dialog>
+
 
 </div>
 
@@ -6440,6 +6888,458 @@ document.querySelectorAll(".tab-button").forEach(button => {
     });
 
 })();
+
+
+// ---------------------------------------------------------------
+// Notizen: Anforderungen und Fehler in PostgreSQL
+// ---------------------------------------------------------------
+(function () {
+
+    const API = "/api/notiz";
+    const KATEGORIEN = ["Anforderung", "Fehler"];
+    const EMOJI = {
+        Anforderung: "📋",
+        Fehler: "❌"
+    };
+
+    const tbody = document.getElementById("notizBody");
+    const badge = document.getElementById("notizenZaehler");
+    const anzahlHinweis = document.getElementById("notizAnzahlHinweis");
+
+    const form = document.getElementById("notizForm");
+    const textEl = document.getElementById("notizText");
+    const meldungEl = document.getElementById("notizMeldung");
+    const addButton = document.getElementById("notizHinzufuegen");
+    const kategorieContainer = document.getElementById("notizKategorieAuswahl");
+
+    const filterContainer = document.getElementById("notizFilter");
+
+    const dialog = document.getElementById("notizDialog");
+    const editForm = document.getElementById("notizEditForm");
+    const editKategorieContainer = document.getElementById("notizEditKategorie");
+    const editTextEl = document.getElementById("notizEditText");
+    const editFehlerEl = document.getElementById("notizEditFehler");
+    const editSpeichernButton = document.getElementById("notizEditSpeichern");
+
+    let notizDaten = [];
+    let notizKategorie = "Anforderung";
+    let notizEditKategorie = "Anforderung";
+    let notizEditId = null;
+    let notizFilter = "";
+
+    function statusZeile(text, fehler = false) {
+        const tr = document.createElement("tr");
+        const td = document.createElement("td");
+        td.colSpan = 4;
+        td.className = "notiz-leer";
+        td.textContent = text;
+
+        if (fehler) {
+            td.style.color = "#b91c1c";
+        }
+
+        tr.appendChild(td);
+        tbody.replaceChildren(tr);
+    }
+
+    async function notizApi(url, methode = "GET", payload = undefined) {
+
+        const optionen = {
+            method: methode,
+            cache: "no-store",
+            headers: {
+                "Accept": "application/json"
+            }
+        };
+
+        if (payload !== undefined) {
+            optionen.headers["Content-Type"] = "application/json";
+            optionen.body = JSON.stringify(payload);
+        }
+
+        const antwort = await fetch(url, optionen);
+        const ergebnis = await antwort.json().catch(() => null);
+
+        if (!antwort.ok) {
+            throw new Error(
+                ergebnis?.fehler || "API-Fehler " + antwort.status + "."
+            );
+        }
+
+        return ergebnis;
+    }
+
+    function renderKategorieAuswahl(container, aktiv, callback) {
+
+        container.replaceChildren();
+
+        KATEGORIEN.forEach(kategorie => {
+
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className =
+                "notiz-kategorie-button" +
+                (kategorie === aktiv ? " aktiv" : "");
+
+            button.textContent = EMOJI[kategorie] + " " + kategorie;
+            button.setAttribute("aria-pressed", String(kategorie === aktiv));
+
+            button.addEventListener("click", () => callback(kategorie));
+
+            container.appendChild(button);
+        });
+    }
+
+    function setNotizKategorie(kategorie) {
+        notizKategorie = kategorie;
+
+        renderKategorieAuswahl(
+            kategorieContainer,
+            notizKategorie,
+            setNotizKategorie
+        );
+    }
+
+    function setNotizEditKategorie(kategorie) {
+        notizEditKategorie = kategorie;
+
+        renderKategorieAuswahl(
+            editKategorieContainer,
+            notizEditKategorie,
+            setNotizEditKategorie
+        );
+    }
+
+    function updateNotizBadge() {
+
+        const anzahl = notizDaten.length;
+
+        badge.hidden = anzahl === 0;
+        badge.textContent = anzahl > 99 ? "99+" : String(anzahl);
+        badge.setAttribute("aria-label", anzahl + " vorhandene Notizen");
+
+        anzahlHinweis.textContent =
+            anzahl === 1
+                ? "1 Notiz vorhanden"
+                : anzahl + " Notizen vorhanden";
+    }
+
+    function renderNotizen() {
+
+        updateNotizBadge();
+
+        const sichtbar = notizFilter
+            ? notizDaten.filter(n => n.kategorie === notizFilter)
+            : notizDaten;
+
+        filterContainer.querySelectorAll("[data-filter]").forEach(button => {
+            button.classList.toggle(
+                "aktiv",
+                button.dataset.filter === notizFilter
+            );
+        });
+
+        if (!sichtbar.length) {
+            statusZeile(
+                notizDaten.length
+                    ? "Keine Notizen in dieser Kategorie vorhanden."
+                    : "Noch keine Notizen vorhanden."
+            );
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
+
+        sichtbar.forEach(notiz => {
+
+            const tr = document.createElement("tr");
+
+            const datumTd = document.createElement("td");
+            datumTd.className = "notiz-datum";
+
+            const zeitpunkt = new Date(notiz.zeitpunkt);
+
+            datumTd.textContent = Number.isNaN(zeitpunkt.getTime())
+                ? "–"
+                : zeitpunkt.toLocaleDateString("de-DE", {
+                    timeZone: "Europe/Berlin",
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric"
+                });
+
+            const kategorieTd = document.createElement("td");
+            kategorieTd.className = "notiz-kategorie";
+
+            const tag = document.createElement("span");
+            tag.className =
+                "notiz-kategorie-tag" +
+                (notiz.kategorie === "Fehler" ? " fehler" : "");
+
+            tag.textContent =
+                (EMOJI[notiz.kategorie] || "") + " " + notiz.kategorie;
+
+            kategorieTd.appendChild(tag);
+
+            const textTd = document.createElement("td");
+            textTd.className = "notiz-text";
+            textTd.textContent = notiz.text;
+
+            const aktionenTd = document.createElement("td");
+            const aktionen = document.createElement("div");
+            aktionen.className = "notiz-aktionen";
+
+            const bearbeiten = document.createElement("button");
+            bearbeiten.type = "button";
+            bearbeiten.className = "pf-klein";
+            bearbeiten.textContent = "Ändern";
+            bearbeiten.title = "Notiz ändern";
+            bearbeiten.addEventListener("click", () => oeffneNotizBearbeiten(notiz.id));
+
+            const loeschen = document.createElement("button");
+            loeschen.type = "button";
+            loeschen.className = "pf-klein loeschen";
+            loeschen.textContent = "Löschen";
+            loeschen.title = "Notiz löschen";
+            loeschen.addEventListener("click", () => loescheNotiz(notiz.id));
+
+            aktionen.append(bearbeiten, loeschen);
+            aktionenTd.appendChild(aktionen);
+
+            tr.append(datumTd, kategorieTd, textTd, aktionenTd);
+            fragment.appendChild(tr);
+        });
+
+        tbody.replaceChildren(fragment);
+    }
+
+    async function ladeNotizen() {
+
+        statusZeile("Notizen werden geladen …");
+
+        try {
+
+            const daten = await notizApi(API);
+
+            if (!Array.isArray(daten)) {
+                throw new Error("Die Notiz-API hat keine gültige Liste geliefert.");
+            }
+
+            if (daten.some(n =>
+                !n ||
+                !Number.isInteger(n.id) ||
+                typeof n.zeitpunkt !== "string" ||
+                !KATEGORIEN.includes(n.kategorie) ||
+                typeof n.text !== "string"
+            )) {
+                throw new Error("Die Notiz-API hat ungültige Datensätze geliefert.");
+            }
+
+            notizDaten = daten;
+            renderNotizen();
+
+        } catch (err) {
+
+            console.error("Notizen konnten nicht geladen werden:", err);
+            notizDaten = [];
+            updateNotizBadge();
+            statusZeile(
+                err.message || "Notizen konnten nicht geladen werden.",
+                true
+            );
+        }
+    }
+
+    function zeigeMeldung(text) {
+        meldungEl.textContent = text;
+    }
+
+    form.addEventListener("submit", async event => {
+
+        event.preventDefault();
+
+        const text = textEl.value.trim();
+
+        if (!text) {
+            zeigeMeldung("Bitte einen Notiztext eingeben.");
+            textEl.focus();
+            return;
+        }
+
+        if (!KATEGORIEN.includes(notizKategorie)) {
+            zeigeMeldung("Bitte eine gültige Kategorie auswählen.");
+            return;
+        }
+
+        // Versionsnummer aus der vorhandenen Versionsanzeige auslesen.
+        const versionsText = document.querySelector(".menu-info")?.textContent || "";
+        const versionsTreffer = versionsText.match(/Version:\s*([0-9]+\.[0-9A-Za-z]+)/);
+
+        if (!versionsTreffer) {
+            zeigeMeldung("Die Versionsnummer konnte nicht ermittelt werden.");
+            return;
+        }
+
+        const datum = new Date().toLocaleDateString("de-DE", {
+            timeZone: "Europe/Berlin",
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric"
+        });
+
+        const notizMitVersion =
+            text + "\n[Version " + versionsTreffer[1] + ", " + datum + "]";
+
+        addButton.disabled = true;
+        addButton.textContent = "Speichern …";
+        zeigeMeldung("");
+
+        try {
+
+            await notizApi(API, "POST", {
+                kategorie: notizKategorie,
+                text: notizMitVersion
+            });
+
+            textEl.value = "";
+            zeigeMeldung("");
+            await ladeNotizen();
+
+        } catch (err) {
+
+            console.error("Notiz konnte nicht gespeichert werden:", err);
+            zeigeMeldung(
+                err.message || "Die Notiz konnte nicht gespeichert werden."
+            );
+
+        } finally {
+
+            addButton.disabled = false;
+            addButton.textContent = "+ Hinzufügen";
+
+        }
+    });
+
+    filterContainer.querySelectorAll("[data-filter]").forEach(button => {
+        button.addEventListener("click", () => {
+            notizFilter = button.dataset.filter;
+            renderNotizen();
+        });
+    });
+
+    function oeffneNotizBearbeiten(id) {
+
+        const notiz = notizDaten.find(n => n.id === id);
+        if (!notiz) return;
+
+        notizEditId = id;
+        editTextEl.value = notiz.text;
+        editFehlerEl.textContent = "";
+
+        setNotizEditKategorie(notiz.kategorie);
+
+        editSpeichernButton.disabled = false;
+        dialog.showModal();
+        editTextEl.focus();
+    }
+
+    document.getElementById("notizEditAbbrechen").addEventListener("click", () => {
+        dialog.close();
+    });
+
+    dialog.addEventListener("click", event => {
+        if (event.target === dialog) {
+            dialog.close();
+        }
+    });
+
+    editForm.addEventListener("submit", async event => {
+
+        event.preventDefault();
+
+        const text = editTextEl.value.trim();
+
+        if (!text) {
+            editFehlerEl.textContent = "Bitte einen Notiztext eingeben.";
+            editTextEl.focus();
+            return;
+        }
+
+        if (!notizEditId || !KATEGORIEN.includes(notizEditKategorie)) {
+            editFehlerEl.textContent = "Bitte eine gültige Kategorie auswählen.";
+            return;
+        }
+
+        editSpeichernButton.disabled = true;
+        editFehlerEl.textContent = "";
+
+        try {
+
+            await notizApi(
+                API + "/" + encodeURIComponent(notizEditId),
+                "PUT",
+                {
+                    kategorie: notizEditKategorie,
+                    text: text
+                }
+            );
+
+            dialog.close();
+            await ladeNotizen();
+
+        } catch (err) {
+
+            console.error("Notiz konnte nicht geändert werden:", err);
+            editFehlerEl.textContent =
+                err.message || "Die Notiz konnte nicht gespeichert werden.";
+
+        } finally {
+
+            editSpeichernButton.disabled = false;
+
+        }
+    });
+
+    async function loescheNotiz(id) {
+
+        const notiz = notizDaten.find(n => n.id === id);
+        if (!notiz) return;
+
+        if (!confirm("Möchtest du diese Notiz wirklich löschen?")) {
+            return;
+        }
+
+        try {
+
+            await notizApi(
+                API + "/" + encodeURIComponent(id),
+                "DELETE"
+            );
+
+            await ladeNotizen();
+
+        } catch (err) {
+
+            console.error("Notiz konnte nicht gelöscht werden:", err);
+            alert("Löschen fehlgeschlagen: " + err.message);
+
+        }
+    }
+
+    setNotizKategorie(notizKategorie);
+    setNotizEditKategorie(notizEditKategorie);
+
+    document
+        .querySelector('.tab-button[data-tab="notizen"]')
+        .addEventListener("click", () => {
+            void ladeNotizen();
+        });
+
+    // Bereits beim Öffnen der Seite laden, damit der Zähler aktuell ist.
+    void ladeNotizen();
+
+})();
+
 
 async function ladeAltersvorsorgeHistorie() {
 
