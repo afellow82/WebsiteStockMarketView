@@ -947,6 +947,632 @@ def position_loeschen(position_id):
 
 
 # ============================================
+# Gemeinsame Hilfsfunktionen für die drei Planungstabellen
+# ============================================
+
+def _smv_json_objekt():
+    daten = request.get_json(silent=True)
+    if not isinstance(daten, dict):
+        raise ValueError("Ungültige JSON-Eingabe.")
+    return daten
+
+
+def _smv_int(daten, feld, bezeichnung, minimum=None, maximum=None):
+    wert = daten.get(feld)
+    if isinstance(wert, bool) or not isinstance(wert, int):
+        raise ValueError(f"{bezeichnung} muss eine ganze Zahl sein.")
+    if minimum is not None and wert < minimum:
+        raise ValueError(f"{bezeichnung} muss mindestens {minimum} sein.")
+    if maximum is not None and wert > maximum:
+        raise ValueError(f"{bezeichnung} darf höchstens {maximum} sein.")
+    return wert
+
+
+def _smv_decimal(daten, feld, bezeichnung, precision, scale, nullable=False):
+    rohwert = daten.get(feld)
+    if rohwert is None:
+        if nullable:
+            return None
+        raise ValueError(f"{bezeichnung} fehlt.")
+    if isinstance(rohwert, bool):
+        raise ValueError(f"{bezeichnung} ist ungültig.")
+    try:
+        wert = Decimal(str(rohwert))
+        if not wert.is_finite():
+            raise ValueError()
+        quantum = Decimal(1).scaleb(-scale)
+        gerundet = wert.quantize(quantum)
+        if wert != gerundet:
+            raise ValueError()
+        if abs(wert) >= Decimal(10) ** (precision - scale):
+            raise ValueError()
+    except (InvalidOperation, ValueError):
+        raise ValueError(
+            f"{bezeichnung} darf höchstens {scale} Nachkommastellen und "
+            f"insgesamt {precision} Stellen haben."
+        )
+    return wert
+
+
+def _smv_text(daten, feld, bezeichnung, maximum):
+    wert = daten.get(feld)
+    if not isinstance(wert, str):
+        raise ValueError(f"{bezeichnung} fehlt oder ist ungültig.")
+    wert = wert.strip()
+    if not wert or len(wert) > maximum:
+        raise ValueError(f"{bezeichnung} darf nicht leer sein und höchstens {maximum} Zeichen enthalten.")
+    return wert
+
+
+def _smv_datum(daten, feld, bezeichnung):
+    rohwert = daten.get(feld)
+    if not isinstance(rohwert, str) or not re.fullmatch(r"\d{4}-\d{2}-\d{2}", rohwert):
+        raise ValueError(f"{bezeichnung} muss im Format JJJJ-MM-TT angegeben werden.")
+    try:
+        return date.fromisoformat(rohwert)
+    except ValueError:
+        raise ValueError(f"{bezeichnung} ist kein gültiges Kalenderdatum.")
+
+
+def _smv_eigene_position_pruefen(cur, position_id):
+    cur.execute("""
+        SELECT 1
+        FROM public.position AS p
+        JOIN public.besitzer AS b
+          ON b.besitzer_id = p.besitzer_id
+        WHERE p.position_id = %s
+          AND b.ist_eigen = true
+    """, (position_id,))
+    if cur.fetchone() is None:
+        raise ValueError("Die ausgewählte Position ist nicht vorhanden oder gehört nicht zum eigenen Bestand.")
+
+
+def _smv_decimal_json(wert):
+    return None if wert is None else format(wert, "f")
+
+
+def _smv_sparplan_json(zeile):
+    return {
+        "sparplan_id": zeile[0],
+        "position_id": zeile[1],
+        "betrag": _smv_decimal_json(zeile[2]),
+        "rhythmus": db_text(zeile[3]),
+        "tag_im_monat": zeile[4]
+    }
+
+
+def _smv_geplanter_kauf_json(zeile):
+    return {
+        "kauf_id": zeile[0],
+        "position_id": zeile[1],
+        "zeitpunkt_text": db_text(zeile[2]),
+        "zeitpunkt_datum": zeile[3].isoformat(),
+        "kommentar": db_text(zeile[4]),
+        "berechnungsart": db_text(zeile[5]),
+        "kaufpreis": _smv_decimal_json(zeile[6]),
+        "anzahl_fix": _smv_decimal_json(zeile[7]),
+        "wert_fix": _smv_decimal_json(zeile[8]),
+        "faktor_auf_kaufpreis": _smv_decimal_json(zeile[9])
+    }
+
+
+# ============================================
+# Jahresanfangswerte: GET
+# ============================================
+
+@app.route("/api/position-jahresanfang", methods=["GET"])
+def position_jahresanfang_lesen():
+    jahr_roh = request.args.get("jahr")
+    if jahr_roh is not None:
+        if not re.fullmatch(r"\d{4}", jahr_roh):
+            return jsonify({"fehler": "Ungültiges Jahr."}), 400
+        jahr = int(jahr_roh)
+        if jahr < 2000 or jahr > 2100:
+            return jsonify({"fehler": "Das Jahr muss zwischen 2000 und 2100 liegen."}), 400
+    else:
+        jahr = None
+
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                if jahr is None:
+                    cur.execute("""
+                        SELECT ja.position_id, ja.jahr, ja.anzahl, ja.kurs
+                        FROM public.position_jahresanfang AS ja
+                        JOIN public.position AS p
+                          ON p.position_id = ja.position_id
+                        JOIN public.besitzer AS b
+                          ON b.besitzer_id = p.besitzer_id
+                        WHERE b.ist_eigen = true
+                        ORDER BY ja.jahr DESC, ja.position_id ASC
+                    """)
+                else:
+                    cur.execute("""
+                        SELECT ja.position_id, ja.jahr, ja.anzahl, ja.kurs
+                        FROM public.position_jahresanfang AS ja
+                        JOIN public.position AS p
+                          ON p.position_id = ja.position_id
+                        JOIN public.besitzer AS b
+                          ON b.besitzer_id = p.besitzer_id
+                        WHERE b.ist_eigen = true
+                          AND ja.jahr = %s
+                        ORDER BY ja.position_id ASC
+                    """, (jahr,))
+
+                daten = [
+                    {
+                        "position_id": zeile[0],
+                        "jahr": zeile[1],
+                        "anzahl": _smv_decimal_json(zeile[2]),
+                        "kurs": _smv_decimal_json(zeile[3])
+                    }
+                    for zeile in cur.fetchall()
+                ]
+
+        response = jsonify(daten)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Lesen der Jahresanfangswerte")
+        return jsonify({"fehler": "Datenbankfehler beim Lesen der Jahresanfangswerte."}), 500
+
+
+# ============================================
+# Jahresanfangswerte: POST (neu erfassen)
+# ============================================
+
+@app.route("/api/position-jahresanfang", methods=["POST"])
+def position_jahresanfang_einfuegen():
+    try:
+        daten = _smv_json_objekt()
+        position_id = _smv_int(daten, "position_id", "Positions-ID", 1)
+        jahr = _smv_int(daten, "jahr", "Jahr", 2000, 2100)
+        anzahl = _smv_decimal(daten, "anzahl", "Anzahl", 18, 6)
+        kurs = _smv_decimal(daten, "kurs", "Kurs", 14, 4)
+        if anzahl < 0:
+            raise ValueError("Die Anzahl darf nicht negativ sein.")
+        if kurs <= 0:
+            raise ValueError("Der Kurs muss größer als 0 sein.")
+
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                _smv_eigene_position_pruefen(cur, position_id)
+                cur.execute("""
+                    INSERT INTO public.position_jahresanfang
+                        (position_id, jahr, anzahl, kurs)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING position_id, jahr, anzahl, kurs
+                """, (position_id, jahr, anzahl, kurs))
+                zeile = cur.fetchone()
+
+        response = jsonify({
+            "position_id": zeile[0],
+            "jahr": zeile[1],
+            "anzahl": _smv_decimal_json(zeile[2]),
+            "kurs": _smv_decimal_json(zeile[3])
+        })
+        response.headers["Cache-Control"] = "no-store"
+        return response, 201
+
+    except ValueError as e:
+        return jsonify({"fehler": str(e)}), 400
+    except psycopg.errors.UniqueViolation:
+        return jsonify({"fehler": "Für diese Position und dieses Jahr existieren bereits Jahresanfangswerte."}), 409
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Einfügen der Jahresanfangswerte")
+        return jsonify({"fehler": "Datenbankfehler beim Speichern der Jahresanfangswerte."}), 500
+
+
+# ============================================
+# Jahresanfangswerte: PUT (ändern; kein DELETE vorgesehen)
+# ============================================
+
+@app.route("/api/position-jahresanfang/<int:position_id>/<int:jahr>", methods=["PUT"])
+def position_jahresanfang_aendern(position_id, jahr):
+    try:
+        daten = _smv_json_objekt()
+        if daten.get("position_id", position_id) != position_id or daten.get("jahr", jahr) != jahr:
+            raise ValueError("Positions-ID und Jahr im JSON müssen zur Adresse passen.")
+        if jahr < 2000 or jahr > 2100:
+            raise ValueError("Das Jahr muss zwischen 2000 und 2100 liegen.")
+        anzahl = _smv_decimal(daten, "anzahl", "Anzahl", 18, 6)
+        kurs = _smv_decimal(daten, "kurs", "Kurs", 14, 4)
+        if anzahl < 0:
+            raise ValueError("Die Anzahl darf nicht negativ sein.")
+        if kurs <= 0:
+            raise ValueError("Der Kurs muss größer als 0 sein.")
+
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    UPDATE public.position_jahresanfang AS ja
+                    SET anzahl = %s,
+                        kurs = %s
+                    WHERE ja.position_id = %s
+                      AND ja.jahr = %s
+                      AND EXISTS (
+                          SELECT 1
+                          FROM public.position AS p
+                          JOIN public.besitzer AS b
+                            ON b.besitzer_id = p.besitzer_id
+                          WHERE p.position_id = ja.position_id
+                            AND b.ist_eigen = true
+                      )
+                    RETURNING ja.position_id, ja.jahr, ja.anzahl, ja.kurs
+                """, (anzahl, kurs, position_id, jahr))
+                zeile = cur.fetchone()
+                if zeile is None:
+                    return jsonify({"fehler": "Der Jahresanfangswert wurde nicht gefunden."}), 404
+
+        response = jsonify({
+            "position_id": zeile[0],
+            "jahr": zeile[1],
+            "anzahl": _smv_decimal_json(zeile[2]),
+            "kurs": _smv_decimal_json(zeile[3])
+        })
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except ValueError as e:
+        return jsonify({"fehler": str(e)}), 400
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Ändern der Jahresanfangswerte")
+        return jsonify({"fehler": "Datenbankfehler beim Ändern der Jahresanfangswerte."}), 500
+
+
+# ============================================
+# Sparpläne: GET
+# ============================================
+
+@app.route("/api/sparplaene", methods=["GET"])
+def sparplaene_lesen():
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT s.sparplan_id, s.position_id, s.betrag,
+                           s.rhythmus, s.tag_im_monat
+                    FROM public.sparplan AS s
+                    JOIN public.position AS p
+                      ON p.position_id = s.position_id
+                    JOIN public.besitzer AS b
+                      ON b.besitzer_id = p.besitzer_id
+                    WHERE b.ist_eigen = true
+                    ORDER BY s.position_id ASC
+                """)
+                daten = [_smv_sparplan_json(z) for z in cur.fetchall()]
+
+        response = jsonify(daten)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Lesen der Sparpläne")
+        return jsonify({"fehler": "Datenbankfehler beim Lesen der Sparpläne."}), 500
+
+
+# ============================================
+# Sparpläne: POST (neu anlegen)
+# ============================================
+
+@app.route("/api/sparplaene", methods=["POST"])
+def sparplan_einfuegen():
+    try:
+        daten = _smv_json_objekt()
+        position_id = _smv_int(daten, "position_id", "Positions-ID", 1)
+        betrag = _smv_decimal(daten, "betrag", "Betrag", 12, 2)
+        rhythmus = daten.get("rhythmus", "monatlich")
+        tag = _smv_int(daten, "tag_im_monat", "Tag im Monat", 1, 28)
+        if betrag <= 0:
+            raise ValueError("Der Sparplanbetrag muss größer als 0 sein.")
+        if rhythmus != "monatlich":
+            raise ValueError("Der Rhythmus muss 'monatlich' sein.")
+
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                _smv_eigene_position_pruefen(cur, position_id)
+                cur.execute("""
+                    INSERT INTO public.sparplan
+                        (position_id, betrag, rhythmus, tag_im_monat)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING sparplan_id, position_id, betrag, rhythmus, tag_im_monat
+                """, (position_id, betrag, rhythmus, tag))
+                zeile = cur.fetchone()
+
+        response = jsonify(_smv_sparplan_json(zeile))
+        response.headers["Cache-Control"] = "no-store"
+        return response, 201
+
+    except ValueError as e:
+        return jsonify({"fehler": str(e)}), 400
+    except psycopg.errors.UniqueViolation:
+        return jsonify({"fehler": "Für diese Position existiert bereits ein Sparplan."}), 409
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Einfügen des Sparplans")
+        return jsonify({"fehler": "Datenbankfehler beim Anlegen des Sparplans."}), 500
+
+
+# ============================================
+# Sparpläne: PUT (ändern)
+# ============================================
+
+@app.route("/api/sparplaene/<int:sparplan_id>", methods=["PUT"])
+def sparplan_aendern(sparplan_id):
+    try:
+        daten = _smv_json_objekt()
+        position_id = _smv_int(daten, "position_id", "Positions-ID", 1)
+        betrag = _smv_decimal(daten, "betrag", "Betrag", 12, 2)
+        rhythmus = daten.get("rhythmus", "monatlich")
+        tag = _smv_int(daten, "tag_im_monat", "Tag im Monat", 1, 28)
+        if betrag <= 0:
+            raise ValueError("Der Sparplanbetrag muss größer als 0 sein.")
+        if rhythmus != "monatlich":
+            raise ValueError("Der Rhythmus muss 'monatlich' sein.")
+
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                _smv_eigene_position_pruefen(cur, position_id)
+                cur.execute("""
+                    UPDATE public.sparplan AS s
+                    SET position_id = %s,
+                        betrag = %s,
+                        rhythmus = %s,
+                        tag_im_monat = %s
+                    WHERE s.sparplan_id = %s
+                      AND EXISTS (
+                          SELECT 1
+                          FROM public.position AS p
+                          JOIN public.besitzer AS b
+                            ON b.besitzer_id = p.besitzer_id
+                          WHERE p.position_id = s.position_id
+                            AND b.ist_eigen = true
+                      )
+                    RETURNING s.sparplan_id, s.position_id, s.betrag,
+                              s.rhythmus, s.tag_im_monat
+                """, (position_id, betrag, rhythmus, tag, sparplan_id))
+                zeile = cur.fetchone()
+                if zeile is None:
+                    return jsonify({"fehler": "Der Sparplan wurde nicht gefunden."}), 404
+
+        response = jsonify(_smv_sparplan_json(zeile))
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except ValueError as e:
+        return jsonify({"fehler": str(e)}), 400
+    except psycopg.errors.UniqueViolation:
+        return jsonify({"fehler": "Für diese Position existiert bereits ein Sparplan."}), 409
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Ändern des Sparplans")
+        return jsonify({"fehler": "Datenbankfehler beim Ändern des Sparplans."}), 500
+
+
+# ============================================
+# Sparpläne: DELETE
+# ============================================
+
+@app.route("/api/sparplaene/<int:sparplan_id>", methods=["DELETE"])
+def sparplan_loeschen(sparplan_id):
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    DELETE FROM public.sparplan AS s
+                    WHERE s.sparplan_id = %s
+                      AND EXISTS (
+                          SELECT 1
+                          FROM public.position AS p
+                          JOIN public.besitzer AS b
+                            ON b.besitzer_id = p.besitzer_id
+                          WHERE p.position_id = s.position_id
+                            AND b.ist_eigen = true
+                      )
+                    RETURNING s.sparplan_id
+                """, (sparplan_id,))
+                zeile = cur.fetchone()
+                if zeile is None:
+                    return jsonify({"fehler": "Der Sparplan wurde nicht gefunden."}), 404
+
+        response = jsonify({"ok": True, "sparplan_id": zeile[0]})
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Löschen des Sparplans")
+        return jsonify({"fehler": "Datenbankfehler beim Löschen des Sparplans."}), 500
+
+
+# ============================================
+# Geplante Käufe: GET
+# ============================================
+
+@app.route("/api/geplante-kaeufe", methods=["GET"])
+def geplante_kaeufe_lesen():
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT g.kauf_id, g.position_id, g.zeitpunkt_text,
+                           g.zeitpunkt_datum, g.kommentar, g.berechnungsart,
+                           g.kaufpreis, g.anzahl_fix, g.wert_fix,
+                           g.faktor_auf_kaufpreis
+                    FROM public.geplanter_kauf AS g
+                    JOIN public.position AS p
+                      ON p.position_id = g.position_id
+                    JOIN public.besitzer AS b
+                      ON b.besitzer_id = p.besitzer_id
+                    WHERE b.ist_eigen = true
+                    ORDER BY g.zeitpunkt_datum ASC, g.kauf_id ASC
+                """)
+                daten = [_smv_geplanter_kauf_json(z) for z in cur.fetchall()]
+
+        response = jsonify(daten)
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Lesen der geplanten Käufe")
+        return jsonify({"fehler": "Datenbankfehler beim Lesen der geplanten Käufe."}), 500
+
+
+# ============================================
+# Geplante Käufe: Eingabe prüfen
+# ============================================
+
+def _smv_geplanter_kauf_eingabe(daten):
+    position_id = _smv_int(daten, "position_id", "Positions-ID", 1)
+    zeitpunkt_text = _smv_text(daten, "zeitpunkt_text", "Zeitpunkt-Text", 30)
+    zeitpunkt_datum = _smv_datum(daten, "zeitpunkt_datum", "Zeitpunkt-Datum")
+    kommentar = _smv_text(daten, "kommentar", "Kommentar", 200)
+    berechnungsart = daten.get("berechnungsart")
+    if berechnungsart not in ("ANZAHL_FIX", "WERT_AUS_KAUFPREIS", "WERT_FIX"):
+        raise ValueError("Ungültige Berechnungsart.")
+
+    kaufpreis = _smv_decimal(daten, "kaufpreis", "Kaufpreis", 12, 2)
+    anzahl_fix = _smv_decimal(daten, "anzahl_fix", "Feste Anzahl", 18, 6, nullable=True)
+    wert_fix = _smv_decimal(daten, "wert_fix", "Fester Wert", 14, 2, nullable=True)
+    faktor = _smv_decimal(daten, "faktor_auf_kaufpreis", "Faktor", 12, 10, nullable=True)
+
+    if kaufpreis < 0:
+        raise ValueError("Der Kaufpreis darf nicht negativ sein.")
+    if berechnungsart == "ANZAHL_FIX":
+        if anzahl_fix is None or anzahl_fix <= 0 or wert_fix is not None or faktor is not None:
+            raise ValueError("Bei ANZAHL_FIX ist nur eine positive feste Anzahl zulässig.")
+    elif berechnungsart == "WERT_FIX":
+        if wert_fix is None or wert_fix <= 0 or anzahl_fix is not None or faktor is not None:
+            raise ValueError("Bei WERT_FIX ist nur ein positiver fester Wert zulässig.")
+    else:
+        if faktor is None or faktor <= 0 or anzahl_fix is not None or wert_fix is not None:
+            raise ValueError("Bei WERT_AUS_KAUFPREIS ist nur ein positiver Faktor zulässig.")
+
+    return (
+        position_id, zeitpunkt_text, zeitpunkt_datum, kommentar,
+        berechnungsart, kaufpreis, anzahl_fix, wert_fix, faktor
+    )
+
+
+# ============================================
+# Geplante Käufe: POST (neu anlegen)
+# ============================================
+
+@app.route("/api/geplante-kaeufe", methods=["POST"])
+def geplanter_kauf_einfuegen():
+    try:
+        werte = _smv_geplanter_kauf_eingabe(_smv_json_objekt())
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                _smv_eigene_position_pruefen(cur, werte[0])
+                cur.execute("""
+                    INSERT INTO public.geplanter_kauf
+                        (position_id, zeitpunkt_text, zeitpunkt_datum, kommentar,
+                         berechnungsart, kaufpreis, anzahl_fix, wert_fix,
+                         faktor_auf_kaufpreis)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    RETURNING kauf_id, position_id, zeitpunkt_text, zeitpunkt_datum,
+                              kommentar, berechnungsart, kaufpreis, anzahl_fix,
+                              wert_fix, faktor_auf_kaufpreis
+                """, werte)
+                zeile = cur.fetchone()
+
+        response = jsonify(_smv_geplanter_kauf_json(zeile))
+        response.headers["Cache-Control"] = "no-store"
+        return response, 201
+
+    except ValueError as e:
+        return jsonify({"fehler": str(e)}), 400
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Einfügen des geplanten Kaufs")
+        return jsonify({"fehler": "Datenbankfehler beim Anlegen des geplanten Kaufs."}), 500
+
+
+# ============================================
+# Geplante Käufe: PUT (ändern)
+# ============================================
+
+@app.route("/api/geplante-kaeufe/<int:kauf_id>", methods=["PUT"])
+def geplanter_kauf_aendern(kauf_id):
+    try:
+        werte = _smv_geplanter_kauf_eingabe(_smv_json_objekt())
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                _smv_eigene_position_pruefen(cur, werte[0])
+                cur.execute("""
+                    UPDATE public.geplanter_kauf AS g
+                    SET position_id = %s,
+                        zeitpunkt_text = %s,
+                        zeitpunkt_datum = %s,
+                        kommentar = %s,
+                        berechnungsart = %s,
+                        kaufpreis = %s,
+                        anzahl_fix = %s,
+                        wert_fix = %s,
+                        faktor_auf_kaufpreis = %s
+                    WHERE g.kauf_id = %s
+                      AND EXISTS (
+                          SELECT 1
+                          FROM public.position AS p
+                          JOIN public.besitzer AS b
+                            ON b.besitzer_id = p.besitzer_id
+                          WHERE p.position_id = g.position_id
+                            AND b.ist_eigen = true
+                      )
+                    RETURNING g.kauf_id, g.position_id, g.zeitpunkt_text,
+                              g.zeitpunkt_datum, g.kommentar, g.berechnungsart,
+                              g.kaufpreis, g.anzahl_fix, g.wert_fix,
+                              g.faktor_auf_kaufpreis
+                """, (*werte, kauf_id))
+                zeile = cur.fetchone()
+                if zeile is None:
+                    return jsonify({"fehler": "Der geplante Kauf wurde nicht gefunden."}), 404
+
+        response = jsonify(_smv_geplanter_kauf_json(zeile))
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except ValueError as e:
+        return jsonify({"fehler": str(e)}), 400
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Ändern des geplanten Kaufs")
+        return jsonify({"fehler": "Datenbankfehler beim Ändern des geplanten Kaufs."}), 500
+
+
+# ============================================
+# Geplante Käufe: DELETE
+# ============================================
+
+@app.route("/api/geplante-kaeufe/<int:kauf_id>", methods=["DELETE"])
+def geplanter_kauf_loeschen(kauf_id):
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    DELETE FROM public.geplanter_kauf AS g
+                    WHERE g.kauf_id = %s
+                      AND EXISTS (
+                          SELECT 1
+                          FROM public.position AS p
+                          JOIN public.besitzer AS b
+                            ON b.besitzer_id = p.besitzer_id
+                          WHERE p.position_id = g.position_id
+                            AND b.ist_eigen = true
+                      )
+                    RETURNING g.kauf_id
+                """, (kauf_id,))
+                zeile = cur.fetchone()
+                if zeile is None:
+                    return jsonify({"fehler": "Der geplante Kauf wurde nicht gefunden."}), 404
+
+        response = jsonify({"ok": True, "kauf_id": zeile[0]})
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Löschen des geplanten Kaufs")
+        return jsonify({"fehler": "Datenbankfehler beim Löschen des geplanten Kaufs."}), 500
+
+
+# ============================================
 # Lokaler Start
 # ============================================
 

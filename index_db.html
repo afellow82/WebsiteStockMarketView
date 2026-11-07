@@ -1922,6 +1922,9 @@ id="restkaeufeJahrGesamt">
             <button type="button" class="menu-eintrag" data-aktion="besitzer">Besitzer pflegen</button>
             <button type="button" class="menu-eintrag" data-aktion="wertpapiere">Wertpapiere pflegen</button>
             <button type="button" class="menu-eintrag" data-aktion="positionen">Positionen pflegen</button>
+            <button type="button" class="menu-eintrag" data-demo="sparplan">Sparpläne pflegen</button>
+            <button type="button" class="menu-eintrag" data-demo="kauf">Geplante Käufe pflegen</button>
+            <button type="button" class="menu-eintrag" data-demo="jahresanfang">Jahresanfangswerte pflegen</button>
             <div class="menu-info">
                 <strong>Stock Market Viewer</strong><br>
                 Version: 3.XX (06.11.2026)<br>
@@ -1962,6 +1965,25 @@ id="restkaeufeJahrGesamt">
               <button type="button" class="av-abbrechen" id="pflegeNeu">Neu / Eingabe leeren</button>
               <button type="submit" class="av-button" id="pflegeSpeichern">Speichern</button>
               <button type="button" class="av-abbrechen" id="pflegeSchliessen">Schließen</button>
+          </div>
+      </form>
+  </dialog>
+
+  <!-- Pflegefenster Sparplaene / Geplante Kaeufe / Jahresanfangswerte: direkt an PostgreSQL angebunden. -->
+  <dialog id="demoDialog" class="av-dialog pf-dialog">
+      <h2 id="demoTitel"></h2>
+      <div class="demo-hinweis" style="margin-bottom:10px; font-size:12px; color:#64748b;">
+          Datenbankpflege – Änderungen werden direkt in PostgreSQL gespeichert.
+      </div>
+      <div class="pf-liste" id="demoListe"></div>
+      <form id="demoForm" novalidate>
+          <h3 id="demoFormTitel"></h3>
+          <div id="demoFelder"></div>
+          <div class="av-fehler" id="demoFehler" role="alert"></div>
+          <div class="av-dialog-buttons">
+              <button type="button" class="av-abbrechen" id="demoNeu">Neu / Eingabe leeren</button>
+              <button type="submit" class="av-button" id="demoSpeichern">Speichern</button>
+              <button type="button" class="av-abbrechen" id="demoSchliessen">Schließen</button>
           </div>
       </form>
   </dialog>
@@ -2639,75 +2661,6 @@ const STANDDATUM_ANTEILE = "04.11.2026";
 const STANDDATUM_INVESTITIONEN = "04.11.2026";
 const STANDDATUM_ANTEILE_FREMDANLAGEN = "02.11.2026";
 const STANDDATUM_INVESTITIONEN_FREMDANLAGEN = "02.11.2026";
-
-const isins = [
-
-{
-bezeichnung:"ETF MSCI World SRI",
-isin:"IE00BYX2JD69",
-link:"https://www.onvista.de/etf/iShares-MSCI-World-SRI-EUR-ACC-ETF-IE00BYX2JD69?notation=289979926",
-anzahl:5055.017439,
-anzahlJA:3792.520514,
-kursJA:12.19,
-sparplanBetrag:500.00,
-sparplanRhytmus:"monatlich",
-sparplanTag:2,
-investition:58890.95,
-investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
-},
-
-{
-bezeichnung:"ETF Core MSCI World",
-isin:"IE00B4L5Y983",
-link:"https://www.onvista.de/etf/iShares-Core-MSCI-World-ETF-IE00B4L5Y983?notation=244540011",
-anzahl:557.122293,
-anzahlJA:500.084082,
-kursJA:111.74,
-sparplanBetrag:400.00,
-sparplanRhytmus:"monatlich",
-sparplanTag:2,
-investition:41210.34,
-investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
-},
-
-{
-bezeichnung:"Aktie Allianz",
-isin:"DE0008404005",
-link:"https://www.onvista.de/aktien/Allianz-Aktie-DE0008404005?notation=244494211",
-anzahl:76.765,
-anzahlJA:91.862,
-kursJA:390.50,
-investition:19901.67,
-investitionHinweis:"Reale Summe Anschaffungskosten inkl. Steuer geldwerter Vorteil ohne Ermäßigungen"
-},
-
-{
-bezeichnung:"ETF AI Infrastructure",
-isin:"IE000X59ZHE2",
-link:"https://www.onvista.de/etf/iShs-III-iShs-AI-Infrastr-ETF-Reg-Shs-USD-Acc-oN-ETF-IE000X59ZHE2?notation=486568018",
-anzahl:805.615908,
-anzahlJA:476.198976,
-kursJA:6.19,
-investition:6001.84,
-investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
-},
-
-{
-bezeichnung:"Fonds Allianz US Equity",
-isin:"LU0256843979",
-link:"https://www.onvista.de/fonds/ALLIANZ-GIF-ALLIANZ-US-EQUITY-FUND-A-EUR-DIS-Fonds-LU0256843979?notation=273709592",
-anzahl:5.698,
-anzahlJA:4.873,
-kursJA:457.889,
-sparplanBetrag:40.00,
-sparplanRhytmus:"monatlich",
-sparplanTag:22,
-investition:2160,
-investitionHinweis:"Reale Summe monatlicher Zahlungen"
-}
-
-];
-
 
 function formatZahl(value,stellen=3,tausender=false){
 
@@ -3870,14 +3823,11 @@ try {
         throw new Error("Mindestens eine eigene Position aus der Datenbank ist ungültig.");
     }
 
-    // Vorhandene Reihenfolge der bisherigen Anlagen beibehalten;
-    // neu hinzugefuegte Anlagen werden danach alphabetisch einsortiert.
-    const bekannteReihenfolge = new Map(isins.map((p, i) => [p.isin, i]));
-    eigenePositionen.sort((a, b) => {
-        const ai = bekannteReihenfolge.has(a.isin) ? bekannteReihenfolge.get(a.isin) : Number.MAX_SAFE_INTEGER;
-        const bi = bekannteReihenfolge.has(b.isin) ? bekannteReihenfolge.get(b.isin) : Number.MAX_SAFE_INTEGER;
-        return ai - bi || a.bezeichnung.localeCompare(b.bezeichnung, "de", { sensitivity: "base", numeric: true });
-    });
+    // Die bestehende Reihenfolge bleibt über position_id stabil;
+    // neu angelegte Positionen folgen entsprechend ihrer ID.
+    eigenePositionen.sort((a, b) =>
+        a.id - b.id || a.bezeichnung.localeCompare(b.bezeichnung, "de", { sensitivity: "base", numeric: true })
+    );
 
 } catch (err) {
     console.error("Eigene Positionen konnten nicht aus PostgreSQL geladen werden:", err);
@@ -3890,10 +3840,7 @@ try {
 }
 
 // Kursdaten fuer die Jahres-/Sparplanansicht und alle eigenen Positionen laden.
-const abzufragendeIsins = [...new Set([
-    ...isins.map(p => p.isin),
-    ...eigenePositionen.map(p => p.isin)
-])];
+const abzufragendeIsins = [...new Set(eigenePositionen.map(p => p.isin))];
 
 for (const isin of abzufragendeIsins) {
     try {
@@ -3939,59 +3886,143 @@ let summeWertJahresanfang = 0;
 
 const performanceDaten = [];
 
-// Jahresanfangswerte und Sparplaene bleiben vorerst in den vorhandenen
-// Zusatzdaten. Sie werden spaeter durch eigene Datenbanktabellen ersetzt.
-for (const item of isins) {
+// Jahresanfangswerte, Sparpläne und geplante Käufe kommen aus PostgreSQL.
+const JAHR = new Date().getFullYear();
+const positionenNachId = new Map(eigenePositionen.map(p => [Number(p.id), p]));
 
-    const historischerGesamtwert = item.anzahlJA * item.kursJA;
-    jahresAnfang += historischerGesamtwert;
-    summeWertJahresanfang += historischerGesamtwert;
+async function ladeDbListe(url, bezeichnung) {
+    const werte = await ladeApiJson(url);
+    if (!Array.isArray(werte)) {
+        throw new Error(bezeichnung + " hat keine gültige Liste geliefert.");
+    }
+    return werte;
+}
 
-    if ((item.sparplanBetrag ?? 0) > 0) {
-        restkaeufeJahrGesamt += restKaeufeImJahr(
-            item.sparplanTag,
-            item.sparplanBetrag
-        );
+const [jahresanfangErgebnis, sparplanErgebnis, kaufErgebnis] = await Promise.allSettled([
+    ladeDbListe(`/api/position-jahresanfang?jahr=${JAHR}`, "Jahresanfangswerte-API"),
+    ladeDbListe("/api/sparplaene", "Sparplan-API"),
+    ladeDbListe("/api/geplante-kaeufe", "Geplante-Käufe-API")
+]);
 
-        sparplan.innerHTML += `
-<tr>
-<td>${item.bezeichnung}</td>
-<td class="kurs">${formatZahl(item.sparplanBetrag,2,true)} €</td>
-<td>${item.sparplanRhytmus ?? "-"}</td>
-<td class="kurs">${item.sparplanTag ? naechsteAusfuehrung(item.sparplanTag) : "-"}</td>
-<td class="status">${item.sparplanTag ? statusNaechsteAusfuehrung(item.sparplanTag) : "-"}</td>
-<td class="kurs">${item.sparplanTag ? formatZahl(restKaeufeImJahr(item.sparplanTag, item.sparplanBetrag), 2, true) + " €" : "-"}</td>
-</tr>
-`;
+const jahresanfangDaten = jahresanfangErgebnis.status === "fulfilled"
+    ? jahresanfangErgebnis.value
+    : [];
+const sparplanDaten = sparplanErgebnis.status === "fulfilled"
+    ? sparplanErgebnis.value
+    : [];
+const geplanteKaufDaten = kaufErgebnis.status === "fulfilled"
+    ? kaufErgebnis.value
+    : [];
+
+if (jahresanfangErgebnis.status === "rejected") {
+    console.error("Jahresanfangswerte konnten nicht geladen werden:", jahresanfangErgebnis.reason);
+}
+if (sparplanErgebnis.status === "rejected") {
+    console.error("Sparpläne konnten nicht geladen werden:", sparplanErgebnis.reason);
+}
+if (kaufErgebnis.status === "rejected") {
+    console.error("Geplante Käufe konnten nicht geladen werden:", kaufErgebnis.reason);
+}
+
+const htmlEsc = (wert) => String(wert ?? "").replace(/[&<>\"']/g, zeichen => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+}[zeichen]));
+
+if (jahresanfangErgebnis.status === "rejected") {
+    history.innerHTML = '<tr><td colspan="6">Jahresanfangswerte konnten nicht aus der Datenbank geladen werden.</td></tr>';
+} else {
+    const jahresanfangAktuell = jahresanfangDaten
+        .filter(j => Number(j.jahr) === JAHR && positionenNachId.has(Number(j.position_id)))
+        .sort((a, b) => {
+            const pa = positionenNachId.get(Number(a.position_id));
+            const pb = positionenNachId.get(Number(b.position_id));
+            return pa.bezeichnung.localeCompare(pb.bezeichnung, "de", { sensitivity: "base", numeric: true });
+        });
+
+    if (!jahresanfangAktuell.length) {
+        history.innerHTML = `<tr><td colspan="6">Für ${JAHR} sind noch keine Jahresanfangswerte erfasst.</td></tr>`;
     }
 
-    const etfHistory = kursDaten[item.isin];
-    let aktuellerKurs = "-";
-    let kursEntwicklung = "-";
+    for (const eintrag of jahresanfangAktuell) {
+        const item = positionenNachId.get(Number(eintrag.position_id));
+        const anzahlJA = Number(eintrag.anzahl);
+        const kursJA = Number(eintrag.kurs);
+        if (!Number.isFinite(anzahlJA) || !Number.isFinite(kursJA) || kursJA <= 0) {
+            console.error("Ungültiger Jahresanfangswert:", eintrag);
+            continue;
+        }
 
-    if (etfHistory) {
-        aktuellerKurs = formatZahl(etfHistory.kurs,3) + " €";
-        const diff = etfHistory.kurs - item.kursJA;
-        const prozent = diff / item.kursJA * 100;
-        kursEntwicklung = `
+        const historischerGesamtwert = anzahlJA * kursJA;
+        jahresAnfang += historischerGesamtwert;
+        summeWertJahresanfang += historischerGesamtwert;
+
+        const etfHistory = kursDaten[item.isin];
+        let aktuellerKurs = "-";
+        let kursEntwicklung = "-";
+
+        if (etfHistory) {
+            aktuellerKurs = formatZahl(etfHistory.kurs, 3) + " €";
+            const diff = etfHistory.kurs - kursJA;
+            const prozent = diff / kursJA * 100;
+            kursEntwicklung = `
 <span style="color:${diff >= 0 ? "#15803d" : "#b91c1c"};font-weight:650;">
-    ${prozent >= 0 ? "+ " : ""}${formatZahl(prozent,2)} %
-    (${diff >= 0 ? "+ " : ""}${formatZahl(diff,2)} €)
+    ${prozent >= 0 ? "+ " : ""}${formatZahl(prozent, 2)} %
+    (${diff >= 0 ? "+ " : ""}${formatZahl(diff, 2)} €)
 </span>
 `;
-        jahresAktuell += item.anzahlJA * etfHistory.kurs;
-    }
+            jahresAktuell += anzahlJA * etfHistory.kurs;
+        }
 
-    history.innerHTML += `
+        history.innerHTML += `
 <tr>
-<td>${item.bezeichnung}</td>
-<td class="kurs kurs-normal">${formatZahl(item.anzahlJA,6,true)}</td>
-<td class="kurs kurs-normal">${formatZahl(item.kursJA,3)} €</td>
+<td>${htmlEsc(item.bezeichnung)}</td>
+<td class="kurs kurs-normal">${formatZahl(anzahlJA, 6, true)}</td>
+<td class="kurs kurs-normal">${formatZahl(kursJA, 3)} €</td>
 <td class="kurs kurs-normal">${aktuellerKurs}</td>
 <td class="kurs">${kursEntwicklung}</td>
-<td class="kurs">${formatZahl(historischerGesamtwert,2,true)} €</td>
+<td class="kurs">${formatZahl(historischerGesamtwert, 2, true)} €</td>
 </tr>
 `;
+    }
+}
+
+if (sparplanErgebnis.status === "rejected") {
+    sparplan.innerHTML = '<tr><td colspan="6">Sparpläne konnten nicht aus der Datenbank geladen werden.</td></tr>';
+} else {
+    const eigeneSparplaene = sparplanDaten
+        .filter(s => positionenNachId.has(Number(s.position_id)))
+        .sort((a, b) => {
+            const pa = positionenNachId.get(Number(a.position_id));
+            const pb = positionenNachId.get(Number(b.position_id));
+            return pa.bezeichnung.localeCompare(pb.bezeichnung, "de", { sensitivity: "base", numeric: true });
+        });
+
+    if (!eigeneSparplaene.length) {
+        sparplan.innerHTML = '<tr><td colspan="6">Keine Sparpläne vorhanden.</td></tr>';
+    }
+
+    for (const eintrag of eigeneSparplaene) {
+        const item = positionenNachId.get(Number(eintrag.position_id));
+        const betrag = Number(eintrag.betrag);
+        const tag = Number(eintrag.tag_im_monat);
+        if (!Number.isFinite(betrag) || !Number.isInteger(tag) || tag < 1 || tag > 28) {
+            console.error("Ungültiger Sparplan:", eintrag);
+            continue;
+        }
+
+        const rest = restKaeufeImJahr(tag, betrag);
+        restkaeufeJahrGesamt += rest;
+        sparplan.innerHTML += `
+<tr>
+<td>${htmlEsc(item.bezeichnung)}</td>
+<td class="kurs">${formatZahl(betrag, 2, true)} €</td>
+<td>${htmlEsc(eintrag.rhythmus || "-")}</td>
+<td class="kurs">${naechsteAusfuehrung(tag)}</td>
+<td class="status">${statusNaechsteAusfuehrung(tag)}</td>
+<td class="kurs">${formatZahl(rest, 2, true)} €</td>
+</tr>
+`;
+    }
 }
 
 // Aktuelle Depotwerte, Performance und Altersvorsorge kommen aus public.position.
@@ -4070,91 +4101,53 @@ ${etf.tagesentwicklung >= 0 ? "+" : ""}${formatZahl(etf.tagesentwicklung,2)} %
 `;
 }
 
-const allianzKurs =
-kursDaten["DE0008404005"]
-? kursDaten["DE0008404005"].kurs
-: null;
+if (kaufErgebnis.status === "rejected") {
+    geplanteKaeufe.innerHTML = '<tr><td colspan="6">Geplante Käufe konnten nicht aus der Datenbank geladen werden.</td></tr>';
+} else {
+    const eigeneGeplanteKaeufe = geplanteKaufDaten
+        .filter(k => positionenNachId.has(Number(k.position_id)))
+        .sort((a, b) => String(a.zeitpunkt_datum).localeCompare(String(b.zeitpunkt_datum)));
 
-if (allianzKurs) {
-
-    const geplanteKaeufeZeilen = [];
-
-    // ESPP Reinvestition Dividende Allianz 2027
-    {
-        const kaufpreis = 0;
-        const wert = 1420.28;
-        const anzahl = wert / allianzKurs;
-
-        geplanteKaeufeZeilen.push({
-            zeitpunkt: "Mai 2027",
-            aktie: "Aktie Allianz",
-            anzahl: anzahl,
-            kaufpreis: kaufpreis,
-            wert: wert,
-            kommentar: "ESPP Allianz Reinvestition Dividende 2027"
-        });
+    if (!eigeneGeplanteKaeufe.length) {
+        geplanteKaeufe.innerHTML = '<tr><td colspan="6">Keine geplanten Käufe vorhanden.</td></tr>';
     }
 
-    // ESPP Allianz 2027
-    {
-        const kaufpreis = 6934.00;
-        const wert = kaufpreis / 3 * 4;
-        const anzahl = wert / allianzKurs;
+    for (const eintrag of eigeneGeplanteKaeufe) {
+        const item = positionenNachId.get(Number(eintrag.position_id));
+        const kurs = Number(kursDaten[item.isin]?.kurs);
+        const kaufpreis = Number(eintrag.kaufpreis ?? 0);
+        let anzahl = null;
+        let wert = null;
 
-        geplanteKaeufeZeilen.push({
-            zeitpunkt: "November 2027",
-            aktie: "Aktie Allianz",
-            anzahl: anzahl,
-            kaufpreis: kaufpreis,
-            wert: wert,
-            kommentar: "ESPP Allianz 2027"
-        });
-    }
-
-    geplanteKaeufeZeilen.forEach(zeile => {
+        if (eintrag.berechnungsart === "ANZAHL_FIX") {
+            anzahl = Number(eintrag.anzahl_fix);
+            if (Number.isFinite(kurs) && kurs > 0 && Number.isFinite(anzahl)) {
+                wert = anzahl * kurs;
+            }
+        } else if (eintrag.berechnungsart === "WERT_FIX") {
+            wert = Number(eintrag.wert_fix);
+            if (Number.isFinite(kurs) && kurs > 0 && Number.isFinite(wert)) {
+                anzahl = wert / kurs;
+            }
+        } else if (eintrag.berechnungsart === "WERT_AUS_KAUFPREIS") {
+            const faktor = Number(eintrag.faktor_auf_kaufpreis);
+            wert = kaufpreis * faktor;
+            if (Number.isFinite(kurs) && kurs > 0 && Number.isFinite(wert)) {
+                anzahl = wert / kurs;
+            }
+        }
 
         geplanteKaeufe.innerHTML += `
-
 <tr>
-
-<td>${zeile.zeitpunkt}</td>
-
-<td>${zeile.aktie}</td>
-
-<td class="kurs">
-${formatZahl(zeile.anzahl,6,true)}
-</td>
-
-<td class="kurs">
-${formatZahl(zeile.kaufpreis,2,true)} €
-</td>
-
-<td class="kurs">
-${formatZahl(zeile.wert,2,true)} €
-</td>
-
-<td>${zeile.kommentar}</td>
-
+<td>${htmlEsc(eintrag.zeitpunkt_text)}</td>
+<td>${htmlEsc(item.bezeichnung)}</td>
+<td class="kurs">${Number.isFinite(anzahl) ? formatZahl(anzahl, 6, true) : "-"}</td>
+<td class="kurs">${formatZahl(kaufpreis, 2, true)} €</td>
+<td class="kurs">${Number.isFinite(wert) ? formatZahl(wert, 2, true) + " €" : "-"}</td>
+<td>${htmlEsc(eintrag.kommentar)}</td>
 </tr>
-
 `;
-
-    });
-
-} else {
-
-    geplanteKaeufe.innerHTML = `
-
-<tr>
-
-<td colspan="6">
-Aktueller Kurs Aktie Allianz nicht verfügbar
-</td>
-
-</tr>
-
-`;
-
+    }
 }
 
 performanceDaten
@@ -4246,7 +4239,7 @@ formatZahl(Math.abs(tagesentwicklungBetrag),2,true)+
 
 
 const jahresentwicklung =
-((jahresAktuell/jahresAnfang)-1)*100;
+jahresAnfang > 0 ? ((jahresAktuell/jahresAnfang)-1)*100 : 0;
 
 
 const jahresentwicklungBetrag =
@@ -4582,7 +4575,7 @@ formatZahl(restkaeufeJahrGesamt,2,true)+
 let startDatumText="";
 
 
-for(const item of isins){
+for(const item of eigenePositionen){
 
 const start =
 kursDaten[item.isin];
@@ -5853,7 +5846,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
         }
     }
 
-    menuPopup.querySelectorAll(".menu-eintrag").forEach(b => {
+    menuPopup.querySelectorAll(".menu-eintrag:not([data-demo])").forEach(b => {
         b.addEventListener("click", () => { void oeffne(b.dataset.aktion); });
     });
 
@@ -5971,6 +5964,478 @@ document.querySelectorAll(".tab-button").forEach(button => {
             fehlerEl.textContent = err.message || "Der Eintrag konnte nicht gespeichert werden.";
         } finally {
             speichernButton.disabled = false;
+        }
+    });
+
+})();
+
+// ---------------------------------------------------------------
+// Datenbankpflege: Sparpläne, geplante Käufe und Jahresanfangswerte.
+// ---------------------------------------------------------------
+(function () {
+
+    const menuPopup = document.getElementById("menuPopup");
+    const dialog = document.getElementById("demoDialog");
+    const titelEl = document.getElementById("demoTitel");
+    const listeEl = document.getElementById("demoListe");
+    const formEl = document.getElementById("demoForm");
+    const formTitelEl = document.getElementById("demoFormTitel");
+    const felderEl = document.getElementById("demoFelder");
+    const fehlerEl = document.getElementById("demoFehler");
+    const neuButton = document.getElementById("demoNeu");
+    const speichernButton = document.getElementById("demoSpeichern");
+
+    const JAHR = new Date().getFullYear();
+    let positionen = [];
+    const daten = { sparplan: [], kauf: [], jahresanfang: [] };
+
+    const API = {
+        positionen: "/api/positionen",
+        sparplan: "/api/sparplaene",
+        kauf: "/api/geplante-kaeufe",
+        jahresanfang: `/api/position-jahresanfang?jahr=${JAHR}`
+    };
+
+    async function apiAnfrage(url, methode = "GET", payload = undefined) {
+        const optionen = {
+            method: methode,
+            cache: "no-store",
+            headers: { "Accept": "application/json" }
+        };
+        if (payload !== undefined) {
+            optionen.headers["Content-Type"] = "application/json";
+            optionen.body = JSON.stringify(payload);
+        }
+        const antwort = await fetch(url, optionen);
+        const ergebnis = await antwort.json().catch(() => null);
+        if (!antwort.ok) {
+            throw new Error(ergebnis?.fehler || "API-Fehler " + antwort.status + ".");
+        }
+        return ergebnis;
+    }
+
+    const vgl = (a, b) => String(a).localeCompare(String(b), "de", { sensitivity: "base", numeric: true });
+    const posBez = (id) => (positionen.find(p => p.id === Number(id)) || {}).bezeichnung || "?";
+    const fmt = (v, n) => v === null || v === undefined || !Number.isFinite(Number(v)) ? "" :
+        Number(v).toLocaleString("de-DE", { minimumFractionDigits: n, maximumFractionDigits: n });
+    const positionOptionen = () => positionen.slice().sort((a, b) => vgl(a.bezeichnung, b.bezeichnung))
+        .map(p => ({ wert: String(p.id), text: p.bezeichnung }));
+
+    async function ladePflegeDaten(art) {
+        const positionsDaten = await ladeApiJson(API.positionen);
+        if (!Array.isArray(positionsDaten)) {
+            throw new Error("Die Positions-API hat keine gültige Liste geliefert.");
+        }
+        positionen = positionsDaten
+            .filter(p => p && p.ist_eigen === true)
+            .map(p => ({ id: Number(p.id), bezeichnung: String(p.bezeichnung || "") }))
+            .filter(p => Number.isInteger(p.id) && p.bezeichnung);
+
+        const antwort = await ladeApiJson(API[art]);
+        if (!Array.isArray(antwort)) {
+            throw new Error("Die Datenbank-API hat keine gültige Liste geliefert.");
+        }
+
+        if (art === "sparplan") {
+            daten.sparplan = antwort.map(s => ({
+                id: Number(s.sparplan_id ?? s.id),
+                position_id: Number(s.position_id),
+                betrag: Number(s.betrag),
+                rhythmus: s.rhythmus,
+                tag_im_monat: Number(s.tag_im_monat)
+            }));
+        } else if (art === "kauf") {
+            daten.kauf = antwort.map(k => ({
+                id: Number(k.kauf_id ?? k.id),
+                position_id: Number(k.position_id),
+                zeitpunkt_text: k.zeitpunkt_text,
+                zeitpunkt_datum: String(k.zeitpunkt_datum).slice(0, 10),
+                kommentar: k.kommentar,
+                berechnungsart: k.berechnungsart,
+                kaufpreis: Number(k.kaufpreis ?? 0),
+                anzahl_fix: k.anzahl_fix === null ? null : Number(k.anzahl_fix),
+                wert_fix: k.wert_fix === null ? null : Number(k.wert_fix),
+                faktor_auf_kaufpreis: k.faktor_auf_kaufpreis === null ? null : Number(k.faktor_auf_kaufpreis)
+            }));
+        } else if (art === "jahresanfang") {
+            daten.jahresanfang = antwort.map(j => ({
+                position_id: Number(j.position_id),
+                jahr: Number(j.jahr),
+                anzahl: Number(j.anzahl),
+                kurs: Number(j.kurs)
+            }));
+        }
+    }
+
+    const ARTEN = [
+        { wert: "ANZAHL_FIX", text: "Feste Anzahl (z. B. Gratisaktie)" },
+        { wert: "WERT_FIX", text: "Fester Wert in €" },
+        { wert: "WERT_AUS_KAUFPREIS", text: "Wert = Kaufpreis × Faktor" }
+    ];
+    const ARTEN_KURZ = {
+        ANZAHL_FIX: "Feste Anzahl",
+        WERT_FIX: "Fester Wert",
+        WERT_AUS_KAUFPREIS: "Kaufpreis × Faktor"
+    };
+
+    const konfig = {
+        sparplan: {
+            titel: "Sparpläne pflegen",
+            felder: [
+                { name: "position_id", label: "Position (nur eigene Positionen ohne Sparplan)", typ: "fk", optionen: positionOptionen, pflicht: true, ohneSparplan: true },
+                { name: "betrag", label: "Betrag je Ausführung (€, bis 2 Nachkommastellen)", typ: "dezimal", nachkomma: 2, pflicht: true },
+                { name: "rhythmus", label: "Rhythmus", typ: "select", optionen: ["monatlich"], pflicht: true, deaktiviert: true },
+                { name: "tag_im_monat", label: "Tag im Monat (1 bis 28)", typ: "zahl", pflicht: true }
+            ],
+            spalten: ["Position", "Betrag", "Rhythmus", "Tag im Monat"],
+            gitter: "minmax(220px, 3fr) 120px 110px 110px",
+            liste: () => daten.sparplan.slice().sort((a, b) => vgl(posBez(a.position_id), posBez(b.position_id))),
+            zeile: d => [posBez(d.position_id), fmt(d.betrag, 2) + " €", d.rhythmus, String(d.tag_im_monat) + "."],
+            pruefe(d, id) {
+                if (!positionen.some(p => p.id === d.position_id)) return "Bitte eine eigene Position auswählen.";
+                if (daten.sparplan.some(s => s.id !== id && s.position_id === d.position_id))
+                    return "Für diese Position existiert bereits ein Sparplan (je Position höchstens einer).";
+                if (!(d.betrag > 0)) return "Der Betrag muss größer als 0 sein.";
+                if (!Number.isInteger(d.tag_im_monat) || d.tag_im_monat < 1 || d.tag_im_monat > 28)
+                    return "Der Tag im Monat muss zwischen 1 und 28 liegen.";
+                return "";
+            },
+            async speichern(d, id) {
+                const payload = {
+                    position_id: d.position_id,
+                    betrag: d.betrag,
+                    rhythmus: d.rhythmus,
+                    tag_im_monat: d.tag_im_monat
+                };
+                await apiAnfrage(id === null ? API.sparplan : `${API.sparplan}/${id}`, id === null ? "POST" : "PUT", payload);
+            },
+            async loeschen(id) { await apiAnfrage(`${API.sparplan}/${id}`, "DELETE"); },
+            loeschHinweis: "Der Sparplan wird endgültig gelöscht."
+        },
+        kauf: {
+            titel: "Geplante Käufe pflegen",
+            felder: [
+                { name: "position_id", label: "Position (eigene Positionen)", typ: "fk", optionen: positionOptionen, pflicht: true },
+                { name: "zeitpunkt_text", label: "Zeitpunkt als Anzeigetext (z. B. „Mai 2027“, max. 30 Zeichen)", typ: "text", max: 30, pflicht: true },
+                { name: "zeitpunkt_datum", label: "Zeitpunkt als Datum (für die Sortierung)", typ: "datum", pflicht: true },
+                { name: "kommentar", label: "Kommentar (max. 200 Zeichen)", typ: "text", max: 200, pflicht: true },
+                { name: "berechnungsart", label: "Berechnungsart", typ: "select", optionen: ARTEN, pflicht: true },
+                { name: "kaufpreis", label: "Kaufpreis (€, 0 bei Gratisaktie / Reinvestition)", typ: "dezimal", nachkomma: 2, pflicht: true, standard: "0" },
+                { name: "anzahl_fix", label: "Feste Anzahl (Stück, bis 6 Nachkommastellen)", typ: "dezimal", nachkomma: 6, pflicht: true, nur: "ANZAHL_FIX" },
+                { name: "wert_fix", label: "Fester Wert (€, bis 2 Nachkommastellen)", typ: "dezimal", nachkomma: 2, pflicht: true, nur: "WERT_FIX" },
+                { name: "faktor_auf_kaufpreis", label: "Faktor auf den Kaufpreis (z. B. 1,3333333333 für 4/3)", typ: "dezimal", nachkomma: 10, pflicht: true, nur: "WERT_AUS_KAUFPREIS", standard: "1,3333333333" }
+            ],
+            spalten: ["Position", "Zeitpunkt", "Kommentar", "Berechnungsart", "Kaufpreis", "Wert / Anzahl"],
+            gitter: "minmax(150px, 2fr) 120px minmax(200px, 3fr) 140px 110px 130px",
+            liste: () => daten.kauf.slice().sort((a, b) => a.zeitpunkt_datum.localeCompare(b.zeitpunkt_datum)),
+            zeile: d => [
+                posBez(d.position_id), d.zeitpunkt_text, d.kommentar, ARTEN_KURZ[d.berechnungsart],
+                fmt(d.kaufpreis, 2) + " €",
+                d.berechnungsart === "ANZAHL_FIX" ? fmt(d.anzahl_fix, 6) + " Stk."
+                    : d.berechnungsart === "WERT_FIX" ? fmt(d.wert_fix, 2) + " €"
+                    : fmt(d.kaufpreis * d.faktor_auf_kaufpreis, 2) + " €"
+            ],
+            pruefe(d) {
+                if (!positionen.some(p => p.id === d.position_id)) return "Bitte eine eigene Position auswählen.";
+                if (!d.zeitpunkt_text || d.zeitpunkt_text.length > 30) return "Der Zeitpunkt-Text ist ungültig (maximal 30 Zeichen).";
+                if (isNaN(Date.parse(d.zeitpunkt_datum))) return "Bitte ein gültiges Datum angeben.";
+                if (!d.kommentar || d.kommentar.length > 200) return "Der Kommentar ist ungültig (maximal 200 Zeichen).";
+                if (d.kaufpreis < 0) return "Der Kaufpreis darf nicht negativ sein.";
+                if (d.berechnungsart === "ANZAHL_FIX" && !(d.anzahl_fix > 0)) return "Die feste Anzahl muss größer als 0 sein.";
+                if (d.berechnungsart === "WERT_FIX" && !(d.wert_fix > 0)) return "Der feste Wert muss größer als 0 sein.";
+                if (d.berechnungsart === "WERT_AUS_KAUFPREIS" && !(d.faktor_auf_kaufpreis > 0)) return "Der Faktor muss größer als 0 sein.";
+                return "";
+            },
+            async speichern(d, id) {
+                const payload = {
+                    position_id: d.position_id,
+                    zeitpunkt_text: d.zeitpunkt_text,
+                    zeitpunkt_datum: d.zeitpunkt_datum,
+                    kommentar: d.kommentar,
+                    berechnungsart: d.berechnungsart,
+                    kaufpreis: d.kaufpreis,
+                    anzahl_fix: d.anzahl_fix,
+                    wert_fix: d.wert_fix,
+                    faktor_auf_kaufpreis: d.faktor_auf_kaufpreis
+                };
+                await apiAnfrage(id === null ? API.kauf : `${API.kauf}/${id}`, id === null ? "POST" : "PUT", payload);
+            },
+            async loeschen(id) { await apiAnfrage(`${API.kauf}/${id}`, "DELETE"); },
+            loeschHinweis: "Der geplante Kauf wird endgültig gelöscht (z. B. weil er erledigt ist)."
+        },
+        jahresanfang: {
+            titel: "Jahresanfangswerte pflegen (01.01." + JAHR + ")",
+            felder: [
+                { name: "position_id", label: "Position", typ: "fk", optionen: positionOptionen, gesperrt: true },
+                { name: "jahr", label: "Jahr", typ: "text", gesperrt: true },
+                { name: "anzahl", label: "Anzahl der Anteile zum 01.01. (bis 6 Nachkommastellen)", typ: "dezimal", nachkomma: 6, pflicht: true },
+                { name: "kurs", label: "Kurs zum 01.01. (€, bis 4 Nachkommastellen)", typ: "dezimal", nachkomma: 4, pflicht: true }
+            ],
+            spalten: ["Position", "Jahr", "Anzahl 01.01.", "Kurs 01.01.", "Status"],
+            gitter: "minmax(220px, 3fr) 70px 150px 130px 120px",
+            liste: () => positionen.slice().sort((a, b) => vgl(a.bezeichnung, b.bezeichnung)).map(p => {
+                const ja = daten.jahresanfang.find(j => j.position_id === p.id && j.jahr === JAHR);
+                return {
+                    id: p.id,
+                    position_id: p.id,
+                    jahr: JAHR,
+                    anzahl: ja ? ja.anzahl : null,
+                    kurs: ja ? ja.kurs : null,
+                    vorhanden: !!ja
+                };
+            }),
+            zeile: d => [posBez(d.position_id), String(d.jahr), d.vorhanden ? fmt(d.anzahl, 6) : "–",
+                d.vorhanden ? fmt(d.kurs, 4) + " €" : "–", d.vorhanden ? "erfasst" : "fehlt – bitte erfassen"],
+            pruefe(d) {
+                if (!Number.isFinite(d.anzahl) || d.anzahl < 0 || d.anzahl >= 1e12) return "Die Anzahl ist ungültig.";
+                if (!Number.isFinite(d.kurs) || d.kurs <= 0 || d.kurs >= 1e10) return "Der Kurs muss größer als 0 sein.";
+                return "";
+            },
+            async speichern(d, id) {
+                const vorhanden = daten.jahresanfang.some(j => j.position_id === id && j.jahr === JAHR);
+                const payload = { position_id: id, jahr: JAHR, anzahl: d.anzahl, kurs: d.kurs };
+                const url = vorhanden
+                    ? `/api/position-jahresanfang/${id}/${JAHR}`
+                    : "/api/position-jahresanfang";
+                await apiAnfrage(url, vorhanden ? "PUT" : "POST", payload);
+            },
+            aenderText: d => d.vorhanden ? "Ändern" : "Erfassen",
+            ohneLoeschen: true,
+            ohneNeu: true
+        }
+    };
+
+    let aktuell = null;
+    let bearbeiteId = null;
+
+    function baueFormular() {
+        felderEl.textContent = "";
+        konfig[aktuell].felder.forEach(f => {
+            const block = document.createElement("div");
+            if (f.nur) block.dataset.nur = f.nur;
+            const label = document.createElement("label");
+            label.htmlFor = "demo_" + f.name;
+            label.textContent = f.label;
+            let el;
+            if (f.typ === "select" || f.typ === "fk") {
+                el = document.createElement("select");
+                if (f.typ === "fk") el.add(new Option("– bitte wählen –", ""));
+                const opts = typeof f.optionen === "function" ? f.optionen() : f.optionen;
+                opts.forEach(o => el.add(typeof o === "string" ? new Option(o, o) : new Option(o.text, o.wert)));
+            } else {
+                el = document.createElement("input");
+                el.type = f.typ === "datum" ? "date" : "text";
+                if (f.max) el.maxLength = f.max;
+                el.autocomplete = "off";
+            }
+            el.id = "demo_" + f.name;
+            if (f.gesperrt || f.deaktiviert) el.disabled = true;
+            if (f.name === "berechnungsart") el.addEventListener("change", zeigeNurFelder);
+            block.append(label, el);
+            felderEl.appendChild(block);
+        });
+    }
+
+    function zeigeNurFelder() {
+        const artEl = document.getElementById("demo_berechnungsart");
+        felderEl.querySelectorAll("[data-nur]").forEach(b => {
+            b.hidden = !artEl || b.dataset.nur !== artEl.value;
+        });
+    }
+
+    function fuelleFormular(d) {
+        const k = konfig[aktuell];
+        k.felder.forEach(f => {
+            const el = document.getElementById("demo_" + f.name);
+            const v = d ? d[f.name] : null;
+            if (f.ohneSparplan) {
+                el.length = 0;
+                el.add(new Option("– bitte wählen –", ""));
+                const belegtePositionen = new Set(daten.sparplan.map(s => s.position_id));
+                positionOptionen()
+                    .filter(o => (d && Number(o.wert) === Number(d.position_id)) || !belegtePositionen.has(Number(o.wert)))
+                    .forEach(o => el.add(new Option(o.text, o.wert)));
+            }
+            if (f.typ === "select") {
+                el.value = v ?? (typeof f.optionen[0] === "string" ? f.optionen[0] : f.optionen[0].wert);
+            } else if (f.typ === "fk") {
+                el.value = v === null || v === undefined ? "" : String(v);
+            } else if (f.typ === "dezimal") {
+                el.value = v === null || v === undefined ? (d || !f.standard ? "" : f.standard) : String(v).replace(".", ",");
+            } else {
+                el.value = v === null || v === undefined ? "" : String(v);
+            }
+        });
+        zeigeNurFelder();
+        fehlerEl.textContent = "";
+        bearbeiteId = d ? d.id : null;
+        formTitelEl.textContent = k.ohneNeu
+            ? (d ? (d.vorhanden ? "Jahresanfangswerte ändern" : "Jahresanfangswerte erfassen")
+                : "Bitte in der Liste „Ändern“ bzw. „Erfassen“ wählen")
+            : (d ? "Eintrag ändern" : "Neuen Eintrag anlegen");
+        const gesperrt = k.ohneNeu && !d;
+        felderEl.querySelectorAll("input,select").forEach(el => {
+            const f = k.felder.find(x => "demo_" + x.name === el.id);
+            el.disabled = gesperrt || !!f.gesperrt || !!f.deaktiviert;
+        });
+        speichernButton.disabled = gesperrt;
+        zeichneListe();
+    }
+
+    function zeichneListe() {
+        const k = konfig[aktuell];
+        const eintraege = k.liste();
+        listeEl.textContent = "";
+        if (!eintraege.length) {
+            const leer = document.createElement("div");
+            leer.className = "pf-leer";
+            leer.textContent = "Noch keine Einträge vorhanden.";
+            listeEl.appendChild(leer);
+            return;
+        }
+        const kopf = document.createElement("div");
+        kopf.className = "pf-zeile pf-kopf";
+        const kopfText = document.createElement("div");
+        kopfText.className = "pf-text pf-spalten";
+        kopfText.style.gridTemplateColumns = k.gitter;
+        k.spalten.forEach(t => {
+            const span = document.createElement("span");
+            span.textContent = t;
+            kopfText.appendChild(span);
+        });
+        const platzhalter = document.createElement("span");
+        platzhalter.style.width = k.ohneLoeschen ? "66px" : "142px";
+        platzhalter.style.flex = "none";
+        kopf.append(kopfText, platzhalter);
+        listeEl.appendChild(kopf);
+
+        eintraege.forEach(d => {
+            const zeile = document.createElement("div");
+            zeile.className = "pf-zeile" + (d.id === bearbeiteId ? " aktiv" : "");
+            const text = document.createElement("div");
+            text.className = "pf-text pf-spalten";
+            text.style.gridTemplateColumns = k.gitter;
+            const zellen = k.zeile(d);
+            zellen.forEach((z, i) => {
+                const span = document.createElement("span");
+                span.textContent = z;
+                if (i === 0) span.style.fontWeight = "650";
+                if (k.ohneNeu && i === zellen.length - 1 && !d.vorhanden) {
+                    span.style.color = "#dc2626";
+                    span.style.fontWeight = "650";
+                }
+                text.appendChild(span);
+            });
+
+            const bearbeiten = document.createElement("button");
+            bearbeiten.type = "button";
+            bearbeiten.className = "pf-klein";
+            bearbeiten.textContent = k.aenderText ? k.aenderText(d) : "Ändern";
+            bearbeiten.addEventListener("click", () => fuelleFormular(d));
+            zeile.append(text, bearbeiten);
+
+            if (!k.ohneLoeschen) {
+                const loeschen = document.createElement("button");
+                loeschen.type = "button";
+                loeschen.className = "pf-klein loeschen";
+                loeschen.textContent = "Löschen";
+                loeschen.addEventListener("click", async () => {
+                    if (!confirm("„" + zellen[0] + "“ wirklich löschen?\n" + k.loeschHinweis)) return;
+                    loeschen.disabled = true;
+                    try {
+                        await k.loeschen(d.id);
+                        await ladePflegeDaten(aktuell);
+                        fuelleFormular(null);
+                        await ladeAlleKurse();
+                    } catch (err) {
+                        fehlerEl.textContent = err.message || "Der Eintrag konnte nicht gelöscht werden.";
+                        loeschen.disabled = false;
+                    }
+                });
+                zeile.appendChild(loeschen);
+            }
+            listeEl.appendChild(zeile);
+        });
+    }
+
+    async function oeffne(art) {
+        aktuell = art;
+        const k = konfig[art];
+        titelEl.textContent = k.titel;
+        neuButton.hidden = !!k.ohneNeu;
+        listeEl.textContent = "Daten werden aus PostgreSQL geladen …";
+        fehlerEl.textContent = "";
+        speichernButton.disabled = true;
+        baueFormular();
+        fuelleFormular(null);
+        menuPopup.hidden = true;
+        document.getElementById("menuButton").setAttribute("aria-expanded", "false");
+        dialog.showModal();
+        try {
+            await ladePflegeDaten(art);
+            fuelleFormular(null);
+            speichernButton.disabled = !!k.ohneNeu;
+        } catch (err) {
+            console.error("Pflegedaten konnten nicht geladen werden:", err);
+            listeEl.textContent = "Daten konnten nicht aus PostgreSQL geladen werden.";
+            fehlerEl.textContent = err.message || "Datenbankfehler beim Laden.";
+        }
+    }
+
+    menuPopup.querySelectorAll(".menu-eintrag[data-demo]").forEach(b => {
+        b.addEventListener("click", () => { void oeffne(b.dataset.demo); });
+    });
+    neuButton.addEventListener("click", () => fuelleFormular(null));
+    document.getElementById("demoSchliessen").addEventListener("click", () => dialog.close());
+
+    formEl.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const k = konfig[aktuell];
+        const d = {};
+        speichernButton.disabled = true;
+        fehlerEl.textContent = "";
+        try {
+            for (const f of k.felder) {
+                const el = document.getElementById("demo_" + f.name);
+                const block = el.parentElement;
+                if (block.hidden) { d[f.name] = null; continue; }
+                const v = el.value.trim();
+                if (f.gesperrt) continue;
+                if (f.pflicht && !v) throw new Error("Bitte alle Pflichtfelder ausfüllen.");
+                if (f.typ === "fk") {
+                    d[f.name] = Number(v);
+                    if (!Number.isInteger(d[f.name])) throw new Error("Bitte eine gültige Position auswählen.");
+                    continue;
+                }
+                if (f.typ === "dezimal") {
+                    const norm = v.replace(/\./g, "").replace(",", ".");
+                    if (!new RegExp("^\\d+(\\.\\d{1," + f.nachkomma + "})?$").test(norm)) {
+                        throw new Error("Bitte eine Zahl mit höchstens " + f.nachkomma + " Nachkommastellen eingeben (z. B. 1234,56).");
+                    }
+                    d[f.name] = Number(norm);
+                    continue;
+                }
+                if (f.typ === "zahl") {
+                    if (!/^\d+$/.test(v)) throw new Error("Bitte eine ganze Zahl eingeben.");
+                    d[f.name] = Number(v);
+                    continue;
+                }
+                d[f.name] = v;
+            }
+
+            if (k.ohneNeu) d.position_id = bearbeiteId;
+            const fehler = k.pruefe(d, bearbeiteId);
+            if (fehler) throw new Error(fehler);
+
+            await k.speichern(d, bearbeiteId);
+            await ladePflegeDaten(aktuell);
+            fuelleFormular(null);
+            await ladeAlleKurse();
+        } catch (err) {
+            console.error("Eintrag konnte nicht gespeichert werden:", err);
+            fehlerEl.textContent = err.message || "Der Eintrag konnte nicht gespeichert werden.";
+        } finally {
+            speichernButton.disabled = !!k.ohneNeu && !bearbeiteId;
         }
     });
 
