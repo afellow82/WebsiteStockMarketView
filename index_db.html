@@ -704,6 +704,10 @@ table {
 .pf-dialog .pf-liste {
     max-height: 26vh;
 }
+/* Jahresanfangswerte: hoehere Liste, damit auf einem HD-Monitor nicht gescrollt werden muss */
+.pf-dialog.liste-hoch .pf-liste {
+    max-height: 46vh;
+}
 .pf-spalten {
     display: grid;
     grid-template-columns: minmax(150px, 2fr) 125px 60px minmax(200px, 5fr);
@@ -845,6 +849,11 @@ table {
 
 .tab-button:hover {
     background: #dbe4ef;
+}
+
+/* Tab "Notizen" rechtsbuendig, direkt neben dem Drei-Punkte-Menue */
+#notizenTabButton {
+    margin-left: auto;
 }
 
 .tab-button.active {
@@ -1906,7 +1915,12 @@ body {
     min-width: 19px;
     height: 19px;
     padding: 0 5px;
-    margin-left: 6px;
+    /* Negative vertikale Raender: der Kreis vergroessert die Zeilenhoehe des
+       Tab-Buttons nicht, der Text "Notizen" bleibt auf einer Linie mit den
+       anderen Tabs. "top" stellt den Kreis hoch. */
+    margin: -6px 0 -6px 6px;
+    position: relative;
+    top: -5px;
     border-radius: 999px;
     background: #dc2626;
     color: white;
@@ -2111,9 +2125,9 @@ id="restkaeufeJahrGesamt">
             <button type="button" class="menu-eintrag" data-aktion="besitzer">Besitzer pflegen</button>
             <button type="button" class="menu-eintrag" data-aktion="wertpapiere">Wertpapiere pflegen</button>
             <button type="button" class="menu-eintrag" data-aktion="positionen">Positionen pflegen</button>
-            <button type="button" class="menu-eintrag" data-demo="sparplan">Sparpläne pflegen</button>
-            <button type="button" class="menu-eintrag" data-demo="kauf">Geplante Käufe pflegen</button>
-            <button type="button" class="menu-eintrag" data-demo="jahresanfang">Jahresanfangswerte pflegen</button>
+            <button type="button" class="menu-eintrag" data-datenpflege="sparplan">Sparpläne pflegen</button>
+            <button type="button" class="menu-eintrag" data-datenpflege="kauf">Geplante Käufe pflegen</button>
+            <button type="button" class="menu-eintrag" data-datenpflege="jahresanfang">Jahresanfangswerte pflegen</button>
             <div class="menu-info">
                 <strong>Stock Market Viewer</strong><br>
                 Version: 3.XX (06.11.2026)<br>
@@ -2159,20 +2173,17 @@ id="restkaeufeJahrGesamt">
   </dialog>
 
   <!-- Pflegefenster Sparplaene / Geplante Kaeufe / Jahresanfangswerte: direkt an PostgreSQL angebunden. -->
-  <dialog id="demoDialog" class="av-dialog pf-dialog">
-      <h2 id="demoTitel"></h2>
-      <div class="demo-hinweis" style="margin-bottom:10px; font-size:12px; color:#64748b;">
-          Datenbankpflege – Änderungen werden direkt in PostgreSQL gespeichert.
-      </div>
-      <div class="pf-liste" id="demoListe"></div>
-      <form id="demoForm" novalidate>
-          <h3 id="demoFormTitel"></h3>
-          <div id="demoFelder"></div>
-          <div class="av-fehler" id="demoFehler" role="alert"></div>
+  <dialog id="datenpflegeDialog" class="av-dialog pf-dialog">
+      <h2 id="datenpflegeTitel"></h2>
+      <div class="pf-liste" id="datenpflegeListe"></div>
+      <form id="datenpflegeForm" novalidate>
+          <h3 id="datenpflegeFormTitel"></h3>
+          <div id="datenpflegeFelder"></div>
+          <div class="av-fehler" id="datenpflegeFehler" role="alert"></div>
           <div class="av-dialog-buttons">
-              <button type="button" class="av-abbrechen" id="demoNeu">Neu / Eingabe leeren</button>
-              <button type="submit" class="av-button" id="demoSpeichern">Speichern</button>
-              <button type="button" class="av-abbrechen" id="demoSchliessen">Schließen</button>
+              <button type="button" class="av-abbrechen" id="datenpflegeNeu">Neu / Eingabe leeren</button>
+              <button type="submit" class="av-button" id="datenpflegeSpeichern">Speichern</button>
+              <button type="button" class="av-abbrechen" id="datenpflegeSchliessen">Schließen</button>
           </div>
       </form>
   </dialog>
@@ -6121,7 +6132,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
         }
     }
 
-    menuPopup.querySelectorAll(".menu-eintrag:not([data-demo])").forEach(b => {
+    menuPopup.querySelectorAll(".menu-eintrag:not([data-datenpflege])").forEach(b => {
         b.addEventListener("click", () => { void oeffne(b.dataset.aktion); });
     });
 
@@ -6244,15 +6255,15 @@ document.querySelectorAll(".tab-button").forEach(button => {
 (function () {
 
     const menuPopup = document.getElementById("menuPopup");
-    const dialog = document.getElementById("demoDialog");
-    const titelEl = document.getElementById("demoTitel");
-    const listeEl = document.getElementById("demoListe");
-    const formEl = document.getElementById("demoForm");
-    const formTitelEl = document.getElementById("demoFormTitel");
-    const felderEl = document.getElementById("demoFelder");
-    const fehlerEl = document.getElementById("demoFehler");
-    const neuButton = document.getElementById("demoNeu");
-    const speichernButton = document.getElementById("demoSpeichern");
+    const dialog = document.getElementById("datenpflegeDialog");
+    const titelEl = document.getElementById("datenpflegeTitel");
+    const listeEl = document.getElementById("datenpflegeListe");
+    const formEl = document.getElementById("datenpflegeForm");
+    const formTitelEl = document.getElementById("datenpflegeFormTitel");
+    const felderEl = document.getElementById("datenpflegeFelder");
+    const fehlerEl = document.getElementById("datenpflegeFehler");
+    const neuButton = document.getElementById("datenpflegeNeu");
+    const speichernButton = document.getElementById("datenpflegeSpeichern");
 
     const JAHR = new Date().getFullYear();
     let positionen = [];
@@ -6483,7 +6494,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
             const block = document.createElement("div");
             if (f.nur) block.dataset.nur = f.nur;
             const label = document.createElement("label");
-            label.htmlFor = "demo_" + f.name;
+            label.htmlFor = "datenpflege_" + f.name;
             label.textContent = f.label;
             let el;
             if (f.typ === "select" || f.typ === "fk") {
@@ -6497,7 +6508,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
                 if (f.max) el.maxLength = f.max;
                 el.autocomplete = "off";
             }
-            el.id = "demo_" + f.name;
+            el.id = "datenpflege_" + f.name;
             if (f.gesperrt || f.deaktiviert) el.disabled = true;
             if (f.name === "berechnungsart") el.addEventListener("change", zeigeNurFelder);
             block.append(label, el);
@@ -6506,7 +6517,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
     }
 
     function zeigeNurFelder() {
-        const artEl = document.getElementById("demo_berechnungsart");
+        const artEl = document.getElementById("datenpflege_berechnungsart");
         felderEl.querySelectorAll("[data-nur]").forEach(b => {
             b.hidden = !artEl || b.dataset.nur !== artEl.value;
         });
@@ -6515,7 +6526,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
     function fuelleFormular(d) {
         const k = konfig[aktuell];
         k.felder.forEach(f => {
-            const el = document.getElementById("demo_" + f.name);
+            const el = document.getElementById("datenpflege_" + f.name);
             const v = d ? d[f.name] : null;
             if (f.ohneSparplan) {
                 el.length = 0;
@@ -6544,7 +6555,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
             : (d ? "Eintrag ändern" : "Neuen Eintrag anlegen");
         const gesperrt = k.ohneNeu && !d;
         felderEl.querySelectorAll("input,select").forEach(el => {
-            const f = k.felder.find(x => "demo_" + x.name === el.id);
+            const f = k.felder.find(x => "datenpflege_" + x.name === el.id);
             el.disabled = gesperrt || !!f.gesperrt || !!f.deaktiviert;
         });
         speichernButton.disabled = gesperrt;
@@ -6631,6 +6642,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
         aktuell = art;
         const k = konfig[art];
         titelEl.textContent = k.titel;
+        dialog.classList.toggle("liste-hoch", art === "jahresanfang");
         neuButton.hidden = !!k.ohneNeu;
         listeEl.textContent = "Daten werden aus PostgreSQL geladen …";
         fehlerEl.textContent = "";
@@ -6651,11 +6663,11 @@ document.querySelectorAll(".tab-button").forEach(button => {
         }
     }
 
-    menuPopup.querySelectorAll(".menu-eintrag[data-demo]").forEach(b => {
-        b.addEventListener("click", () => { void oeffne(b.dataset.demo); });
+    menuPopup.querySelectorAll(".menu-eintrag[data-datenpflege]").forEach(b => {
+        b.addEventListener("click", () => { void oeffne(b.dataset.datenpflege); });
     });
     neuButton.addEventListener("click", () => fuelleFormular(null));
-    document.getElementById("demoSchliessen").addEventListener("click", () => dialog.close());
+    document.getElementById("datenpflegeSchliessen").addEventListener("click", () => dialog.close());
 
     formEl.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -6665,7 +6677,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
         fehlerEl.textContent = "";
         try {
             for (const f of k.felder) {
-                const el = document.getElementById("demo_" + f.name);
+                const el = document.getElementById("datenpflege_" + f.name);
                 const block = el.parentElement;
                 if (block.hidden) { d[f.name] = null; continue; }
                 const v = el.value.trim();
