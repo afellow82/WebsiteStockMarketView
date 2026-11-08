@@ -3026,10 +3026,100 @@ autocomplete="off">
 
 <script>
 
-const STANDDATUM_ANTEILE = "04.11.2026";
-const STANDDATUM_INVESTITIONEN = "04.11.2026";
-const STANDDATUM_ANTEILE_FREMDANLAGEN = "02.11.2026";
-const STANDDATUM_INVESTITIONEN_FREMDANLAGEN = "02.11.2026";
+let datenstand = {
+    anteile_eigen: null,
+    investition_eigen: null,
+    anteile_fremd: null,
+    investition_fremd: null
+};
+
+// ISO-Datum aus PostgreSQL prüfen.
+function zerlegeStanddatum(iso) {
+    if (typeof iso !== "string") return null;
+
+    const treffer = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso);
+    if (!treffer) return null;
+
+    const jahr = Number(treffer[1]);
+    const monat = Number(treffer[2]);
+    const tag = Number(treffer[3]);
+    const zeit = Date.UTC(jahr, monat - 1, tag);
+    const pruefung = new Date(zeit);
+
+    if (
+        pruefung.getUTCFullYear() !== jahr ||
+        pruefung.getUTCMonth() !== monat - 1 ||
+        pruefung.getUTCDate() !== tag
+    ) {
+        return null;
+    }
+
+    return { jahr, monat, tag, zeit };
+}
+
+// ISO-Datum als deutsches Datum anzeigen.
+function formatiereStanddatum(iso) {
+    const datum = zerlegeStanddatum(iso);
+
+    if (!datum) return "nicht verfügbar";
+
+    return String(datum.tag).padStart(2, "0") + "." +
+           String(datum.monat).padStart(2, "0") + "." +
+           datum.jahr;
+}
+
+// Prüfen, ob ein Standdatum mindestens 31 Tage alt ist.
+function standdatumIstAlt(iso) {
+    const datum = zerlegeStanddatum(iso);
+    if (!datum) return false;
+
+    const heute = new Date();
+    const heuteUTC = Date.UTC(
+        heute.getFullYear(),
+        heute.getMonth(),
+        heute.getDate()
+    );
+
+    const differenzTage = Math.floor(
+        (heuteUTC - datum.zeit) / (1000 * 60 * 60 * 24)
+    );
+
+    return differenzTage >= 31;
+}
+
+// Alle vier Standdaten gemeinsam aus PostgreSQL laden.
+async function ladeDatenstand() {
+    try {
+        const daten = await ladeApiJson("/api/datenstand");
+
+        const felder = [
+            "anteile_eigen",
+            "investition_eigen",
+            "anteile_fremd",
+            "investition_fremd"
+        ];
+
+        if (
+            !daten ||
+            typeof daten !== "object" ||
+            felder.some(feld =>
+                daten[feld] !== null &&
+                !zerlegeStanddatum(daten[feld])
+            )
+        ) {
+            throw new Error("Die Datenstand-API hat ungültige Daten geliefert.");
+        }
+
+        datenstand = Object.fromEntries(
+            felder.map(feld => [feld, daten[feld]])
+        );
+
+    } catch (err) {
+        console.error("Standdaten konnten nicht geladen werden:", err);
+    }
+
+    return datenstand;
+}
 
 function formatZahl(value,stellen=3,tausender=false){
 
@@ -3808,6 +3898,9 @@ document.getElementById("fremdanlagenBody");
 
 if(!tbody) return;
 
+// Aktuelle Standdaten ebenfalls aus PostgreSQL laden.
+await ladeDatenstand();
+
 // Besitzer und Depotpositionen aktuell aus PostgreSQL laden.
 // Damit stammen sowohl die Summen als auch ihre Reihenfolge aus der Datenbank.
 try {
@@ -4098,23 +4191,13 @@ const performanceFooterFremd =
 document.getElementById("fremdanlagenPerformanceUpdateInfo");
 
 performanceFooterFremd.textContent =
-"Stand Investitionen Fremdanlagen: " +
-STANDDATUM_INVESTITIONEN_FREMDANLAGEN;
+    "Stand Investitionen Fremdanlagen: " +
+    formatiereStanddatum(datenstand.investition_fremd);
 
-{
-    const [d, m, y] =
-    STANDDATUM_INVESTITIONEN_FREMDANLAGEN.split(".");
-
-    const diff =
-    Math.floor(
-        (new Date() - new Date(`${y}-${m}-${d}`))
-        / (1000 * 60 * 60 * 24)
-    );
-
-    if(diff >= 31){
-        performanceFooterFremd.classList.add("stand-datum-alt");
-    }
-}
+performanceFooterFremd.classList.toggle(
+    "stand-datum-alt",
+    standdatumIstAlt(datenstand.investition_fremd)
+);
 
 
 // Footer: Standdatum + Tagesanfangskurs (basiert auf der ersten Zeile)
@@ -4135,27 +4218,21 @@ if(ersteZeile && ersteZeile.tagesanfangDatum){
 
 }
 
-footer.innerHTML =
-"<span id='standFremdanlagenText'>Stand Anteile Fremdanlagen: " +
-STANDDATUM_ANTEILE_FREMDANLAGEN +
-"</span>" +
-tagesanfangText;
+const standFremdanlagenEl = document.createElement("span");
+standFremdanlagenEl.id = "standFremdanlagenText";
+standFremdanlagenEl.textContent =
+    "Stand Anteile Fremdanlagen: " +
+    formatiereStanddatum(datenstand.anteile_fremd);
 
-// Standdatum rot markieren, wenn älter als 31 Tage
-
-const [d, m, y] = STANDDATUM_ANTEILE_FREMDANLAGEN.split(".");
-
-const diffTage =
-Math.floor(
-    (new Date() - new Date(`${y}-${m}-${d}`))
-    / (1000 * 60 * 60 * 24)
+standFremdanlagenEl.classList.toggle(
+    "stand-datum-alt",
+    standdatumIstAlt(datenstand.anteile_fremd)
 );
 
-if(diffTage >= 31){
-    document
-        .getElementById("standFremdanlagenText")
-        .classList.add("stand-datum-alt");
-}
+footer.replaceChildren(
+    standFremdanlagenEl,
+    document.createTextNode(tagesanfangText)
+);
 
 }
 
@@ -4167,6 +4244,9 @@ async function ladeAlleKurseAusfuehren(){
 const tbody = document.getElementById("tableBody");
 const kursDaten = {};
 let eigenePositionen = [];
+
+// Aktuelle Standdaten aus PostgreSQL laden.
+await ladeDatenstand();
 
 // Aktuelle eigene Depotpositionen stammen ausschliesslich aus PostgreSQL.
 try {
@@ -5177,48 +5257,38 @@ new Date().toLocaleString("de-DE", {
     minute: "2-digit"
 });
 
-updateInfoEl.innerHTML =
-"<span id='standAnteileText'>Stand Anteile: " +
-STANDDATUM_ANTEILE +
-"</span>" +
-startDatumText;
+// Footer Aktuelle Kurse: Standdatum aus PostgreSQL.
+const standAnteileEl = document.createElement("span");
+standAnteileEl.id = "standAnteileText";
+standAnteileEl.textContent =
+    "Stand Anteile: " +
+    formatiereStanddatum(datenstand.anteile_eigen);
+
+standAnteileEl.classList.toggle(
+    "stand-datum-alt",
+    standdatumIstAlt(datenstand.anteile_eigen)
+);
+
+updateInfoEl.replaceChildren(
+    standAnteileEl,
+    document.createTextNode(startDatumText)
+);
 
 document.getElementById("letzteAktualisierung").textContent =
-letzteAktualisierungText;
+    letzteAktualisierungText;
 
+// Footer Performance: Investitionsdatum aus PostgreSQL.
+const performanceFooter =
+    document.getElementById("performanceUpdateInfo");
 
-// --- NEU: Datum prüfen ---
-function parseDEDate(str) {
-    const [d, m, y] = str.split(".");
-    return new Date(`${y}-${m}-${d}`);
-}
+performanceFooter.textContent =
+    "Stand Investitionen: " +
+    formatiereStanddatum(datenstand.investition_eigen);
 
-const standDate = parseDEDate(STANDDATUM_ANTEILE);
-const now = new Date();
-
-const diffDays =
-Math.floor((now - standDate) / (1000 * 60 * 60 * 24));
-
-const standEl = document.getElementById("standAnteileText");
-
-if (diffDays >= 31) {
-    standEl.classList.add("stand-datum-alt");
-}
-
-// --- NEU: Performance-Footer prüfen ---
-
-const performanceFooter = document.getElementById("performanceUpdateInfo");
-
-performanceFooter.textContent = "Stand Investitionen: " + STANDDATUM_INVESTITIONEN;
-
-const perfDate = parseDEDate(STANDDATUM_INVESTITIONEN);
-
-const diffDaysPerf =
-    Math.floor((now - perfDate) / (1000 * 60 * 60 * 24));
-
-if (diffDaysPerf >= 31) {
-    performanceFooter.classList.add("stand-datum-alt");
-}
+performanceFooter.classList.toggle(
+    "stand-datum-alt",
+    standdatumIstAlt(datenstand.investition_eigen)
+);
 
 document.getElementById("summeJahresanfang").innerHTML =
 "<strong>" +

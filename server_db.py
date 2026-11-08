@@ -802,6 +802,57 @@ def positionen_lesen():
         return jsonify({"fehler": "Datenbankfehler beim Lesen der Positionen."}), 500
 
 
+
+# ============================================
+# Datenstände: GET
+# ============================================
+
+@app.route("/api/datenstand", methods=["GET"])
+def datenstand_lesen():
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("""
+                    SELECT
+                        MAX(p.anteile_geaendert_am)
+                            FILTER (WHERE b.ist_eigen IS TRUE),
+                        MAX(p.investition_geaendert_am)
+                            FILTER (WHERE b.ist_eigen IS TRUE),
+                        MAX(p.anteile_geaendert_am)
+                            FILTER (WHERE b.ist_eigen IS FALSE),
+                        MAX(p.investition_geaendert_am)
+                            FILTER (WHERE b.ist_eigen IS FALSE)
+                    FROM public.position AS p
+                    JOIN public.besitzer AS b
+                      ON b.besitzer_id = p.besitzer_id
+                """)
+
+                zeile = cur.fetchone()
+
+        def datum_iso(wert):
+            if wert is None:
+                return None
+            if hasattr(wert, "date"):
+                wert = wert.date()
+            return wert.isoformat()
+
+        response = jsonify({
+            "anteile_eigen": datum_iso(zeile[0]),
+            "investition_eigen": datum_iso(zeile[1]),
+            "anteile_fremd": datum_iso(zeile[2]),
+            "investition_fremd": datum_iso(zeile[3])
+        })
+
+        response.headers["Cache-Control"] = "no-store"
+        return response
+
+    except psycopg.Error:
+        app.logger.exception("Fehler beim Lesen der Datenstände")
+        return jsonify({
+            "fehler": "Datenbankfehler beim Lesen der Datenstände."
+        }), 500
+
+
 # ============================================
 # Positionen: POST
 # ============================================
