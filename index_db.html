@@ -2130,7 +2130,7 @@ id="restkaeufeJahrGesamt">
             <button type="button" class="menu-eintrag" data-datenpflege="jahresanfang">Jahresanfangswerte pflegen</button>
             <div class="menu-info">
                 <strong>Stock Market Viewer</strong><br>
-                Version: 3.XX (06.11.2026)<br>
+                Version: 3.00 (06.11.2026)<br>
                 <br>
                 <span id="letzteAktualisierung"></span><br>
                 (automatische Datenaktualisierung alle 5 min)
@@ -3643,6 +3643,26 @@ const htmlEsc = (wert) => String(wert ?? "").replace(/[&<>\"']/g, zeichen => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
 }[zeichen]));
 
+// Setzt bei jeder Position den Anzeigenamen "anlage" = Art + Bezeichnung.
+// Liefert die Positions-API keine Art mit, wird sie ueber die ISIN aus
+// /api/wertpapiere ergaenzt. Fehlt sie weiterhin, bleibt nur die Bezeichnung.
+async function ergaenzeAnlagenname(positionen) {
+    if (positionen.some(p => !p.art)) {
+        try {
+            const wertpapiere = await ladeApiJson("/api/wertpapiere");
+            const artNachIsin = new Map(
+                (Array.isArray(wertpapiere) ? wertpapiere : []).map(w => [w.isin, w.art])
+            );
+            positionen.forEach(p => { p.art = p.art || artNachIsin.get(p.isin) || ""; });
+        } catch (artFehler) {
+            console.error("Wertpapierarten konnten nicht geladen werden:", artFehler);
+        }
+    }
+    positionen.forEach(p => {
+        p.anlage = [p.art, p.bezeichnung].filter(Boolean).join(" ");
+    });
+}
+
 // Verhindert ueberlappende Laeufe einer Ladefunktion (Timer + Speichern im
 // Pflegedialog). Wird waehrend eines Laufs erneut aufgerufen, folgt genau
 // ein weiterer Lauf nach dem aktuellen.
@@ -3782,9 +3802,12 @@ try {
             link: p.link || "",
             anzahl,
             investition,
-            investitionHinweis: p.investitionHinweis || ""
+            investitionHinweis: p.investitionHinweis || "",
+            art: p.art || ""
         };
     });
+
+    await ergaenzeAnlagenname(fremdanlagen);
 
 } catch (err) {
     console.error("Fremdanlagen konnten nicht aus PostgreSQL geladen werden:", err);
@@ -3832,7 +3855,7 @@ for(const item of fremdSortiert){
         html += `
 <tr>
 <td colspan="10">
-Fehler bei ${htmlEsc(item.besitzer)} / ${htmlEsc(item.bezeichnung)}: Kein Kurs verfügbar
+Fehler bei ${htmlEsc(item.besitzer)} / ${htmlEsc(item.anlage)}: Kein Kurs verfügbar
 </td>
 </tr>
 `;
@@ -3852,7 +3875,7 @@ Fehler bei ${htmlEsc(item.besitzer)} / ${htmlEsc(item.bezeichnung)}: Kein Kurs v
 
     performanceDaten.push({
         besitzer: item.besitzer,
-        bezeichnung: item.bezeichnung,
+        anlage: item.anlage,
         hinweis: item.investitionHinweis,
         wert,
         investition,
@@ -3870,7 +3893,7 @@ Fehler bei ${htmlEsc(item.besitzer)} / ${htmlEsc(item.bezeichnung)}: Kein Kurs v
 
 <td>
 <a href="${htmlEsc(item.link)}" target="_blank">
-${htmlEsc(item.bezeichnung)}
+${htmlEsc(item.anlage)}
 </a>
 </td>
 
@@ -3996,7 +4019,7 @@ performanceDaten
 
     <td>${htmlEsc(item.besitzer)}</td>
 
-    <td>${htmlEsc(item.bezeichnung)}</td>
+    <td>${htmlEsc(item.anlage)}</td>
 
     <td class="kurs">
         ${formatZahl(item.wert,2,true)} €
@@ -4118,8 +4141,11 @@ try {
             anzahl: Number(p.anzahl),
             investition: Number(p.investition),
             investitionHinweis: p.investition_hinweis || "",
-            ist_altersvorsorge: p.ist_altersvorsorge === true
+            ist_altersvorsorge: p.ist_altersvorsorge === true,
+            art: p.art || ""
         }));
+
+    await ergaenzeAnlagenname(eigenePositionen);
 
     if (eigenePositionen.some(p =>
         !Number.isInteger(p.id) ||
@@ -4284,7 +4310,7 @@ if (jahresanfangErgebnis.status === "rejected") {
 
         history.innerHTML += `
 <tr>
-<td>${htmlEsc(item.bezeichnung)}</td>
+<td>${htmlEsc(item.anlage)}</td>
 <td class="kurs kurs-normal">${formatZahl(anzahlJA, 6, true)}</td>
 <td class="kurs kurs-normal">${formatZahl(kursJA, 3)} €</td>
 <td class="kurs kurs-normal">${aktuellerKurs}</td>
@@ -4323,7 +4349,7 @@ if (sparplanErgebnis.status === "rejected") {
         restkaeufeJahrGesamt += rest;
         sparplan.innerHTML += `
 <tr>
-<td>${htmlEsc(item.bezeichnung)}</td>
+<td>${htmlEsc(item.anlage)}</td>
 <td class="kurs">${formatZahl(betrag, 2, true)} €</td>
 <td>${htmlEsc(eintrag.rhythmus || "-")}</td>
 <td class="kurs">${naechsteAusfuehrung(tag)}</td>
@@ -4347,7 +4373,7 @@ for (const item of eigeneNachWert) {
     if (!etf) {
         tbody.innerHTML += `
 <tr>
-<td colspan="9">Fehler bei ${htmlEsc(item.bezeichnung)}: Kein Kurs verfügbar</td>
+<td colspan="9">Fehler bei ${htmlEsc(item.anlage)}: Kein Kurs verfügbar</td>
 </tr>
 `;
         continue;
@@ -4359,7 +4385,7 @@ for (const item of eigeneNachWert) {
     const prozent = investition !== 0 ? (gewinnVerlust / investition) * 100 : 0;
 
     performanceDaten.push({
-        bezeichnung: item.bezeichnung,
+        anlage: item.anlage,
         hinweis: item.investitionHinweis,
         wert,
         investition,
@@ -4370,7 +4396,7 @@ for (const item of eigeneNachWert) {
     if (item.ist_altersvorsorge) {
         vorsorge.innerHTML += `
 <tr>
-<td>${htmlEsc(item.bezeichnung)}</td>
+<td>${htmlEsc(item.anlage)}</td>
 <td class="kurs">${formatZahl(etf.kurs,3)} €</td>
 <td class="kurs vorsorge-wert">${formatZahl(wert,2,true)} €</td>
 </tr>
@@ -4378,7 +4404,7 @@ for (const item of eigeneNachWert) {
     }
 
     gesamtwert += wert;
-    chartLabels.push(item.bezeichnung);
+    chartLabels.push(item.anlage);
     chartValues.push(wert);
 
     startwertHeute += item.anzahl * etf.tagesanfang;
@@ -4387,7 +4413,7 @@ for (const item of eigeneNachWert) {
 
     tbody.innerHTML += `
 <tr>
-<td><a href="${htmlEsc(item.link)}" target="_blank">${htmlEsc(item.bezeichnung)}</a></td>
+<td><a href="${htmlEsc(item.link)}" target="_blank">${htmlEsc(item.anlage)}</a></td>
 <td>
     <a href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/stocks?id=${encodeURIComponent(item.isin)}&field=BasicV1&field=ExchangesV2" target="_blank">${htmlEsc(item.isin)}</a>
 </td>
@@ -4450,7 +4476,7 @@ if (kaufErgebnis.status === "rejected") {
         geplanteKaeufe.innerHTML += `
 <tr>
 <td>${htmlEsc(eintrag.zeitpunkt_text)}</td>
-<td>${htmlEsc(item.bezeichnung)}</td>
+<td>${htmlEsc(item.anlage)}</td>
 <td class="kurs">${Number.isFinite(anzahl) ? formatZahl(anzahl, 6, true) : "-"}</td>
 <td class="kurs">${formatZahl(kaufpreis, 2, true)} €</td>
 <td class="kurs">${Number.isFinite(wert) ? formatZahl(wert, 2, true) + " €" : "-"}</td>
@@ -4468,7 +4494,7 @@ performanceDaten
 
 <tr>
 
-    <td>${htmlEsc(item.bezeichnung)}</td>
+    <td>${htmlEsc(item.anlage)}</td>
 
     <td class="kurs">
         ${formatZahl(item.wert,2,true)} €
