@@ -676,6 +676,25 @@ table {
 .menu-eintrag:hover {
     background: #eef2f7;
 }
+/* Gruppenueberschrift "Datenpflege" mit eingerueckten Unterpunkten */
+.menu-gruppe {
+    padding: 10px 12px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: #64748b;
+}
+.menu-eintrag.menu-unter {
+    padding-left: 26px;
+    font-weight: 500;
+}
+.menu-eintrag.menu-abmelden {
+    margin-top: 6px;
+    border-top: 1px solid #e5e7eb;
+    border-radius: 0 0 8px 8px;
+    padding-top: 12px;
+}
 .menu-info {
     margin-top: 6px;
     padding: 10px 12px 6px;
@@ -689,6 +708,12 @@ table {
 @media(max-width:480px){
     .menu-eintrag {
         display: none;
+    }
+    .menu-gruppe {
+        display: none;
+    }
+    .menu-eintrag.menu-abmelden {
+        display: block;
     }
     .menu-info {
         margin-top: 0;
@@ -2122,12 +2147,14 @@ id="restkaeufeJahrGesamt">
         <button type="button" class="menu-button" id="menuButton"
                 aria-haspopup="true" aria-expanded="false" aria-label="Menü">&#8942;</button>
         <div class="menu-popup" id="menuPopup" hidden>
-            <button type="button" class="menu-eintrag" data-aktion="besitzer">Besitzer pflegen</button>
-            <button type="button" class="menu-eintrag" data-aktion="wertpapiere">Wertpapiere pflegen</button>
-            <button type="button" class="menu-eintrag" data-aktion="positionen">Positionen pflegen</button>
-            <button type="button" class="menu-eintrag" data-datenpflege="sparplan">Sparpläne pflegen</button>
-            <button type="button" class="menu-eintrag" data-datenpflege="kauf">Geplante Käufe pflegen</button>
-            <button type="button" class="menu-eintrag" data-datenpflege="jahresanfang">Jahresanfangswerte pflegen</button>
+            <div class="menu-gruppe">Datenpflege</div>
+            <button type="button" class="menu-eintrag menu-unter" data-aktion="besitzer">Besitzer</button>
+            <button type="button" class="menu-eintrag menu-unter" data-aktion="wertpapiere">Wertpapiere</button>
+            <button type="button" class="menu-eintrag menu-unter" data-aktion="positionen">Positionen</button>
+            <button type="button" class="menu-eintrag menu-unter" data-datenpflege="sparplan">Sparpläne</button>
+            <button type="button" class="menu-eintrag menu-unter" data-datenpflege="kauf">Geplante Käufe</button>
+            <button type="button" class="menu-eintrag menu-unter" data-datenpflege="jahresanfang">Jahresanfangswerte</button>
+            <button type="button" class="menu-eintrag menu-abmelden" id="abmeldenButton">Abmelden</button>
             <div class="menu-info">
                 <strong>Stock Market Viewer</strong><br>
                 Version: 3.00 (06.11.2026)<br>
@@ -3030,7 +3057,7 @@ return teile.join(",");
 async function ladeTagesanfang(consorsId){
 
 const response =
-await fetch("api/chart/"+consorsId);
+await apiFetch("api/chart/"+consorsId);
 
 const data =
 await response.json();
@@ -3071,7 +3098,7 @@ async function ladeETF(isin){
 
 
 const response =
-await fetch("api/"+isin);
+await apiFetch("api/"+isin);
 
 
 
@@ -3643,6 +3670,25 @@ const htmlEsc = (wert) => String(wert ?? "").replace(/[&<>\"']/g, zeichen => ({
     "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
 }[zeichen]));
 
+// Zentraler fetch-Wrapper fuer alle Aufrufe der eigenen API.
+// Abgelaufene Cloudflare-Access-Sitzung: Der Redirect auf die Login-Seite wird
+// nicht verfolgt (redirect: "manual" -> Antworttyp "opaqueredirect"), ebenso 401.
+// In beiden Faellen wird die Seite neu geladen, damit die Anmeldung erscheint.
+async function apiFetch(url, options = {}) {
+    const antwort = await window.fetch(url, {
+        credentials: "same-origin",
+        ...options,
+        redirect: "manual"
+    });
+
+    if (antwort.type === "opaqueredirect" || antwort.status === 401) {
+        window.location.reload();
+        throw new Error("Sitzung abgelaufen – bitte neu anmelden.");
+    }
+
+    return antwort;
+}
+
 // Setzt bei jeder Position den Anzeigenamen "anlage" = Art + Bezeichnung.
 // Liefert die Positions-API keine Art mit, wird sie ueber die ISIN aus
 // /api/wertpapiere ergaenzt. Fehlt sie weiterhin, bleibt nur die Bezeichnung.
@@ -3691,7 +3737,7 @@ function serialisiere(fn) {
 
 // Daten aus der PostgreSQL-Datenbank laden (ohne Browser-Cache)
 async function ladeApiJson(url) {
-    const antwort = await fetch(url, {
+    const antwort = await apiFetch(url, {
         method: "GET",
         cache: "no-store"
     });
@@ -5564,7 +5610,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
 
         try {
 
-            const antwort = await fetch("/api/altersvorsorge-historie", {
+            const antwort = await apiFetch("/api/altersvorsorge-historie", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -5836,7 +5882,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
 
                 if (aktuell === "wertpapiere") {
                     try {
-                        const antwort = await fetch("/api/wertpapiere/" + encodeURIComponent(d.id), {
+                        const antwort = await apiFetch("/api/wertpapiere/" + encodeURIComponent(d.id), {
                             method: "DELETE",
                             headers: { "Accept": "application/json" },
                             cache: "no-store"
@@ -5872,7 +5918,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
 
                 if (aktuell === "positionen") {
                     try {
-                        const antwort = await fetch("/api/positionen/" + encodeURIComponent(d.id), {
+                        const antwort = await apiFetch("/api/positionen/" + encodeURIComponent(d.id), {
                             method: "DELETE",
                             headers: { "Accept": "application/json" },
                             cache: "no-store"
@@ -5982,7 +6028,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
         besitzerSpeichernButton.disabled = true;
 
         try {
-            const antwort = await fetch("/api/besitzer/kachel-reihenfolge", {
+            const antwort = await apiFetch("/api/besitzer/kachel-reihenfolge", {
                 method: "PUT",
                 headers: { "Content-Type": "application/json", "Accept": "application/json" },
                 cache: "no-store",
@@ -6158,7 +6204,12 @@ document.querySelectorAll(".tab-button").forEach(button => {
         }
     }
 
-    menuPopup.querySelectorAll(".menu-eintrag:not([data-datenpflege])").forEach(b => {
+    // Abmeldung von Cloudflare Access (relativ zum aktuellen Host)
+    document.getElementById("abmeldenButton").addEventListener("click", () => {
+        window.location.href = "/cdn-cgi/access/logout";
+    });
+
+    menuPopup.querySelectorAll(".menu-eintrag[data-aktion]").forEach(b => {
         b.addEventListener("click", () => { void oeffne(b.dataset.aktion); });
     });
 
@@ -6200,7 +6251,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
                 const url = istNeu
                     ? "/api/wertpapiere"
                     : "/api/wertpapiere/" + encodeURIComponent(bearbeiteId);
-                const antwort = await fetch(url, {
+                const antwort = await apiFetch(url, {
                     method: istNeu ? "POST" : "PUT",
                     headers: {
                         "Content-Type": "application/json",
@@ -6232,7 +6283,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
                 const url = istNeu
                     ? "/api/positionen"
                     : "/api/positionen/" + encodeURIComponent(bearbeiteId);
-                const antwort = await fetch(url, {
+                const antwort = await apiFetch(url, {
                     method: istNeu ? "POST" : "PUT",
                     headers: {
                         "Content-Type": "application/json",
@@ -6312,7 +6363,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
             optionen.headers["Content-Type"] = "application/json";
             optionen.body = JSON.stringify(payload);
         }
-        const antwort = await fetch(url, optionen);
+        const antwort = await apiFetch(url, optionen);
         const ergebnis = await antwort.json().catch(() => null);
         if (!antwort.ok) {
             throw new Error(ergebnis?.fehler || "API-Fehler " + antwort.status + ".");
@@ -6816,7 +6867,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
             optionen.body = JSON.stringify(payload);
         }
 
-        const antwort = await fetch(url, optionen);
+        const antwort = await apiFetch(url, optionen);
         const ergebnis = await antwort.json().catch(() => null);
 
         if (!antwort.ok) {
@@ -7210,7 +7261,7 @@ async function ladeAltersvorsorgeHistorie() {
 
     try {
 
-        const antwort = await fetch("/api/altersvorsorge-historie", {
+        const antwort = await apiFetch("/api/altersvorsorge-historie", {
             method: "GET",
             cache: "no-store"
         });
