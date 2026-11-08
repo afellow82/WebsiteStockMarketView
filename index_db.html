@@ -753,9 +753,6 @@ table {
     min-width: 0;
     overflow-wrap: anywhere;
 }
-.pf-zeile .pf-text small {
-    color: #64748b;
-}
 .pf-klein {
     border: none;
     background: #eef2f7;
@@ -855,7 +852,7 @@ table {
     color: white;
 }
 
-/* Mockup: neue Zeile Altersvorsorge */
+/* Neue Zeile Altersvorsorge */
 .av-neu-leiste {
     display:flex;
     align-items:center;
@@ -1010,12 +1007,7 @@ table {
 
     display:grid;
 
-    grid-template-columns:
-    minmax(700px,1fr) 280px;
-
     gap:22px;
-
-    align-items:start;
 
 }
 
@@ -1166,23 +1158,12 @@ table {
 }
 
 
-@media(max-width:480px){
-
-    .kurse-layout {
-    display:grid;
-    grid-template-columns: 1fr 350px;
-    gap:22px;
-    align-items:stretch;
-}
-
-}
-
 .vorsorge-layout {
 
     grid-template-columns:
     minmax(770px,1fr) 280px 280px;
 
-    align-items:stretch;   /* vorher start */
+    align-items:stretch;
 }
 
 
@@ -1420,97 +1401,7 @@ table {
 
 }
 
-.info-icon {
-    position: absolute;
-    right: 18px;
-    bottom: 16px;
-
-    width: 22px;
-    height: 22px;
-
-    border: 1.5px solid #D3D3D3;
-    border-radius: 50%;
-
-    display: flex;
-    align-items: center;
-    justify-content: center;
-
-    font-size: 13px;
-    font-weight: 700;
-
-    color: #D3D3D3;
-
-    cursor: pointer;
-    user-select: none;
-
-    transition: all .2s ease;
-}
-
-.info-icon:hover {
-    color: #6b7280;
-    border-color: #6b7280;
-    background: #f3f4f6;
-}
-
-.info-tooltip {
-    position: absolute;
-    bottom: calc(100% + 10px);
-    right: 0;
-
-    min-width: 260px;
-    max-width: none;
-    width: max-content;
-
-    background: rgba(255,255,255,.97);
-    color: #334155;
-
-    font-size: 12px;
-    font-weight: 400;
-    line-height: 1.5;
-    text-align: left;
-    white-space: nowrap;
-
-    padding: 10px 14px;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
-
-    box-shadow: 0 10px 25px rgba(15,23,42,.15);
-
-    opacity: 0;
-    visibility: hidden;
-    transform: translateY(4px);
-
-    transition: opacity .2s ease, transform .2s ease, visibility .2s ease;
-
-    pointer-events: none;
-
-    z-index: 20;
-}
-
-.info-tooltip::after {
-    content: "";
-    position: absolute;
-    top: 100%;
-    right: 8px;
-
-    border: 6px solid transparent;
-    border-top-color: rgba(255,255,255,.97);
-}
-
-.info-icon:hover .info-tooltip {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-.info-tooltip.show {
-    opacity: 1;
-    visibility: visible;
-    transform: translateY(0);
-}
-
-
-/* Hinweis-Tooltip an Investitionswerten (Tab Performance) - Optik wie .info-icon */
+/* Hinweis-Tooltip an Investitionswerten (Tab Performance und Fremdanlagen) */
 .inv-hint { position: relative; display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; margin-left: 10px; vertical-align: middle; border: 1.5px solid #D3D3D3; border-radius: 50%; font-size: 11px; font-weight: 700; color: #D3D3D3; cursor: pointer; user-select: none; outline: none; transition: all .2s ease; }
 .inv-hint:hover, .inv-hint:focus { color: #6b7280; border-color: #6b7280; background: #f3f4f6; }
 .inv-hint-text { position: absolute; bottom: calc(100% + 10px); right: 0; width: max-content; max-width: 260px; background: rgba(255,255,255,.97); color: #334155; font-size: 12px; font-weight: 400; line-height: 1.5; text-align: left; text-transform: none; letter-spacing: 0; padding: 10px 14px; border-radius: 10px; border: 1px solid #e5e7eb; box-shadow: 0 10px 25px rgba(15,23,42,.15); opacity: 0; visibility: hidden; transform: translateY(4px); transition: opacity .2s ease, transform .2s ease, visibility .2s ease; pointer-events: none; z-index: 30; }
@@ -1601,14 +1492,6 @@ body {
    auch auf der Mobilseite weniger fett darstellen */
 .zusammenfassung .metric.small {
     font-weight:500;
-}
-
-.info-tooltip {
-    min-width:0;
-    width:290px;
-    right:-8px;
-    font-size:11px;
-    white-space:normal;
 }
 
 /* Tabelle "Aktuelle Kurse": nur relevante Spalten,
@@ -2235,7 +2118,7 @@ id="restkaeufeJahrGesamt">
                 <strong>Stock Market Viewer</strong><br>
                 Version: 3.XX (06.11.2026)<br>
                 <br>
-                <span id="infoTooltipUpdate"></span><br>
+                <span id="letzteAktualisierung"></span><br>
                 (automatische Datenaktualisierung alle 5 min)
             </div>
         </div>
@@ -2326,7 +2209,7 @@ id="restkaeufeJahrGesamt">
             <tbody id="tableBody">
 
                 <tr>
-                    <td colspan="10">Lade Daten...</td>
+                    <td colspan="9">Lade Daten...</td>
                 </tr>
 
             </tbody>
@@ -2477,7 +2360,7 @@ id="restkaeufeJahrGesamt">
 
 <div class="card jahresverlauf-card">
 
-    <div class="zeitstrahl" id="zeitstrahl">
+    <div class="zeitstrahl">
 
         <div class="zeitstrahl-linie-links" id="zeitstrahlLinieLinks"></div>
         <div class="zeitstrahl-linie-rechts" id="zeitstrahlLinieRechts"></div>
@@ -2629,7 +2512,7 @@ id="restkaeufeJahrGesamt">
 <tbody id="altersvorsorgeHistorieBody"></tbody>
     </table>
 
-    <!-- MOCKUP (noch ohne Datenbank): neue Zeile erfassen. Spaeter: POST an das Backend -> Tabelle altersvorsorge_historie -->
+    <!-- Neue Zeile erfassen: POST an /api/altersvorsorge-historie (Tabelle altersvorsorge_historie) -->
     <div class="av-neu-leiste">
         <button type="button" class="av-button" id="avNeuButton" disabled>+ Neue Zeile</button>
         <span class="av-neu-hinweis">Einmal erfasste Werte können hier nicht geändert oder gelöscht werden.</span>
@@ -2879,17 +2762,17 @@ autocomplete="off">
 
 <div class="prognose-kacheln fremd-kacheln">
 
-    <div class="card" data-besitzer="E">
+    <div class="card">
         <div class="label" id="fremdKachel1Label" data-besitzer="E">Summe E</div>
         <div class="metric small" id="fremdKachel1Wert">0,00 €</div>
     </div>
 
-    <div class="card" data-besitzer="T">
+    <div class="card">
         <div class="label" id="fremdKachel2Label" data-besitzer="T">Summe T</div>
         <div class="metric small" id="fremdKachel2Wert">0,00 €</div>
     </div>
 
-    <div class="card" data-besitzer="F">
+    <div class="card">
         <div class="label" id="fremdKachel3Label" data-besitzer="F">Summe F</div>
         <div class="metric small" id="fremdKachel3Wert">0,00 €</div>
     </div>
@@ -3282,11 +3165,7 @@ if (
     tagesanfang = kurs;
 }
 
-let tagesentwicklung = null;
-
-
-
-tagesentwicklung =
+const tagesentwicklung =
 ((kurs - tagesanfang) / tagesanfang) * 100;
 
 
@@ -3745,59 +3624,38 @@ function aktualisiereKapitalTabelleRente(){
 
 }
 
-let fremdanlagen = [
+// Depotpositionen der Fremdbesitzer (werden in ladeFremdanlagen() aus PostgreSQL geladen)
+let fremdanlagen = [];
 
-{
-besitzer:"E",
-bezeichnung:"ETF Amundi Core MSCI World",
-isin:"IE000BI8OT95",
-link:"https://www.onvista.de/suche/?searchValue=IE000BI8OT95",
-anzahl:354.921746,
-investition:48503.61,
-investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
-},
+// HTML-Escaping fuer Werte aus der Datenbank
+const htmlEsc = (wert) => String(wert ?? "").replace(/[&<>\"']/g, zeichen => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+}[zeichen]));
 
-{
-besitzer:"E",
-bezeichnung:"ETF iShares MSCI EM",
-isin:"IE00B4L5YC18",
-link:"https://www.onvista.de/suche/?searchValue=IE00B4L5YC18",
-anzahl:604.147026,
-investition:22099.70,
-investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
-},
-
-{
-besitzer:"E",
-bezeichnung:"Aktie Mercedes-Benz",
-isin:"DE0007100000",
-link:"https://www.onvista.de/suche/?searchValue=DE0007100000",
-anzahl:244,
-investition:11781,
-investitionHinweis:"Reale Summe Anschaffungskosten ohne Ermäßigungen"
-},
-
-{
-besitzer:"T",
-bezeichnung:"ETF Vanguard ESG Global All Cap",
-isin:"IE00BNG8L278",
-link:"https://www.onvista.de/etf/Vanguard-ESG-Global-All-Cap-UCITS-ETF-USD-Acc-ETF-IE00BNG8L278",
-anzahl:971.676918,
-investition:7715.11,
-investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
-},
-
-{
-besitzer:"F",
-bezeichnung:"ETF Vanguard ESG Global All Cap",
-isin:"IE00BNG8L278",
-link:"https://www.onvista.de/etf/Vanguard-ESG-Global-All-Cap-UCITS-ETF-USD-Acc-ETF-IE00BNG8L278",
-anzahl:797.98822,
-investition:6344.01,
-investitionHinweis:"Errechnet durch Einstandskurs in Trade Republic"
+// Verhindert ueberlappende Laeufe einer Ladefunktion (Timer + Speichern im
+// Pflegedialog). Wird waehrend eines Laufs erneut aufgerufen, folgt genau
+// ein weiterer Lauf nach dem aktuellen.
+function serialisiere(fn) {
+    let laeuft = null;
+    let nochmal = false;
+    return function () {
+        if (laeuft) {
+            nochmal = true;
+            return laeuft;
+        }
+        laeuft = (async () => {
+            try {
+                do {
+                    nochmal = false;
+                    await fn();
+                } while (nochmal);
+            } finally {
+                laeuft = null;
+            }
+        })();
+        return laeuft;
+    };
 }
-
-];
 
 
 // Daten aus der PostgreSQL-Datenbank laden (ohne Browser-Cache)
@@ -3861,18 +3719,12 @@ function ordneFremdKacheln(besitzerDaten) {
             throw new Error("Für den Besitzer " + b.kuerzel + " wurde keine Summenkachel gefunden.");
         }
 
-        const label = karte.querySelector(".label");
-        if (label) {
-            label.dataset.besitzer = b.kuerzel;
-            label.textContent = "Summe " + b.kuerzel;
-        }
-
         container.appendChild(karte);
     });
 }
 
 
-async function ladeFremdanlagen(){
+async function ladeFremdanlagenAusfuehren(){
 
 const tbody =
 document.getElementById("fremdanlagenBody");
@@ -3956,7 +3808,11 @@ const summeProBesitzer = {};
 
 const performanceDaten = [];
 
-for(const item of fremdanlagen){
+// Tabelle nach Wert sortieren (hoechster zuerst); Positionen ohne Kurs ans Ende
+const fremdWert = (p) => kursDaten[p.isin] ? p.anzahl * kursDaten[p.isin].kurs : -Infinity;
+const fremdSortiert = fremdanlagen.slice().sort((a, b) => fremdWert(b) - fremdWert(a));
+
+for(const item of fremdSortiert){
 
     const etf = kursDaten[item.isin];
 
@@ -3965,7 +3821,7 @@ for(const item of fremdanlagen){
         html += `
 <tr>
 <td colspan="10">
-Fehler bei ${item.besitzer} / ${item.bezeichnung}: Kein Kurs verfügbar
+Fehler bei ${htmlEsc(item.besitzer)} / ${htmlEsc(item.bezeichnung)}: Kein Kurs verfügbar
 </td>
 </tr>
 `;
@@ -3977,7 +3833,7 @@ Fehler bei ${item.besitzer} / ${item.bezeichnung}: Kein Kurs verfügbar
     summeProBesitzer[item.besitzer] =
         (summeProBesitzer[item.besitzer] || 0) + wert;
 
-    const investition = item.investition ?? 0;
+    const investition = item.investition;
     const gewinnVerlust = wert - investition;
     const prozent = investition !== 0
         ? (gewinnVerlust / investition) * 100
@@ -3999,18 +3855,18 @@ Fehler bei ${item.besitzer} / ${item.bezeichnung}: Kein Kurs verfügbar
     html += `
 <tr>
 
-<td>${item.besitzer}</td>
+<td>${htmlEsc(item.besitzer)}</td>
 
 <td>
-<a href="${item.link}" target="_blank">
-${item.bezeichnung}
+<a href="${htmlEsc(item.link)}" target="_blank">
+${htmlEsc(item.bezeichnung)}
 </a>
 </td>
 
 <td>
     <a
-        href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/stocks?id=${item.isin}&field=BasicV1&field=ExchangesV2" target="_blank">
-        ${item.isin}
+        href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/stocks?id=${encodeURIComponent(item.isin)}&field=BasicV1&field=ExchangesV2" target="_blank">
+        ${htmlEsc(item.isin)}
     </a>
 </td>
 
@@ -4020,19 +3876,11 @@ ${formatZahl(item.anzahl,6,true)}
 
 <td class="kurs kurs-normal">
 
-${
-etf.tagesanfang!==null
-?
-`
 <a class="tagesanfang-link"
    href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/securities?id=${etf.consorsId}&field=ChartHistoryV1&idTypeOffset=51&historySince=0&resolution=15m&pagesize=2000&sortorder=DATETIME_FIRST"
    target="_blank">
    ${formatZahl(etf.tagesanfang,3)} €
 </a>
-`
-:
-"-"
-}
 
 </td>
 
@@ -4047,7 +3895,6 @@ ${formatZahl(wert,2,true)} €
 <td class="kurs">
 
 ${
-etf.tagesentwicklung===null ||
 Math.abs(etf.tagesentwicklung)<0.005
 ?
 ""
@@ -4136,16 +3983,16 @@ performanceDaten
 
 <tr>
 
-    <td>${item.besitzer}</td>
+    <td>${htmlEsc(item.besitzer)}</td>
 
-    <td>${item.bezeichnung}</td>
+    <td>${htmlEsc(item.bezeichnung)}</td>
 
     <td class="kurs">
         ${formatZahl(item.wert,2,true)} €
     </td>
 
     <td class="kurs">
-        ${formatZahl(item.investition,2,true)} €${item.hinweis ? `<span class="inv-hint" tabindex="0" role="note" aria-label="${item.hinweis}">i<span class="inv-hint-text">${item.hinweis}</span></span>` : ""}
+        ${formatZahl(item.investition,2,true)} €${item.hinweis ? `<span class="inv-hint" tabindex="0" role="note" aria-label="${htmlEsc(item.hinweis)}">i<span class="inv-hint-text">${htmlEsc(item.hinweis)}</span></span>` : ""}
     </td>
 
     <td class="kurs"
@@ -4196,7 +4043,7 @@ const footer =
 document.getElementById("fremdanlagenUpdateInfo");
 
 const ersteZeile =
-kursDaten[fremdanlagen[0].isin];
+fremdanlagen.length ? kursDaten[fremdanlagen[0].isin] : null;
 
 let tagesanfangText = "";
 
@@ -4232,8 +4079,10 @@ if(diffTage >= 31){
 
 }
 
+const ladeFremdanlagen = serialisiere(ladeFremdanlagenAusfuehren);
 
-async function ladeAlleKurse(){
+
+async function ladeAlleKurseAusfuehren(){
 
 const tbody = document.getElementById("tableBody");
 const kursDaten = {};
@@ -4279,7 +4128,7 @@ try {
 
 } catch (err) {
     console.error("Eigene Positionen konnten nicht aus PostgreSQL geladen werden:", err);
-    tbody.innerHTML = '<tr><td colspan="10">Eigene Positionen konnten nicht aus der Datenbank geladen werden.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="9">Eigene Positionen konnten nicht aus der Datenbank geladen werden.</td></tr>';
     document.getElementById("performanceBody").innerHTML = '<tr><td colspan="4">Positionen konnten nicht geladen werden.</td></tr>';
     document.getElementById("vorsorgeBody").innerHTML = '<tr><td colspan="3">Altersvorsorge-Positionen konnten nicht geladen werden.</td></tr>';
     document.getElementById("updateInfo").textContent = "Fehler beim Laden der Positionsdaten.";
@@ -4372,19 +4221,20 @@ if (kaufErgebnis.status === "rejected") {
     console.error("Geplante Käufe konnten nicht geladen werden:", kaufErgebnis.reason);
 }
 
-const htmlEsc = (wert) => String(wert ?? "").replace(/[&<>\"']/g, zeichen => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-}[zeichen]));
-
 if (jahresanfangErgebnis.status === "rejected") {
     history.innerHTML = '<tr><td colspan="6">Jahresanfangswerte konnten nicht aus der Datenbank geladen werden.</td></tr>';
 } else {
     const jahresanfangAktuell = jahresanfangDaten
         .filter(j => Number(j.jahr) === JAHR && positionenNachId.has(Number(j.position_id)))
         .sort((a, b) => {
-            const pa = positionenNachId.get(Number(a.position_id));
-            const pb = positionenNachId.get(Number(b.position_id));
-            return pa.bezeichnung.localeCompare(pb.bezeichnung, "de", { sensitivity: "base", numeric: true });
+            // Nach Jahreskursentwicklung in Prozent (hoechste zuerst);
+            // Eintraege ohne aktuellen Kurs bzw. gueltigen Jahresanfangskurs ans Ende
+            const entwicklung = (j) => {
+                const kursJA = Number(j.kurs);
+                const aktuell = kursDaten[positionenNachId.get(Number(j.position_id)).isin]?.kurs;
+                return Number.isFinite(aktuell) && kursJA > 0 ? (aktuell - kursJA) / kursJA : -Infinity;
+            };
+            return entwicklung(b) - entwicklung(a);
         });
 
     if (!jahresanfangAktuell.length) {
@@ -4474,14 +4324,19 @@ if (sparplanErgebnis.status === "rejected") {
 }
 
 // Aktuelle Depotwerte, Performance und Altersvorsorge kommen aus public.position.
-for (const item of eigenePositionen) {
+// Sortierung nach Wert (hoechster zuerst) gilt damit fuer die Kurse-Tabelle und
+// die Altersvorsorge-Tabelle; Positionen ohne Kurs stehen am Ende.
+const positionWert = (p) => kursDaten[p.isin] ? p.anzahl * kursDaten[p.isin].kurs : -Infinity;
+const eigeneNachWert = eigenePositionen.slice().sort((a, b) => positionWert(b) - positionWert(a));
+
+for (const item of eigeneNachWert) {
 
     const etf = kursDaten[item.isin];
 
     if (!etf) {
         tbody.innerHTML += `
 <tr>
-<td colspan="10">Fehler bei ${item.bezeichnung}: Kein Kurs verfügbar</td>
+<td colspan="9">Fehler bei ${htmlEsc(item.bezeichnung)}: Kein Kurs verfügbar</td>
 </tr>
 `;
         continue;
@@ -4504,7 +4359,7 @@ for (const item of eigenePositionen) {
     if (item.ist_altersvorsorge) {
         vorsorge.innerHTML += `
 <tr>
-<td>${item.bezeichnung}</td>
+<td>${htmlEsc(item.bezeichnung)}</td>
 <td class="kurs">${formatZahl(etf.kurs,3)} €</td>
 <td class="kurs vorsorge-wert">${formatZahl(wert,2,true)} €</td>
 </tr>
@@ -4515,31 +4370,27 @@ for (const item of eigenePositionen) {
     chartLabels.push(item.bezeichnung);
     chartValues.push(wert);
 
-    if (etf.tagesanfang !== null) {
-        startwertHeute += item.anzahl * etf.tagesanfang;
-    }
+    startwertHeute += item.anzahl * etf.tagesanfang;
 
     const tagesDiff = (etf.kurs - etf.tagesanfang) * item.anzahl;
 
     tbody.innerHTML += `
 <tr>
-<td><a href="${item.link}" target="_blank">${item.bezeichnung}</a></td>
+<td><a href="${htmlEsc(item.link)}" target="_blank">${htmlEsc(item.bezeichnung)}</a></td>
 <td>
-    <a href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/stocks?id=${item.isin}&field=BasicV1&field=ExchangesV2" target="_blank">${item.isin}</a>
+    <a href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/stocks?id=${encodeURIComponent(item.isin)}&field=BasicV1&field=ExchangesV2" target="_blank">${htmlEsc(item.isin)}</a>
 </td>
 <td class="kurs kurs-normal">${formatZahl(item.anzahl,6,true)}</td>
 <td class="kurs kurs-normal">
-${etf.tagesanfang !== null ? `
 <a class="tagesanfang-link" href="https://www.consorsbank.de/web-financialinfo-service/api/marketdata/securities?id=${etf.consorsId}&field=ChartHistoryV1&idTypeOffset=51&historySince=0&resolution=15m&pagesize=2000&sortorder=DATETIME_FIRST" target="_blank">${formatZahl(etf.tagesanfang,3)} €</a>
-` : "-"}
 </td>
 <td class="kurs">${formatZahl(etf.kurs,3)} €</td>
 <td class="kurs">${formatZahl(wert,2,true)} €</td>
 <td class="kurs">
-${etf.tagesentwicklung === null || Math.abs(etf.tagesentwicklung) < 0.005 ? "" : `
+${Math.abs(etf.tagesentwicklung) < 0.005 ? "" : `
 <span class="tages-badge ${etf.tagesentwicklung > 2 ? "darkgreen" : etf.tagesentwicklung > 0 ? "green" : etf.tagesentwicklung < -2 ? "red" : etf.tagesentwicklung < 0 ? "orange" : ""}">
-${etf.tagesentwicklung >= 0 ? "+" : ""}${formatZahl(etf.tagesentwicklung,2)} %
-(${tagesDiff >= 0 ? "+" : "-"}${formatZahl(Math.abs(tagesDiff),2,true)} €)
+<span class="tages-pct">${etf.tagesentwicklung >= 0 ? "+" : ""}${formatZahl(etf.tagesentwicklung,2)} %</span>
+<span class="tages-abs">(${tagesDiff >= 0 ? "+" : "-"}${formatZahl(Math.abs(tagesDiff),2,true)} €)</span>
 </span>
 `}
 </td>
@@ -4606,14 +4457,14 @@ performanceDaten
 
 <tr>
 
-    <td>${item.bezeichnung}</td>
+    <td>${htmlEsc(item.bezeichnung)}</td>
 
     <td class="kurs">
         ${formatZahl(item.wert,2,true)} €
     </td>
 
     <td class="kurs">
-        ${formatZahl(item.investition,2,true)} €${item.hinweis ? `<span class="inv-hint" tabindex="0" role="note" aria-label="${item.hinweis}">i<span class="inv-hint-text">${item.hinweis}</span></span>` : ""}
+        ${formatZahl(item.investition,2,true)} €${item.hinweis ? `<span class="inv-hint" tabindex="0" role="note" aria-label="${htmlEsc(item.hinweis)}">i<span class="inv-hint-text">${htmlEsc(item.hinweis)}</span></span>` : ""}
     </td>
 
     <td class="kurs"
@@ -5249,7 +5100,7 @@ STANDDATUM_ANTEILE +
 "</span>" +
 startDatumText;
 
-document.getElementById("infoTooltipUpdate").textContent =
+document.getElementById("letzteAktualisierung").textContent =
 letzteAktualisierungText;
 
 
@@ -5460,26 +5311,7 @@ wert/gesamt*100,
 
 }
 
-document.querySelectorAll(".info-icon").forEach(icon => {
-
-    icon.addEventListener("click", (e) => {
-
-        e.stopPropagation();
-
-        const tooltip = icon.querySelector(".info-tooltip");
-
-        tooltip.classList.toggle("show");
-
-    });
-
-});
-
-document.addEventListener("click", () => {
-
-    document.querySelectorAll(".info-tooltip.show")
-        .forEach(t => t.classList.remove("show"));
-
-});
+const ladeAlleKurse = serialisiere(ladeAlleKurseAusfuehren);
 
 document.querySelectorAll(".tab-button").forEach(button => {
 
@@ -5785,7 +5617,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
     const fmtZahl = (v, n) => v === null || v === undefined ? "" :
         Number(v).toLocaleString("de-DE", { minimumFractionDigits: n, maximumFractionDigits: n });
 
-    // ---- Beschreibung der Tabellen (siehe Word-Datei 3.1 / 3.2 / 3.3) ----
+    // ---- Beschreibung der Tabellen (Wertpapiere und Positionen) ----
     const konfig = {
         positionen: {
             titel: "Positionen pflegen",
@@ -5847,7 +5679,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
     const felderEl = document.getElementById("pflegeFelder");
     const fehlerEl = document.getElementById("pflegeFehler");
 
-    let aktuell = null;      // "besitzer" | "wertpapiere" | "positionen"
+    let aktuell = null;      // "besitzer" | "wertpapiere" | "positionen" (konfig gibt es nur fuer die beiden letzten)
     let bearbeiteId = null;  // null = neuer Eintrag
 
     function baueFormular() {
@@ -5865,7 +5697,6 @@ document.querySelectorAll(".tab-button").forEach(button => {
                 el = document.createElement("input");
                 el.type = f.typ === "check" ? "checkbox" : "text";
                 if (f.max) el.maxLength = f.max;
-                if (f.typ === "zahl") el.inputMode = "numeric";
                 el.autocomplete = "off";
             }
             el.id = "pf_" + f.name;
@@ -5930,11 +5761,9 @@ document.querySelectorAll(".tab-button").forEach(button => {
         const vgl = (a, b) => a.localeCompare(b, "de", { sensitivity: "base", numeric: true });
         const sortiert = aktuell === "wertpapiere"
             ? datenListe.slice().sort((a, b) => vgl(a.bezeichnung, b.bezeichnung))
-            : aktuell === "positionen"
-            ? datenListe.slice().sort((a, b) =>
+            : datenListe.slice().sort((a, b) =>
                 vgl(besitzerKuerzel(a.besitzer_id), besitzerKuerzel(b.besitzer_id)) ||
-                vgl(wertpapierBez(a.wertpapier_id), wertpapierBez(b.wertpapier_id)))
-            : datenListe;
+                vgl(wertpapierBez(a.wertpapier_id), wertpapierBez(b.wertpapier_id)));
 
         sortiert.forEach(d => {
             const zeile = document.createElement("div");
@@ -6287,10 +6116,8 @@ document.querySelectorAll(".tab-button").forEach(button => {
             await zeigeBesitzer();
         } else if (art === "wertpapiere") {
             await ladeWertpapiere();
-        } else if (art === "positionen") {
-            await ladePositionen();
         } else {
-            document.getElementById("pflegeSpeichern").disabled = false;
+            await ladePositionen();
         }
     }
 
@@ -6308,8 +6135,7 @@ document.querySelectorAll(".tab-button").forEach(button => {
         for (const f of k.felder) {
             const el = document.getElementById("pf_" + f.name);
             if (f.typ === "check") { daten[f.name] = el.checked; continue; }
-            let v = el.value.trim();
-            if (f.gross) v = v.toUpperCase();
+            const v = f.gross ? el.value.trim().toUpperCase() : el.value.trim();
             if (f.pflicht && !v) { fehlerEl.textContent = "Bitte alle Pflichtfelder ausfüllen."; return; }
             if (f.typ === "fk") { daten[f.name] = Number(v); continue; }
             if (f.typ === "dezimal") {
@@ -6321,11 +6147,6 @@ document.querySelectorAll(".tab-button").forEach(button => {
                 }
                 daten[f.name] = Number(norm);
                 continue;
-            }
-            if (f.typ === "zahl") {
-                if (v === "") v = null;
-                else if (!/^\d+$/.test(v)) { fehlerEl.textContent = "Bitte eine ganze Zahl eingeben."; return; }
-                else v = Number(v);
             }
             daten[f.name] = v === "" ? null : v;
         }
@@ -7440,7 +7261,7 @@ async function ladeAltersvorsorgeHistorie() {
 }
 
 
-async function starteTestversion() {
+async function starteAnwendung() {
 
     try {
         await ladeAltersvorsorgeHistorie();
@@ -7460,7 +7281,7 @@ document.getElementById("jahresTabButton").textContent =
     "Jahr " + aktuellesJahr;
 
 
-starteTestversion();
+starteAnwendung();
 
 document.getElementById("zielwert").addEventListener("input", () => {
 
