@@ -2157,7 +2157,7 @@ id="restkaeufeJahrGesamt">
             <button type="button" class="menu-eintrag menu-abmelden" id="abmeldenButton">Abmelden</button>
             <div class="menu-info">
                 <strong>Stock Market Viewer</strong><br>
-                Version: 3.01 (09.11.2026)<br>
+                Version: 3.02 (10.11.2026)<br>
                 <br>
                 <span id="letzteAktualisierung"></span><br>
                 (automatische Datenaktualisierung alle 5 min)
@@ -2644,6 +2644,65 @@ autocomplete="off">
 
 
 </div>
+
+    <h1 class="section-title">
+        Rentenfortschritt
+    </h1>
+
+<div class="prognose-kacheln" id="rentenfortschrittKacheln">
+    <div class="card">
+        <div class="label">Arbeitsbeginn</div>
+        <div class="metric small"><span id="rfArbeitsbeginn"></span><br><span class="prognose-datum">Vergangene Zeit: <span id="rfZeitSeit"></span></span></div>
+    </div>
+    <div class="card">
+        <div class="label">Bergfest</div>
+        <div class="metric small"><span id="rfBergfest"></span><br><span class="prognose-datum">Rentenfortschritt: <span id="rfFortschritt"></span></span></div>
+    </div>
+    <div class="card">
+        <div class="label">Beginn Rente mit 67</div>
+        <div class="metric small"><span id="rfRentenbeginn"></span><br><span class="prognose-datum">Verbleibende Zeit: <span id="rfZeitBis"></span></span></div>
+    </div>
+</div>
+
+<script>
+(function(){
+    const start = new Date(2007,0,1);
+    const ende  = new Date(2049,7,1);
+    const heute = new Date();
+    heute.setHours(0,0,0,0);
+
+    const TAG = 86400000;
+    const fmt = d => String(d.getDate()).padStart(2,"0") + "." +
+        String(d.getMonth()+1).padStart(2,"0") + "." + d.getFullYear();
+
+    // Differenz in vollen Jahren + Resttagen (von a nach b, a <= b)
+    function jahreTage(a,b){
+        if(b < a){ return "0 Jahre, 0 Tage"; }
+        let j = b.getFullYear() - a.getFullYear();
+        let z = new Date(a.getFullYear()+j, a.getMonth(), a.getDate());
+        if(z > b){ j--; z = new Date(a.getFullYear()+j, a.getMonth(), a.getDate()); }
+        const t = Math.round((b - z) / TAG);
+        return j + (j===1?" Jahr":" Jahre") + ", " + t + (t===1?" Tag":" Tage");
+    }
+
+    const gesamt = ende - start;
+    // Mitte zwischen Arbeitsbeginn und Rentenbeginn
+    const bf = new Date(start.getTime() + Math.round(gesamt/2/TAG)*TAG);
+    bf.setHours(0,0,0,0);
+
+    let prozent = (heute - start) / gesamt * 100;
+    prozent = Math.max(0, Math.min(100, prozent));
+
+    const set = (id,t) => document.getElementById(id).textContent = t;
+    set("rfArbeitsbeginn", fmt(start));
+    set("rfBergfest", fmt(bf));
+    set("rfRentenbeginn", fmt(ende));
+    set("rfZeitSeit", jahreTage(start,heute));
+    set("rfFortschritt", prozent.toLocaleString("de-DE",
+        {minimumFractionDigits:2, maximumFractionDigits:2}) + " %");
+    set("rfZeitBis", jahreTage(heute,ende));
+})();
+</script>
 
     <h1 class="section-title">
         Prognose Kapital Altersvorsorge bis Rentenbeginn
